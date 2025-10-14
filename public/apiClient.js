@@ -1,5 +1,5 @@
 // Configuration de l'API
-const API_BASE_URL = https://depot-w4hn.onrender.com/api';
+const API_BASE_URL = 'https://depot-w4hn.onrender.com/api';
 // ========== SYSTÈME DE CACHE SIMPLE ==========
 
 // Classe pour gérer les appels API - SANS LOCALSTORAGE
