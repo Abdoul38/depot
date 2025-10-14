@@ -16,8 +16,15 @@ const PORT = process.env.PORT || 3000;
 const { pool, initializeDatabase } = require('./config/database');
 
 // =================== MIDDLEWARE GLOBAUX ===================
+// =================== MIDDLEWARE GLOBAUX ===================
 app.use(cors({
-    origin: ['http://localhost:3000', 'http://127.0.0.1:3000', 'http://localhost:5500'],
+    origin: [
+        'http://localhost:3000', 
+        'http://127.0.0.1:3000', 
+        'http://localhost:5500',
+        'https://depot-w4hn.onrender.com', // Ajoutez votre domaine Render
+        'https://votre-app.onrender.com'   // Si vous avez d'autres sous-domaines
+    ],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Accept']
