@@ -57,7 +57,7 @@ function viderCacheAPI(pattern) {
 }
 class ApiClient {
     constructor() {
-        this.baseURL = 'http://localhost:3000/api';
+        this.baseURL = 'https://depot-w4hn.onrender.com/api';
         this.token = localStorage.getItem('authToken');
         this.currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
         this.pendingRequests = new Map(); // Éviter les requêtes doublons
