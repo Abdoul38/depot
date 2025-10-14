@@ -4,11 +4,11 @@ require('dotenv').config();
 
 // Configuration du pool PostgreSQL
 const pool = new Pool({
-  host: process.env.DB_HOST || 'localhost',
+  host: process.env.DB_HOST || 'ep-morning-fog-afch71kx-pooler.c-2.us-west-2.aws.neon.tech',
   port: process.env.DB_PORT || 5432,
-  database: process.env.DB_NAME || 'udh',
-  user: process.env.DB_USER || '123456',
-  password: process.env.DB_PASSWORD || 'postgres',
+  database: process.env.DB_NAME || 'neondb',
+  user: process.env.DB_USER || 'neondb_owner',
+  password: process.env.DB_PASSWORD || 'npg_rTYtRD78FigZ',
   ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false
 });
 
