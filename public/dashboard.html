@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tableau de Bord - Université Djibo Hamani</title>
+    <link rel="stylesheet" href="Style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- SIDEBAR -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <img src="/uploads/logo-universite.png" alt="Logo" class="sidebar-logo" onerror="this.style.display='none'">
+                <div class="sidebar-title">UDH Tahoua</div>
+                <div class="sidebar-subtitle">Système de Gestion</div>
+            </div>
+
+            <nav class="sidebar-menu">
+                <!-- SECTION GÉNÉRAL -->
+                <div class="menu-section">
+                    <div class="menu-section-title">Général</div>
+                    <a class="menu-item active" onclick="navigateTo('dashboard')">
+                        <span class="menu-item-icon">🏠</span>
+                        <span class="menu-item-text">Tableau de Bord</span>
+                    </a>
+                    <a class="menu-item" onclick="navigateTo('statistiques')">
+                        <span class="menu-item-icon">📊</span>
+                        <span class="menu-item-text">Statistiques</span>
+                    </a>
+                </div>
+
+                <!-- SECTION GESTION -->
+                <div class="menu-section">
+                    <div class="menu-section-title">Gestion</div>
+                    <a class="menu-item" onclick="navigateTo('gestionEtudiants')">
+                        <span class="menu-item-icon">🎓</span>
+                        <span class="menu-item-text">Étudiants</span>
+                        <span class="menu-item-badge" id="badgeEtudiants">0</span>
+                    </a>
+                    <a class="menu-item" onclick="navigateTo('gestionDossiers')">
+                        <span class="menu-item-icon">📁</span>
+                        <span class="menu-item-text">Dossiers</span>
+                        <span class="menu-item-badge" id="badgeDossiers">0</span>
+                    </a>
+                    <a class="menu-item" onclick="navigateTo('gestionUtilisateurs')">
+                        <span class="menu-item-icon">👥</span>
+                        <span class="menu-item-text">Utilisateurs</span>
+                    </a>
+                    <a class="menu-item" onclick="navigateTo('gestionFormations')">
+                        <span class="menu-item-icon">🏫</span>
+                        <span class="menu-item-text">Formations</span>
+                    </a>
+                </div>
+
+                <!-- SECTION CONFIGURATION -->
+                <div class="menu-section">
+                    <div class="menu-section-title">Configuration</div>
+                    <a class="menu-item" onclick="navigateTo('configInscription')">
+                        <span class="menu-item-icon">⚙️</span>
+                        <span class="menu-item-text">Inscriptions</span>
+                    </a>
+                    <a class="menu-item" onclick="navigateTo('importExport')">
+                        <span class="menu-item-icon">📤</span>
+                        <span class="menu-item-text">Import/Export</span>
+                    </a>
+                </div>
+
+                <!-- SECTION UTILISATEUR -->
+                <div class="menu-section">
+                    <div class="menu-section-title">Mon Compte</div>
+                    <a class="menu-item" onclick="navigateTo('profil')">
+                        <span class="menu-item-icon">👤</span>
+                        <span class="menu-item-text">Profil</span>
+                    </a>
+                    <a class="menu-item" onclick="deconnexion()">
+                        <span class="menu-item-icon">🚪</span>
+                        <span class="menu-item-text">Déconnexion</span>
+                    </a>
+                </div>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div class="user-avatar" id="userAvatar">A</div>
+                    <div class="user-details">
+                        <div class="user-name" id="userName">Admin</div>
+                        <div class="user-role" id="userRole">Administrateur</div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <div class="main-content">
+            <!-- TOPBAR -->
+            <header class="topbar">
+                <div class="topbar-left">
+                    <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+                    <h1 class="topbar-title" id="pageTitle">Tableau de Bord</h1>
+                </div>
+                <div class="topbar-right">
+                    <div class="topbar-search">
+                        <input type="text" placeholder="Rechercher..." id="globalSearch">
+                        <span class="topbar-search-icon">🔍</span>
+                    </div>
+                    <div class="topbar-notifications">
+                        🔔
+                        <span class="notification-badge" id="notificationCount">0</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- CONTENT AREA -->
+            <main class="content-area">
+                <!-- PAGE: DASHBOARD -->
+                <div id="dashboard" class="page active">
+                    <!-- STATS CARDS -->
+                    <div class="stats-grid">
+                        <div class="stat-card" style="border-left-color: #667eea;">
+                            <div class="stat-card-header">
+                                <div>
+                                    <div class="stat-card-title">Total Étudiants</div>
+                                    <div class="stat-card-value" id="totalEtudiants">0</div>
+                                    <div class="stat-card-change positive">
+                                        ↑ <span id="changeEtudiants">0</span>% ce mois
+                                    </div>
+                                </div>
+                                <div class="stat-card-icon" style="background: linear-gradient(135deg, #667eea, #764ba2);">🎓</div>
+                            </div>
+                        </div>
+
+                        <div class="stat-card" style="border-left-color: #4facfe;">
+                            <div class="stat-card-header">
+                                <div>
+                                    <div class="stat-card-title">Candidatures</div>
+                                    <div class="stat-card-value" id="totalCandidatures">0</div>
+                                    <div class="stat-card-change positive">
+                                        ↑ <span id="changeCandidatures">0</span>% ce mois
+                                    </div>
+                                </div>
+                                <div class="stat-card-icon" style="background: linear-gradient(135deg, #4facfe, #00f2fe);">📋</div>
+                            </div>
+                        </div>
+
+                        <div class="stat-card" style="border-left-color: #28a745;">
+                            <div class="stat-card-header">
+                                <div>
+                                    <div class="stat-card-title">Approuvées</div>
+                                    <div class="stat-card-value" id="totalApprouvees">0</div>
+                                    <div class="stat-card-change positive">
+                                        ↑ <span id="changeApprouvees">0</span>% ce mois
+                                    </div>
+                                </div>
+                                <div class="stat-card-icon" style="background: linear-gradient(135deg, #28a745, #20c997);">✅</div>
+                            </div>
+                        </div>
+
+                        <div class="stat-card" style="border-left-color: #ffc107;">
+                            <div class="stat-card-header">
+                                <div>
+                                    <div class="stat-card-title">En Attente</div>
+                                    <div class="stat-card-value" id="totalEnAttente">0</div>
+                                    <div class="stat-card-change negative">
+                                        <span id="changeEnAttente">0</span> nouveau(x)
+                                    </div>
+                                </div>
+                                <div class="stat-card-icon" style="background: linear-gradient(135deg, #ffc107, #ff8c00);">⏳</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- CHARTS -->
+                    <div class="charts-section">
+                        <div class="chart-card">
+                            <div class="chart-card-header">
+                                <h3 class="chart-card-title">📈 Évolution des Candidatures</h3>
+                                <div class="chart-card-actions">
+                                    <button class="chart-card-action" onclick="exportChart('evolution')">📥 Export</button>
+                                    <button class="chart-card-action" onclick="loadDashboardData()">🔄 Actualiser</button>
+                                </div>
+                            </div>
+                            <div class="chart-container">
+                                <canvas id="chartEvolutionCandidatures"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="chart-card">
+                            <div class="chart-card-header">
+                                <h3 class="chart-card-title">🎯 Répartition par Filière</h3>
+                                <div class="chart-card-actions">
+                                    <button class="chart-card-action" onclick="navigateTo('statistiques')">📊 Détails</button>
+                                </div>
+                            </div>
+                            <div class="chart-container">
+                                <canvas id="chartRepartitionFilieres"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TABLE -->
+                    <div class="table-container">
+                        <div class="table-header">
+                            <h3 class="table-title">📋 Dernières Candidatures</h3>
+                            <div class="table-actions">
+                                <button class="btn btn-secondary" onclick="filtrerCandidatures()">🔍 Filtrer</button>
+                                <button class="btn btn-primary" onclick="navigateTo('gestionDossiers')">📁 Voir tout</button>
+                            </div>
+                        </div>
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Étudiant</th>
+                                    <th>Filière</th>
+                                    <th>Statut</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recentCandidaturesTable">
+                                <tr>
+                                    <td colspan="5" style="text-align: center; padding: 40px; color: #999;">
+                                        <div style="font-size: 48px; margin-bottom: 10px;">⏳</div>
+                                        Chargement des données...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Conteneurs pour les autres pages -->
+                <div id="statistiques-content"></div>
+                <div id="gestion-etudiants-content"></div>
+                <div id="gestion-dossiers-content"></div>
+                <div id="gestion-utilisateurs-content"></div>
+                <div id="gestion-formations-content"></div>
+                <div id="config-inscription-content"></div>
+                <div id="import-export-content"></div>
+                <div id="profil-content"></div>
+            </main>
+        </div>
+    </div>
+
+    <!-- SCRIPTS -->
+    <script src="apiClient.js"></script>
+    <script src="inscription.js"></script>
+    <script src="stat.js"></script>
+    <script src="formation.js"></script>
+    <script src="sidebar.js"></script>
+    
+    <script>
+        // Fonction de déconnexion
+        function deconnexion() {
+            if (confirm('Voulez-vous vraiment vous déconnecter ?')) {
+                apiClient.logout();
+                window.location.href = 'index.html';
+            }
+        }
+        
+        // Charger les contenus des autres pages dynamiquement
+        async function chargerContenus() {
+            try {
+                const pages = [
+                    { id: 'statistiques', file: 'admin.html', selector: '#statistiques' },
+                    { id: 'gestionEtudiants', file: 'admin.html', selector: '#gestionEtudiants' },
+                    { id: 'gestionDossiers', file: 'admin.html', selector: '#gestionDossiers' },
+                    { id: 'gestionUtilisateurs', file: 'admin.html', selector: '#gestionUtilisateurs' },
+                    { id: 'gestionFormations', file: 'admin.html', selector: '#gestionFormations' },
+                    { id: 'configInscription', file: 'admin.html', selector: '#configInscription' },
+                    { id: 'importExport', file: 'admin.html', selector: '#importExport' },
+                    { id: 'profil', file: 'user.html', selector: '#profil' }
+                ];
+                
+                for (const page of pages) {
+                    const response = await fetch(page.file);
+                    const html = await response.text();
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    const content = doc.querySelector(page.selector);
+                    
+                    if (content) {
+                        document.querySelector('.content-area').appendChild(content);
+                    }
+                }
+                
+                console.log('✅ Tous les contenus chargés');
+                
+            } catch (error) {
+                console.error('❌ Erreur chargement contenus:', error);
+            }
+        }
+        
+        // Initialisation
+        document.addEventListener('DOMContentLoaded', () => {
+            chargerContenus();
+        });
+    </script>
+</body>
+</html>

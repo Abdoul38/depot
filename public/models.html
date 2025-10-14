@@ -1,0 +1,399 @@
+   <!-- Modal d'ajout/modification de faculté -->
+<div id="ajoutFaculteModal" class="modal">
+    <div class="modal-content" style="max-width: 600px;">
+        <span class="close" onclick="closeModal('ajoutFaculteModal')">&times;</span>
+        <h3 id="titreFaculteModal">Ajouter une faculté</h3>
+        <form id="faculteForm" onsubmit="sauvegarderFaculte(event)">
+            <div class="form-group">
+                <label for="faculteNom">Nom *</label>
+                <input type="text" id="faculteNom" required placeholder="Ex: FADEG">
+            </div>
+            <div class="form-group">
+                <label for="faculteLibelle">Libellé *</label>
+                <input type="text" id="faculteLibelle" required placeholder="Ex: Faculté de Droit d'Économie et de Gestion">
+            </div>
+            <div class="form-group">
+                <label for="faculteDescription">Description</label>
+                <textarea id="faculteDescription" rows="3" placeholder="Description de la faculté..."></textarea>
+            </div>
+            <div class="form-group">
+                <label for="faculteActive">
+                    <input type="checkbox" id="faculteActive" checked> Active
+                </label>
+            </div>
+            <input type="hidden" id="faculteId">
+            <button type="submit" class="btn btn-primary" style="width: 100%;">Enregistrer</button>
+        </form>
+    </div>
+</div>
+
+<!-- Modal d'ajout/modification de filière -->
+<div id="ajoutFiliereModal" class="modal">
+    <div class="modal-content" style="max-width: 700px; max-height: 85vh; overflow: hidden; display: flex; flex-direction: column;">
+        <!-- Header -->
+        <div style="flex-shrink: 0; padding-bottom: 15px; border-bottom: 1px solid #e1e5e9;">
+            <span class="close" onclick="closeModal('ajoutFiliereModal')">&times;</span>
+            <h3 id="titreFiliereModal" style="margin: 0;">Ajouter une filière</h3>
+        </div>
+        
+        <!-- Contenu avec défilement -->
+        <div style="flex: 1; overflow-y: auto; padding: 15px 0;">
+            <form id="filiereForm" onsubmit="sauvegarderFiliere(event)">
+                <!-- Vos champs de formulaire existants ici -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="filiereNom">Nom *</label>
+                        <input type="text" id="filiereNom" required placeholder="Ex: INFORMATIQUE">
+                    </div>
+                    <div class="form-group">
+                        <label for="filiereLibelle">Libellé *</label>
+                        <input type="text" id="filiereLibelle" required placeholder="Ex: Informatique">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="filiereFaculte">Faculté *</label>
+                        <select id="filiereFaculte" required>
+                            <option value="">Sélectionner une faculté</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="filiereCapacite">Capacité maximale</label>
+                        <input type="number" id="filiereCapacite" placeholder="Ex: 150">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="filiereDescription">Description</label>
+                    <textarea id="filiereDescription" rows="2" placeholder="Description de la filière..."></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label>Types de bac autorisés *</label>
+                    <div id="typesBacContainer" style="max-height: 120px; overflow-y: auto; border: 1px solid #e1e5e9; border-radius: 8px; padding: 10px; background: #fafafa; margin-bottom: 10px;">
+                        <!-- Les cases à cocher seront ajoutées dynamiquement -->
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="filiereActive">
+                        <input type="checkbox" id="filiereActive" checked> Active
+                    </label>
+                </div>
+                
+                <input type="hidden" id="filiereId">
+            </form>
+        </div>
+        
+        <!-- Bouton fixe en bas -->
+        <div style="flex-shrink: 0; padding-top: 15px; border-top: 1px solid #e1e5e9; background: white;">
+            <button type="submit" form="filiereForm" class="btn btn-primary" style="width: 100%;">Enregistrer</button>
+        </div>
+    </div>
+</div>
+
+<div id="ajoutDiplomeModal" class="modal">
+    <div class="modal-content" style="max-width: 700px;">
+        <span class="close" onclick="closeModal('ajoutDiplomeModal')">&times;</span>
+        <h3 id="titreDiplomeModal">Ajouter un Diplôme</h3>
+        
+        <form id="diplomeForm" onsubmit="sauvegarderDiplome(event)">
+            <!-- ORDRE MODIFIÉ : Faculté d'abord -->
+            <div class="form-group">
+                <label for="diplomeFaculte">Faculté *</label>
+                <select id="diplomeFaculte" required onchange="chargerFilieresParFaculte()">
+                    <option value="">Sélectionner une faculté</option>
+                </select>
+            </div>
+            
+            <!-- Filière ensuite (se charge automatiquement) -->
+            <div class="form-group">
+                <label for="diplomeFiliere">Filière *</label>
+                <select id="diplomeFiliere" required>
+                    <option value="">Sélectionner d'abord une faculté</option>
+                </select>
+                <div class="form-hint">
+                    <small>💡 Les filières disponibles dépendent de la faculté sélectionnée</small>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="diplomeLibelle">Niveau *</label>
+                    <input type="text" id="diplomeLibelle" required placeholder="Ex: DUT, LICENCE">
+                </div>
+            </div>
+            
+            <input type="hidden" id="diplomeId">
+            
+            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 20px;">Enregistrer</button>
+        </form>
+    </div>
+</div>
+
+<!-- Modal d'ajout/modification de type de bac -->
+<div id="ajoutTypeBacModal" class="modal">
+    <div class="modal-content" style="max-width: 600px;">
+        <span class="close" onclick="closeModal('ajoutTypeBacModal')">&times;</span>
+        <h3 id="titreTypeBacModal">Ajouter un type de bac</h3>
+        <form id="typeBacForm" onsubmit="sauvegarderTypeBac(event)">
+            <div class="form-group">
+                <label for="typeBacNom">Nom *</label>
+                <input type="text" id="typeBacNom" required placeholder="Ex: BAC A">
+            </div>
+            <div class="form-group">
+                <label for="typeBacLibelle">Niveau *</label>
+                <input type="text" id="typeBacLibelle" required placeholder="Ex: Baccalauréat A">
+            </div>
+            <div class="form-group">
+                <label for="typeBacDescription">Description</label>
+                <textarea id="typeBacDescription" rows="3" placeholder="Description du type de bac..."></textarea>
+            </div>
+            <div class="form-group">
+                <label for="typeBacActive">
+                    <input type="checkbox" id="typeBacActive" checked> Active
+                </label>
+            </div>
+            <input type="hidden" id="typeBacId">
+            <button type="submit" class="btn btn-primary" style="width: 100%;">Enregistrer</button>
+        </form>
+    </div>
+</div>
+
+    <!-- Modals -->
+    <div id="ajoutUtilisateurModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('ajoutUtilisateurModal')">&times;</span>
+            <h3 style="margin-bottom: 20px;">Ajouter un utilisateur</h3>
+            <form id="ajoutUtilisateurForm" onsubmit="ajouterUtilisateur(event)">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="adminNom">Nom complet</label>
+                        <input type="text" id="adminNom" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="adminEmail">Email</label>
+                        <input type="email" id="adminEmail" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="adminTelephone">Téléphone</label>
+                        <input type="tel" id="adminTelephone" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="adminRole">Rôle</label>
+                        <select id="adminRole" required>
+                            <option value="user">Utilisateur</option>
+                            <option value="admin">Administrateur</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="adminMotDePasse">Mot de passe temporaire</label>
+                    <input type="password" id="adminMotDePasse" required>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 20px;">Ajouter</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="confirmationModal" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeModal('confirmationModal')">&times;</span>
+    <h3 style="margin-bottom: 20px; text-align: center;">🎉 Dossier validé avec succès!</h3>
+    <p style="text-align: center; margin-bottom: 30px;">
+      Votre dossier a été soumis avec succès. Vous pouvez maintenant télécharger votre quitus dans votre tableau de bord.
+    </p>
+    <div style="text-align: center;">
+      <button class="btn btn-secondary" onclick="closeModal('confirmationModal'); showPage('dashboard');">
+        Retour au tableau de bord
+      </button>
+    </div>
+  </div>
+</div>
+<div id="ajoutEtudiantModal" class="modal">
+    <div class="modal-content" style="max-width: 800px; max-height: 90vh; overflow-y: auto;">
+        <span class="close" onclick="closeModal('ajoutEtudiantModal')">&times;</span>
+        <h3>Ajouter un étudiant manuellement</h3>
+        
+        <form id="ajoutEtudiantManuelForm" onsubmit="ajouterEtudiantManuel(event)">
+            <!-- Informations obligatoires -->
+            <div style="background: #e8f4ff; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                <h4 style="margin: 0 0 10px 0; color: #667eea;">📋 Informations obligatoires</h4>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="addNumeroDossier">Numéro de dossier *</label>
+                    <input type="text" id="addNumeroDossier" placeholder="Ex: UDH123456" required>
+                </div>
+                <div class="form-group">
+                    <label for="addMatricule">Matricule</label>
+                    <input type="text" id="addMatricule" placeholder="Ex: 2024UDH001">
+                    <small>Laissez vide pour génération automatique</small>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="addNom">Nom *</label>
+                    <input type="text" id="addNom" required>
+                </div>
+                <div class="form-group">
+                    <label for="addPrenom">Prénom *</label>
+                    <input type="text" id="addPrenom" required>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="addDateNaissance">Date de naissance *</label>
+                    <input type="date" id="addDateNaissance" required>
+                </div>
+                <div class="form-group">
+                    <label for="addLieuNaissance">Lieu de naissance *</label>
+                    <input type="text" id="addLieuNaissance" required>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="addGenre">Genre *</label>
+                    <select id="addGenre" required>
+                        <option value="">Sélectionner...</option>
+                        <option value="masculin">Masculin</option>
+                        <option value="feminin">Féminin</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="addNationalite">Nationalité *</label>
+                    <input type="text" id="addNationalite" value="nigerienne" required>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="addAdresse">Adresse *</label>
+                <textarea id="addAdresse" rows="2" required></textarea>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="addTelephone">Téléphone *</label>
+                    <input type="tel" id="addTelephone" placeholder="+227 XX XX XX XX" required>
+                </div>
+                <div class="form-group">
+                    <label for="addEmail">Email *</label>
+                    <input type="email" id="addEmail" required>
+                </div>
+            </div>
+            
+            <!-- Informations optionnelles -->
+            <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                <h4 style="margin: 0 0 10px 0; color: #856404;">📚 Informations baccalauréat (optionnel)</h4>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="addTypeBac">Type de bac</label>
+                    <select id="addTypeBac">
+                        <option value="">Aucun</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="addLieuObtention">Lieu d'obtention</label>
+                    <input type="text" id="addLieuObtention">
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="addAnneeObtention">Année d'obtention</label>
+                    <input type="text" id="addAnneeObtention" placeholder="Ex: 2023-2024">
+                </div>
+                <div class="form-group">
+                    <label for="addMention">Mention</label>
+                    <select id="addMention">
+                        <option value="">Aucune</option>
+                        <option value="Passable">Passable</option>
+                        <option value="Assez Bien">Assez Bien</option>
+                        <option value="Bien">Bien</option>
+                        <option value="Très Bien">Très Bien</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="addStatut">Statut</label>
+                    <select id="addStatut">
+                        <option value="actif">Actif</option>
+                        <option value="inactif">Inactif</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="addPeutInscrire" checked> Peut s'inscrire
+                    </label>
+                </div>
+            </div>
+            
+            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 20px;">
+                ✅ Ajouter l'étudiant
+            </button>
+        </form>
+    </div>
+</div>
+<div id="inscriptionAdminModal" class="modal">
+    <div class="modal-content" style="max-width: 600px;">
+        <span class="close" onclick="closeModal('inscriptionAdminModal')">&times;</span>
+        <h3>Inscrire un étudiant</h3>
+        
+        <div id="infoEtudiantInscription" style="background: #e8f4ff; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+            <!-- Informations de l'étudiant -->
+        </div>
+        
+        <form id="inscriptionAdminForm" onsubmit="validerInscriptionAdmin(event)">
+            <input type="hidden" id="inscriptionEtudiantId">
+            
+            <!-- Plus besoin de sélectionner filière et niveau -->
+            
+            <div class="form-group">
+                <label for="inscriptionAnnee">Année universitaire *</label>
+                <select id="inscriptionAnnee" required>
+                    <option value="2024-2025">2024-2025</option>
+                    <option value="2025-2026">2025-2026</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="inscriptionModePaiement">Mode de paiement</label>
+                <select id="inscriptionModePaiement">
+                    <option value="">Non spécifié</option>
+                    <option value="especes">Espèces</option>
+                    <option value="mobile">Mobile Money</option>
+                    <option value="virement">Virement bancaire</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="inscriptionMontant">Montant payé</label>
+                <input type="number" id="inscriptionMontant" placeholder="Ex: 50000">
+            </div>
+            
+            <div class="form-group">
+                <label for="inscriptionStatutPaiement">Statut du paiement</label>
+                <select id="inscriptionStatutPaiement">
+                    <option value="en-attente">En attente</option>
+                    <option value="valide">Validé</option>
+                    <option value="refuse">Refusé</option>
+                </select>
+            </div>
+            
+            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 20px;">
+                Valider l'inscription
+            </button>
+        </form>
+    </div>
+</div>

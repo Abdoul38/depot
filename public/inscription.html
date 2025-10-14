@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inscription en Ligne - Université Djibo Hamani</title>
+    <link rel="stylesheet" href="Style.css">
+    <style>
+        .inscription-container {
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 30px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .search-section {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+
+        .search-tabs {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .search-tab {
+            flex: 1;
+            padding: 12px;
+            background: white;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .search-tab.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .search-form {
+            display: none;
+        }
+
+        .search-form.active {
+            display: block;
+        }
+
+        .info-card {
+            background: #e8f4ff;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+            margin-bottom: 20px;
+        }
+
+        .payment-methods {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .payment-method {
+            padding: 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .payment-method:hover {
+            border-color: #667eea;
+            background: #f8f9fa;
+        }
+
+        .payment-method.selected {
+            border-color: #28a745;
+            background: #d4edda;
+        }
+
+        .inscription-form {
+            display: none;
+            animation: fadeIn 0.5s;
+        }
+
+        .inscription-form.active {
+            display: block;
+        }
+      #recuSection {
+    animation: slideDown 0.5s ease;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+#recuSection button {
+    transition: all 0.3s ease;
+}
+
+#recuSection button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .etudiant-info {
+            background: #fff3cd;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 4px solid #ffc107;
+        }
+
+        .status-badge-inscription {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .status-open {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-closed {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .amount-display {
+            font-size: 32px;
+            font-weight: bold;
+            color: #667eea;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .confirmation-page {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .confirmation-page.active {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+
+        .confirmation-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+        }
+
+        .confirmation-card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .payment-instructions {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            text-align: left;
+        }
+
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            border-left: 4px solid #dc3545;
+        }
+
+        @media (max-width: 768px) {
+            .payment-methods {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="logo-section">
+                <img src="/uploads/logo-universite.png" alt="Logo Université" class="logo-image" onerror="this.style.display='none'">
+                <div class="logo-text">Université Djibo Hamani de Tahoua</div>
+            </div>
+            <nav class="nav-buttons">
+                <button class="btn btn-secondary" onclick="window.location.href='index.html'">🏠 Accueil Dépôt</button>
+            </nav>
+        </header>
+
+        <div class="inscription-container">
+            <div class="page-header">
+                <h1>🎓 Inscription en Ligne</h1>
+                <p>Année Universitaire 2024-2025</p>
+                <span class="status-badge-inscription status-open" id="statusInscription">Inscriptions Ouvertes</span>
+            </div>
+
+            <div class="info-card" id="infoCard">
+                <h3>ℹ️ Informations importantes</h3>
+                <ul style="margin: 10px 0; padding-left: 20px;">
+                    <li><strong>Nouveaux étudiants :</strong> Utilisez votre numéro de dossier</li>
+                    <li><strong>Anciens étudiants :</strong> Utilisez votre matricule</li>
+                    <li><strong>Important :</strong> Votre filière et niveau ont déjà été définis</li>
+                    <li><strong>Modes de paiement :</strong> Airtel Money, Moov Flooz, Orange Money, MyNita, Amanata</li>
+                </ul>
+            </div>
+
+            <div class="info-card" id="alertFermeture" style="display: none; background: #fff3cd; border-left: 4px solid #ffc107;">
+                <h3 style="color: #856404;">⚠️ Inscriptions fermées</h3>
+                <p id="messageFermeture" style="color: #856404; margin: 10px 0; font-size: 16px; line-height: 1.6;"></p>
+            </div>
+
+            <div class="search-section" id="searchSection">
+                <h3 style="margin-bottom: 20px; text-align: center;">Rechercher votre profil</h3>
+                
+                <div class="search-tabs">
+                    <div class="search-tab active" onclick="switchSearchTab('nouveau')">
+                        <strong>📋 Nouveau Étudiant</strong>
+                        <p style="font-size: 12px; margin-top: 5px;">Avec numéro de dossier</p>
+                    </div>
+                    <div class="search-tab" onclick="switchSearchTab('ancien')">
+                        <strong>🎓 Ancien Étudiant</strong>
+                        <p style="font-size: 12px; margin-top: 5px;">Avec matricule</p>
+                    </div>
+                </div>
+
+                <div id="search-nouveau" class="search-form active">
+                    <form onsubmit="rechercherNouveauEtudiant(event)">
+                        <div class="form-group">
+                            <label for="numeroDossier">Numéro de Dossier *</label>
+                            <input type="text" id="numeroDossier" placeholder="Ex: UDH123456" required>
+                            <small style="color: #666;">Votre numéro de dossier de candidature</small>
+                        </div>
+                        <div id="errorNouveauEtudiant"></div>
+                        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 15px;">
+                            🔍 Rechercher mon dossier
+                        </button>
+                    </form>
+                </div>
+
+                <div id="search-ancien" class="search-form">
+                    <form onsubmit="rechercherAncienEtudiant(event)">
+                        <div class="form-group">
+                            <label for="matricule">Matricule *</label>
+                            <input type="text" id="matricule" placeholder="Ex: 2023UDH001" required>
+                            <small style="color: #666;">Votre matricule étudiant</small>
+                        </div>
+                        <div id="errorAncienEtudiant"></div>
+                        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 15px;">
+                            🔍 Rechercher mon profil
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div id="inscriptionForm" class="inscription-form">
+                <div class="etudiant-info" id="etudiantInfo"></div>
+
+                <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin: 20px 0;">
+                    <h4 style="text-align: center; margin-bottom: 10px;">Montant à payer</h4>
+                    <div class="amount-display" id="montantAPayer">10 000 FCFA</div>
+                    <p style="text-align: center; color: #666; font-size: 14px;">
+                        Frais d'inscription
+                    </p>
+                </div>
+
+                <div style="margin-top: 30px;">
+                    <h4 style="margin-bottom: 15px;">💳 Mode de paiement *</h4>
+                    <div class="payment-methods" id="paymentMethods">
+                        <div class="payment-method" onclick="selectPayment('airtel')">
+                            <div style="font-size: 24px;">📱</div>
+                            <strong>Airtel Money</strong>
+                        </div>
+                        <div class="payment-method" onclick="selectPayment('moov')">
+                            <div style="font-size: 24px;">📱</div>
+                            <strong>Moov Flooz</strong>
+                        </div>
+                        <div class="payment-method" onclick="selectPayment('orange')">
+                            <div style="font-size: 24px;">📱</div>
+                            <strong>Orange Money</strong>
+                        </div>
+                        <div class="payment-method" onclick="selectPayment('mynita')">
+                            <div style="font-size: 24px;">💵</div>
+                            <strong>MyNita</strong>
+                        </div>
+                        <div class="payment-method" onclick="selectPayment('amanata')">
+                            <div style="font-size: 24px;">💵</div>
+                            <strong>Amanata</strong>
+                        </div>
+                        <div class="payment-method" onclick="selectPayment('autre')">
+                            <div style="font-size: 24px;">🧾</div>
+                            <strong>Autre</strong>
+                        </div>
+                    </div>
+                    <input type="hidden" id="selectedPayment">
+                </div>
+
+                <div class="form-group" id="phonePaymentGroup" style="display: none; margin-top: 20px;">
+                    <label for="phonePayment">Numéro de téléphone pour le paiement *</label>
+                    <input type="tel" id="phonePayment" placeholder="+227 XX XX XX XX">
+                    <small style="color: #666;">Le numéro qui servira pour le paiement mobile</small>
+                </div>
+
+                <div style="margin-top: 30px;">
+                    <button type="button" class="btn btn-primary" style="width: 100%; padding: 15px; font-size: 18px;" onclick="validerInscription()">
+                        ✅ Valider mon inscription
+                    </button>
+                </div>
+            </div>
+
+            <div id="confirmationPage" class="confirmation-page">
+    <div class="confirmation-card">
+        <div class="confirmation-icon" id="confirmationIcon">⏳</div>
+        <h2 id="confirmationTitle">Traitement en cours...</h2>
+        <div id="confirmationMessage"></div>
+        <div id="confirmationLoader" class="loader"></div>
+        
+        <!-- NOUVEAU: Section pour le téléchargement du reçu -->
+        <div id="recuSection" style="display: none; margin-top: 30px; padding: 20px; background: #d4edda; border-radius: 10px;">
+            <h4 style="color: #155724; margin-bottom: 15px;">📄 Votre Reçu d'Inscription</h4>
+            <p style="color: #155724; margin-bottom: 15px;">
+                Votre inscription a été validée avec succès ! Vous pouvez maintenant télécharger votre reçu d'inscription.
+            </p>
+            <button class="btn btn-primary" onclick="telechargerMonRecu()" style="padding: 12px 30px; font-size: 16px;">
+                📥 Télécharger mon Reçu
+            </button>
+        </div>
+        
+        <div id="confirmationActions" style="margin-top: 30px; display: none;">
+            <button class="btn btn-primary" onclick="window.location.reload()" style="margin-right: 10px;">
+                🔄 Nouvelle inscription
+            </button>
+            <button class="btn btn-secondary" onclick="window.location.href='index.html'">
+                🏠 Retour à l'accueil
+            </button>
+        </div>
+    </div>
+</div>
+        </div>
+    </div>
+
+    <script src="apiClient.js"></script>
+    <script>
+let currentEtudiant = null;
+let selectedPaymentMethod = null;
+
+async function verifierStatutInscriptions() {
+    try {
+        console.log('🔍 Vérification du statut des inscriptions...');
+        
+        const response = await fetch('/api/inscription/statut');
+        const data = await response.json();
+        
+        console.log('📊 Statut reçu:', data);
+        
+        if (data.success) {
+            const config = data.config;
+            
+            // Si les inscriptions sont fermées
+            if (!config.actif) {
+                // Masquer la section de recherche
+                document.getElementById('searchSection').style.display = 'none';
+                document.getElementById('inscriptionForm').classList.remove('active');
+                
+                // Masquer la carte d'info normale
+                document.getElementById('infoCard').style.display = 'none';
+                
+                // Afficher l'alerte de fermeture
+                const alertFermeture = document.getElementById('alertFermeture');
+                alertFermeture.style.display = 'block';
+                
+                // Afficher le message personnalisé
+                const messageFermeture = document.getElementById('messageFermeture');
+                messageFermeture.innerHTML = config.message_fermeture || 
+                    'Les inscriptions sont actuellement fermées. Veuillez réessayer plus tard.';
+                
+                // Mettre à jour le badge de statut
+                const statusBadge = document.getElementById('statusInscription');
+                statusBadge.textContent = 'Inscriptions Fermées';
+                statusBadge.classList.remove('status-open');
+                statusBadge.classList.add('status-closed');
+                
+                console.log('🔒 Inscriptions bloquées - Interface désactivée');
+                
+            } else {
+                // Les inscriptions sont ouvertes
+                document.getElementById('searchSection').style.display = 'block';
+                document.getElementById('infoCard').style.display = 'block';
+                document.getElementById('alertFermeture').style.display = 'none';
+                
+                const statusBadge = document.getElementById('statusInscription');
+                statusBadge.textContent = 'Inscriptions Ouvertes';
+                statusBadge.classList.remove('status-closed');
+                statusBadge.classList.add('status-open');
+                
+                console.log('✅ Inscriptions ouvertes - Interface activée');
+            }
+            
+            return config.actif;
+        }
+        
+        return false;
+        
+    } catch (error) {
+        console.error('❌ Erreur vérification statut:', error);
+        // En cas d'erreur, on bloque par sécurité
+        document.getElementById('searchSection').style.display = 'none';
+        document.getElementById('alertFermeture').style.display = 'block';
+        document.getElementById('messageFermeture').innerHTML = 
+            'Erreur lors de la vérification du statut des inscriptions. Veuillez réessayer plus tard.';
+        return false;
+    }
+}
+
+function switchSearchTab(type) {
+    document.querySelectorAll('.search-tab').forEach(tab => tab.classList.remove('active'));
+    document.querySelectorAll('.search-form').forEach(form => form.classList.remove('active'));
+    
+    event.target.closest('.search-tab').classList.add('active');
+    document.getElementById('search-' + type).classList.add('active');
+    
+    // Réinitialiser les messages d'erreur
+    document.getElementById('errorNouveauEtudiant').innerHTML = '';
+    document.getElementById('errorAncienEtudiant').innerHTML = '';
+}
+
+async function rechercherNouveauEtudiant(event) {
+    event.preventDefault();
+    
+    // ✅ VÉRIFIER D'ABORD SI LES INSCRIPTIONS SONT OUVERTES
+    const inscriptionsOuvertes = await verifierStatutInscriptions();
+    if (!inscriptionsOuvertes) {
+        UIHelpers.showError('Les inscriptions sont actuellement fermées');
+        return;
+    }
+    
+    const numeroDossier = document.getElementById('numeroDossier').value.trim();
+    const errorDiv = document.getElementById('errorNouveauEtudiant');
+    errorDiv.innerHTML = '';
+    
+    try {
+        const response = await fetch(`/api/inscription/rechercher-nouveau/${numeroDossier}`);
+        const data = await response.json();
+        
+        if (data.success && data.etudiant) {
+            // ✅ VÉRIFIER SI L'ÉTUDIANT PEUT S'INSCRIRE
+            if (!data.etudiant.peut_inscrire) {
+                errorDiv.innerHTML = '<div class="error-message">🚫 Vous n\'êtes pas autorisé à vous inscrire actuellement. Contactez l\'administration.</div>';
+                return;
+            }
+            
+            currentEtudiant = data.etudiant;
+            afficherFormulaire(data.etudiant);
+        } else {
+            errorDiv.innerHTML = '<div class="error-message">❌ Aucun dossier trouvé avec ce numéro. Veuillez vérifier votre numéro de dossier.</div>';
+        }
+    } catch (error) {
+        console.error('Erreur:', error);
+        errorDiv.innerHTML = '<div class="error-message">❌ Erreur lors de la recherche. Veuillez réessayer.</div>';
+    }
+}
+
+
+async function rechercherAncienEtudiant(event) {
+    event.preventDefault();
+    
+    // ✅ VÉRIFIER D'ABORD SI LES INSCRIPTIONS SONT OUVERTES
+    const inscriptionsOuvertes = await verifierStatutInscriptions();
+    if (!inscriptionsOuvertes) {
+        UIHelpers.showError('Les inscriptions sont actuellement fermées');
+        return;
+    }
+    
+    const matricule = document.getElementById('matricule').value.trim();
+    const errorDiv = document.getElementById('errorAncienEtudiant');
+    errorDiv.innerHTML = '';
+    
+    try {
+        const response = await fetch(`/api/inscription/rechercher-ancien/${matricule}`);
+        const data = await response.json();
+        
+        if (data.success && data.etudiant) {
+            // ✅ VÉRIFIER SI L'ÉTUDIANT PEUT S'INSCRIRE
+            if (!data.etudiant.peut_inscrire) {
+                errorDiv.innerHTML = '<div class="error-message">🚫 Vous n\'êtes pas autorisé à vous inscrire actuellement. Contactez l\'administration.</div>';
+                return;
+            }
+            
+            currentEtudiant = data.etudiant;
+            afficherFormulaire(data.etudiant);
+        } else {
+            errorDiv.innerHTML = '<div class="error-message">❌ Aucun étudiant trouvé avec ce matricule. Veuillez vérifier votre matricule.</div>';
+        }
+    } catch (error) {
+        console.error('Erreur:', error);
+        errorDiv.innerHTML = '<div class="error-message">❌ Erreur lors de la recherche. Veuillez réessayer.</div>';
+    }
+}
+document.addEventListener('DOMContentLoaded', async function() {
+    console.log('📄 Page d\'inscription chargée');
+    
+    // ✅ VÉRIFIER LE STATUT DÈS LE CHARGEMENT
+    await verifierStatutInscriptions();
+    
+    // Vérifier périodiquement (toutes les 30 secondes)
+    setInterval(verifierStatutInscriptions, 30000);
+});
+function afficherFormulaire(etudiant) {
+    document.getElementById('etudiantInfo').innerHTML = `
+        <h4>✅ Profil trouvé</h4>
+        <p><strong>Nom:</strong> ${etudiant.nom} ${etudiant.prenom}</p>
+        <p><strong>Filière:</strong> ${etudiant.filiere_libelle || etudiant.filiere}</p>
+        <p><strong>Niveau:</strong> ${etudiant.niveau}</p>
+        ${etudiant.matricule ? `<p><strong>Matricule:</strong> ${etudiant.matricule}</p>` : ''}
+        ${etudiant.numero_dossier ? `<p><strong>N° Dossier:</strong> ${etudiant.numero_dossier}</p>` : ''}
+    `;
+    
+    document.getElementById('searchSection').style.display = 'none';
+    document.getElementById('inscriptionForm').classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function selectPayment(method) {
+    selectedPaymentMethod = method;
+    document.querySelectorAll('.payment-method').forEach(pm => pm.classList.remove('selected'));
+    event.target.closest('.payment-method').classList.add('selected');
+    
+    if (['airtel', 'moov', 'orange'].includes(method)) {
+        document.getElementById('phonePaymentGroup').style.display = 'block';
+    } else {
+        document.getElementById('phonePaymentGroup').style.display = 'none';
+    }
+}
+
+function afficherPageConfirmation() {
+    document.getElementById('searchSection').style.display = 'active';
+    document.getElementById('inscriptionForm').classList.remove('active');
+    document.getElementById('confirmationPage').classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+async function validerInscription() {
+    if (!currentEtudiant || !selectedPaymentMethod) {
+        afficherPageConfirmation();
+        document.getElementById('confirmationIcon').textContent = '⚠️';
+        document.getElementById('confirmationTitle').textContent = 'Informations incomplètes';
+        document.getElementById('confirmationMessage').innerHTML = `
+            <p style="color: #856404; font-size: 16px;">Veuillez compléter toutes les informations :</p>
+            <ul style="text-align: left; display: inline-block; margin-top: 10px;">
+                ${!currentEtudiant ? '<li>Rechercher votre profil étudiant</li>' : ''}
+                ${!selectedPaymentMethod ? '<li>Sélectionner un mode de paiement</li>' : ''}
+            </ul>
+        `;
+        document.getElementById('confirmationLoader').style.display = 'none';
+        document.getElementById('confirmationActions').style.display = 'block';
+        return;
+    }
+    
+    const phonePayment = document.getElementById('phonePayment').value;
+    
+    if (['airtel', 'moov', 'orange'].includes(selectedPaymentMethod) && !phonePayment) {
+        afficherPageConfirmation();
+        document.getElementById('confirmationIcon').textContent = '📱';
+        document.getElementById('confirmationTitle').textContent = 'Numéro requis';
+        document.getElementById('confirmationMessage').innerHTML = '<p style="color: #856404; font-size: 16px;">Veuillez saisir votre numéro de téléphone pour le paiement mobile.</p>';
+        document.getElementById('confirmationLoader').style.display = 'none';
+        document.getElementById('confirmationActions').style.display = 'block';
+        return;
+    }
+    
+    afficherPageConfirmation();
+    
+    try {
+        if (['airtel', 'moov', 'orange'].includes(selectedPaymentMethod)) {
+            // Paiement mobile - logique existante
+            const paiementResponse = await fetch('/api/payment/initier', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    etudiant_id: currentEtudiant.id,
+                    annee_universitaire: '2024-2025',
+                    operateur: selectedPaymentMethod,
+                    telephone: phonePayment,
+                    montant: 10000
+                })
+            });
+            
+            const paiement = await paiementResponse.json();
+            
+            if (paiement.success) {
+                document.getElementById('confirmationIcon').textContent = '📱';
+                document.getElementById('confirmationTitle').textContent = 'Paiement initié';
+                document.getElementById('confirmationMessage').innerHTML = `
+                    <div class="payment-instructions">
+                        <p style="font-size: 16px; margin-bottom: 15px;"><strong>📞 Validez le paiement sur votre téléphone</strong></p>
+                        <p style="color: #666;">Un message vous a été envoyé au <strong>${phonePayment}</strong></p>
+                        <p style="color: #666; margin-top: 10px;">Composez le code USSD pour confirmer le paiement de <strong>10 000 FCFA</strong></p>
+                        <div style="margin-top: 20px; padding: 15px; background: #fff3cd; border-radius: 8px;">
+                            <p style="color: #856404; font-size: 14px;">⏰ En attente de confirmation...</p>
+                        </div>
+                    </div>
+                `;
+                verifierStatutPaiement(paiement.transaction_id);
+            } else {
+                document.getElementById('confirmationIcon').textContent = '❌';
+                document.getElementById('confirmationTitle').textContent = 'Erreur de paiement';
+                document.getElementById('confirmationMessage').innerHTML = `
+                    <p style="color: #dc3545; font-size: 16px;">${paiement.error || 'Erreur lors de l\'initiation du paiement'}</p>
+                `;
+                document.getElementById('confirmationLoader').style.display = 'none';
+                document.getElementById('confirmationActions').style.display = 'block';
+            }
+        } else {
+            // ========== MODIFICATION PRINCIPALE ICI ==========
+            const inscriptionResponse = await fetch('/api/inscription/valider', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    etudiant_id: currentEtudiant.id,
+                    annee_universitaire: '2024-2025',
+                    mode_paiement: selectedPaymentMethod,
+                    telephone_paiement: phonePayment,
+                    montant: 10000
+                })
+            });
+            
+            const inscription = await inscriptionResponse.json();
+            
+            if (inscription.success) {
+                // ✅ STOCKER L'ID DE L'INSCRIPTION POUR LE REÇU
+                window.inscriptionValideeId = inscription.inscription_id;
+                window.inscriptionValideeData = inscription.inscription;
+                
+                document.getElementById('confirmationIcon').textContent = '✅';
+                document.getElementById('confirmationTitle').textContent = 'Inscription enregistrée';
+                document.getElementById('confirmationLoader').style.display = 'none';
+                
+                const instructions = {
+                    'mynita': `
+                        <div class="payment-instructions">
+                            <h4>🏦 Instructions de paiement MyNita</h4>
+                            <ol style="text-align: left; margin-top: 15px;">
+                                <li>Rendez-vous dans votre agence MyNita la plus proche</li>
+                                <li>Présentez votre ${currentEtudiant.numero_dossier ? 'numéro de dossier: <strong>' + currentEtudiant.numero_dossier + '</strong>' : 'matricule: <strong>' + currentEtudiant.matricule + '</strong>'}</li>
+                                <li>Effectuez le paiement de <strong>10 000 FCFA</strong></li>
+                                <li>Conservez votre reçu de paiement</li>
+                            </ol>
+                        </div>
+                    `,
+                    'amanata': `
+                        <div class="payment-instructions">
+                            <h4>💵 Instructions de paiement Amanata</h4>
+                            <ol style="text-align: left; margin-top: 15px;">
+                                <li>Contactez votre agent Amanata habituel</li>
+                                <li>Communiquez-lui votre ${currentEtudiant.numero_dossier ? 'numéro de dossier: <strong>' + currentEtudiant.numero_dossier + '</strong>' : 'matricule: <strong>' + currentEtudiant.matricule + '</strong>'}</li>
+                                <li>Payez <strong>10 000 FCFA</strong> pour votre inscription</li>
+                                <li>Demandez une confirmation de transaction</li>
+                            </ol>
+                        </div>
+                    `,
+                    'autre': `
+                        <div class="payment-instructions">
+                            <h4>🧾 Instructions de paiement</h4>
+                            <p style="margin-top: 15px;">Contactez l'administration de l'université pour connaître les modalités de paiement.</p>
+                            <p style="margin-top: 10px;"><strong>Référence:</strong> ${currentEtudiant.numero_dossier || currentEtudiant.matricule}</p>
+                            <p style="margin-top: 10px;"><strong>Montant:</strong> 10 000 FCFA</p>
+                        </div>
+                    `
+                };
+                
+                document.getElementById('confirmationMessage').innerHTML = instructions[selectedPaymentMethod] || '<p>Inscription enregistrée avec succès!</p>';
+                
+                // ✅ AFFICHER LA SECTION REÇU
+                document.getElementById('recuSection').style.display = 'block';
+                document.getElementById('confirmationActions').style.display = 'block';
+            } else {
+                document.getElementById('confirmationIcon').textContent = '❌';
+                document.getElementById('confirmationTitle').textContent = 'Erreur';
+                document.getElementById('confirmationMessage').innerHTML = `<p style="color: #dc3545;">${inscription.error || 'Erreur lors de l\'inscription'}</p>`;
+                document.getElementById('confirmationLoader').style.display = 'none';
+                document.getElementById('confirmationActions').style.display = 'block';
+            }
+        }
+    } catch (error) {
+        console.error('Erreur:', error);
+        document.getElementById('confirmationIcon').textContent = '❌';
+        document.getElementById('confirmationTitle').textContent = 'Erreur système';
+        document.getElementById('confirmationMessage').innerHTML = '<p style="color: #dc3545;">Une erreur est survenue. Veuillez réessayer.</p>';
+        document.getElementById('confirmationLoader').style.display = 'none';
+        document.getElementById('confirmationActions').style.display = 'block';
+    }
+}
+
+async function telechargerMonRecu() {
+    try {
+        if (!window.inscriptionValideeData) {
+            UIHelpers.showError('Données d\'inscription non disponibles');
+            return;
+        }
+        
+        UIHelpers.showLoading(true);
+        
+        // Utiliser la fonction de génération de reçu existante dans apiClient.js
+        await genererRecuInscription(window.inscriptionValideeData);
+        
+        UIHelpers.showSuccess('Reçu téléchargé avec succès !');
+        
+    } catch (error) {
+        console.error('Erreur téléchargement reçu:', error);
+        UIHelpers.showError('Erreur lors du téléchargement du reçu');
+    } finally {
+        UIHelpers.showLoading(false);
+    }
+}
+
+async function verifierStatutPaiement(transactionId) {
+    const maxTentatives = 20;
+    let tentatives = 0;
+    
+    const interval = setInterval(async () => {
+        try {
+            const response = await fetch(`/api/payment/statut/${transactionId}`);
+            const data = await response.json();
+            
+            if (data.statut === 'reussi') {
+                clearInterval(interval);
+                
+                // ✅ STOCKER LES DONNÉES D'INSCRIPTION
+                if (data.inscription) {
+                    window.inscriptionValideeData = data.inscription;
+                }
+                
+                document.getElementById('confirmationIcon').textContent = '🎉';
+                document.getElementById('confirmationTitle').textContent = 'Paiement validé !';
+                document.getElementById('confirmationMessage').innerHTML = `
+                    <div style="background: #d4edda; padding: 20px; border-radius: 10px; margin-top: 20px;">
+                        <h4 style="color: #155724;">✅ Inscription confirmée</h4>
+                        <p style="color: #155724; margin-top: 10px;">Votre inscription pour l'année universitaire 2024-2025 est validée.</p>
+                        <p style="color: #155724; margin-top: 10px;"><strong>Nom:</strong> ${currentEtudiant.nom} ${currentEtudiant.prenom}</p>
+                        <p style="color: #155724;"><strong>Filière:</strong> ${currentEtudiant.filiere_libelle || currentEtudiant.filiere}</p>
+                    </div>
+                `;
+                document.getElementById('confirmationLoader').style.display = 'none';
+                
+                // ✅ AFFICHER LA SECTION REÇU
+                document.getElementById('recuSection').style.display = 'block';
+                document.getElementById('confirmationActions').style.display = 'block';
+                
+            } else if (data.statut === 'echoue') {
+                clearInterval(interval);
+                document.getElementById('confirmationIcon').textContent = '❌';
+                document.getElementById('confirmationTitle').textContent = 'Paiement échoué';
+                document.getElementById('confirmationMessage').innerHTML = '<p style="color: #dc3545;">Le paiement a échoué. Veuillez réessayer.</p>';
+                document.getElementById('confirmationLoader').style.display = 'none';
+                document.getElementById('confirmationActions').style.display = 'block';
+            }
+            
+            tentatives++;
+            if (tentatives >= maxTentatives) {
+                clearInterval(interval);
+                document.getElementById('confirmationIcon').textContent = '⏰';
+                document.getElementById('confirmationTitle').textContent = 'Délai dépassé';
+                document.getElementById('confirmationMessage').innerHTML = `
+                    <p style="color: #856404;">Le délai de confirmation a été dépassé.</p>
+                    <p style="color: #856404; margin-top: 10px;">Veuillez vérifier l'état de votre paiement auprès de votre opérateur ou contacter l'administration.</p>
+                `;
+                document.getElementById('confirmationLoader').style.display = 'none';
+                document.getElementById('confirmationActions').style.display = 'block';
+            }
+        } catch (error) {
+            console.error('Erreur:', error);
+        }
+    }, 5000);
+}
+
+// Initialisation au chargement de la page
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Page d\'inscription chargée');
+});
+    </script>
+</body>
+</html>

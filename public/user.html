@@ -1,0 +1,1312 @@
+<!-- Page d'inscription -->
+<div id="inscription" class="page">
+    <h2 style="text-align: center; margin-bottom: 30px;">Créer un compte</h2>
+    
+    <form id="registerForm" onsubmit="register(event)">
+        <div class="form-row">
+            <div class="form-group">
+                <label for="regNom">Nom complet *</label>
+                <input type="text" id="regNom" required>
+            </div>
+            <div class="form-group">
+                <label for="regEmail">Email *</label>
+                <input type="email" id="regEmail" required>
+            </div>
+        </div>
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label for="regTelephone">Numéro de téléphone *</label>
+                <input type="tel" id="regTelephone" required>
+            </div>
+            <div class="form-group">
+                <label for="regDateNaissance">Date de naissance</label>
+                <input type="date" id="regDateNaissance">
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label for="regMotDePasse">Mot de passe *</label>
+            <input type="password" id="regMotDePasse" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="regConfirmMotDePasse">Confirmer le mot de passe *</label>
+            <input type="password" id="regConfirmMotDePasse" required>
+        </div>
+        
+        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 20px;">Créer mon compte</button>
+    </form>
+</div>
+
+<!-- Page de connexion -->
+<div id="connexion" class="page">
+    <h2 style="text-align: center; margin-bottom: 30px;">Se connecter</h2>
+    
+    <form id="loginForm" onsubmit="login(event)">
+        <div class="form-group">
+            <label for="loginIdentifiant">Email ou Téléphone *</label>
+            <input type="text" id="loginIdentifiant" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="loginMotDePasse">Mot de passe *</label>
+            <input type="password" id="loginMotDePasse" required>
+        </div>
+        
+        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 20px;">Se connecter</button>
+        
+        <p style="text-align: center; margin-top: 20px;">
+            <a href="#" onclick="showPage('inscription')" style="color: #667eea; text-decoration: none;">Pas encore de compte ? S'inscrire</a>
+        </p>
+    </form>
+</div>
+
+<!-- Tableau de bord utilisateur -->
+<div id="dashboard" class="page">
+    <div class="welcome-page">
+        <div class="welcome-header">
+            <h1 id="userWelcomeTitle">Bienvenue à l'Université Djibo Hamani</h1>
+            <p>Plateforme moderne de gestion des inscriptions et dossiers étudiants</p>
+        </div>
+
+        <div class="features-grid">
+            <div class="feature-card" onclick="startApplicationProcess()" style="cursor: pointer; transition: transform 0.3s;">
+                <div class="feature-icon">📤</div>
+                <h3>Nouveau Dossier</h3>
+                <p>Déposez votre dossier en quelques étapes simples avec un suivi en temps réel</p>
+            </div>
+
+            <div class="feature-card" onclick="navigateToUserPage('mesDossiers')" style="cursor: pointer; transition: transform 0.3s;">
+                <div class="feature-icon">📋</div>
+                <h3>Mes Dossiers</h3>
+                <p>Consultez l'état de vos dossiers déposés et téléchargez vos documents</p>
+            </div>
+
+            <div class="feature-card" onclick="navigateToUserPage('profil')" style="cursor: pointer; transition: transform 0.3s;">
+                <div class="feature-icon">👤</div>
+                <h3>Mon Profil</h3>
+                <p>Modifiez vos informations personnelles et paramètres de compte</p>
+            </div>
+        </div>
+
+        <div class="action-buttons" style="margin-top: 40px;">
+            <button class="btn btn-primary" onclick="startApplicationProcess()">📤 Nouveau Dépôt</button>
+            <button class="btn btn-secondary" onclick="navigateToUserPage('mesDossiers')">📋 Voir Mes Dossiers</button>
+        </div>
+    </div>
+</div>
+
+<!-- Processus de dépôt - Étape 1 -->
+<div id="etape1" class="page">
+    <div class="step-indicator">
+        <div class="step active">
+            <div class="step-number">1</div>
+            <span>Informations personnelles</span>
+        </div>
+        <div class="step">
+            <div class="step-number">2</div>
+            <span>Choix de filière</span>
+        </div>
+        <div class="step">
+            <div class="step-number">3</div>
+            <span>Documents</span>
+        </div>
+        <div class="step">
+            <div class="step-number">4</div>
+            <span>Résumé</span>
+        </div>
+    </div>
+
+    <div class="form-container">
+        <h2>Étape 1 : Informations personnelles</h2>
+        
+        <form id="etape1Form" onsubmit="nextStep(event, 2)">
+            <div class="form-section">
+                <h3 class="section-title">Identité</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="nom">Nom <span class="required">*</span></label>
+                        <input type="text" id="nom" required placeholder="Votre nom">
+                    </div>
+                    <div class="form-group">
+                        <label for="prenom">Prénom <span class="required">*</span></label>
+                        <input type="text" id="prenom" required placeholder="Votre prénom">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="dateNaissance">Date de naissance <span class="required">*</span></label>
+                        <input type="date" id="dateNaissance" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="lieuNaissance">Lieu de naissance <span class="required">*</span></label>
+                        <input type="text" id="lieuNaissance" required placeholder="Ville, région">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="nationalite">Nationalité <span class="required">*</span></label>
+                        <select id="nationalite" required>
+                            <option value="">Sélectionner...</option>
+                            <option value="nigerienne">Nigérienne</option>
+                            <option value="francaise">Française</option>
+                            <option value="autre">Autre</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="genre">Genre <span class="required">*</span></label>
+                        <select id="genre" required>
+                            <option value="">Sélectionner...</option>
+                            <option value="masculin">Masculin</option>
+                            <option value="feminin">Féminin</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3 class="section-title">Adresse</h3>
+                <div class="form-row full">
+                    <div class="form-group">
+                        <label for="adresse">Adresse complète <span class="required">*</span></label>
+                        <textarea id="adresse" rows="3" required placeholder="Rue, quartier, ville..."></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3 class="section-title">Baccalauréat</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="typeBac">Type de Bac <span class="required">*</span> <small>(Filtre les filières disponibles)</small></label>
+                        <select id="typeBac" required>
+                            <option value="">Chargement des types de bac...</option>
+                        </select>
+                        <div class="form-hint">
+                            <small>Sélectionnez votre type de bac pour voir les filières compatibles à l'étape suivante</small>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="lieuObtention">Lieu d'obtention <span class="required">*</span></label>
+                        <select id="lieuObtention" required>
+                            <option value="">Sélectionner...</option>
+                            <option value="Dosso">Dosso</option>
+                            <option value="Niamey">Niamey</option>
+                            <option value="Tahoua">Tahoua</option>
+                            <option value="Agadez">Agadez</option>
+                            <option value="Maradi">Maradi</option>
+                            <option value="Tillabéri">Tillabéri</option>
+                            <option value="Zinder">Zinder</option>
+                            <option value="Diffa">Diffa</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="anneeObtention">Année d'Obtention <span class="required">*</span></label>
+                        <select id="anneeObtention" required>
+                            <option value="">Sélectionner...</option>
+                            <option value="2024-2025">2024-2025</option>
+                            <option value="2025-2026">2025-2026</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="mention">Mention <span class="required">*</span></label>
+                        <select id="mention" required>
+                            <option value="">Sélectionner...</option>
+                            <option value="Passable">Passable</option>
+                            <option value="Bien">Bien</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3 class="section-title">Contact</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="telephone">Téléphone <span class="required">*</span></label>
+                        <input type="tel" id="telephone" required placeholder="+227 XX XX XX XX">
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email <span class="required">*</span></label>
+                        <input type="email" id="email" required placeholder="exemple@email.com">
+                    </div>
+                </div>
+            </div>
+
+            <div class="info-box">
+                <strong>Informations importantes</strong>
+                <p>Assurez-vous que toutes les informations sont exactes et complètes. Elles seront utilisées pour votre dossier définitif.</p>
+            </div>
+
+            <div class="button-group">
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Étape suivante</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Processus de dépôt - Étape 2 -->
+<div class="page" id="etape2">
+    <div class="step-indicator">
+        <div class="step completed">
+            <div class="step-number">1</div>
+            <span>Informations personnelles</span>
+        </div>
+        <div class="step active">
+            <div class="step-number">2</div>
+            <span>Choix de filière</span>
+        </div>
+        <div class="step">
+            <div class="step-number">3</div>
+            <span>Documents</span>
+        </div>
+        <div class="step">
+            <div class="step-number">4</div>
+            <span>Résumé</span>
+        </div>
+    </div>
+
+    <div class="form-container">
+        <h2>Étape 2 : Choix de filière</h2>
+        
+        <div id="rappelTypeBac" style="background: linear-gradient(135deg, #e8f4ff, #f0f8ff); padding: 15px; border-radius: 8px; margin-bottom: 30px; border-left: 4px solid #667eea; display: none;">
+            <h4 style="margin: 0 0 10px 0; color: #667eea;">Type de bac sélectionné</h4>
+            <p id="typeBacSelectionne" style="margin: 0; font-weight: 600;">-</p>
+            <small style="color: #666;">Les filières ci-dessous sont compatibles avec votre type de bac</small>
+        </div>
+        
+        <form id="etape2Form" onsubmit="nextStep(event, 3)">
+            <div class="form-section">
+                <h3 class="section-title">Vos choix de formation</h3>
+                
+                <div class="form-group">
+                    <label for="premierChoix">Premier choix <span class="required">*</span> <span style="color: #28a745; font-weight: bold; font-size: 0.85em;">(Priorité 1)</span></label>
+                    <select id="premierChoix" required>
+                        <option value="">Chargement des filières compatibles...</option>
+                    </select>
+                    <div class="form-hint">
+                        <small>Votre choix principal - privilégié lors de l'affectation</small>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="deuxiemeChoix">Deuxième choix <span class="required">*</span> <span style="color: #ffc107; font-weight: bold; font-size: 0.85em;">(Priorité 2)</span></label>
+                    <select id="deuxiemeChoix" required>
+                        <option value="">Sélectionner d'abord le premier choix</option>
+                    </select>
+                    <div class="form-hint">
+                        <small>Choix de secours en cas de non-acceptation du premier</small>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="troisiemeChoix">Troisième choix <span class="required">*</span> <span style="color: #dc3545; font-weight: bold; font-size: 0.85em;">(Priorité 3)</span></label>
+                    <select id="troisiemeChoix" required>
+                        <option value="">Sélectionner d'abord les deux premiers choix</option>
+                    </select>
+                    <div class="form-hint">
+                        <small>Dernier choix de sécurité</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="info-box" style="background: linear-gradient(135deg, #fff3cd, #fffacd); border-left-color: #ffc107;">
+                <strong style="color: #856404;">Conseils pour vos choix</strong>
+                <ul style="margin: 10px 0 0 20px; color: #856404; font-size: 0.95em;">
+                    <li>Classez vos choix par ordre de préférence réelle</li>
+                    <li>Assurez-vous que les trois filières sont différentes</li>
+                </ul>
+            </div>
+
+            <div class="button-group">
+                <button type="button" class="btn btn-secondary" onclick="showPage('etape1')">Précédent</button>
+                <button type="submit" class="btn btn-primary" style="flex: 1;">Étape suivante</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Processus de dépôt - Étape 3 -->
+<div id="etape3" class="page">
+    <div class="step-indicator">
+        <div class="step completed">
+            <div class="step-number">1</div>
+            <span>Informations personnelles</span>
+        </div>
+        <div class="step completed">
+            <div class="step-number">2</div>
+            <span>Choix de filière</span>
+        </div>
+        <div class="step active">
+            <div class="step-number">3</div>
+            <span>Documents</span>
+        </div>
+        <div class="step">
+            <div class="step-number">4</div>
+            <span>Résumé</span>
+        </div>
+    </div>
+
+    <div class="form-container">
+        <h2>Étape 3 : Documents requis</h2>
+        
+        <form id="etape3Form" onsubmit="nextStep(event, 4)">
+            <div class="form-section">
+                <h3 class="section-title">Téléchargement de documents</h3>
+                
+                <div class="form-group">
+                    <label>Photo d'identité <span class="required">*</span></label>
+                    <div class="file-upload" onclick="document.getElementById('photoIdentite').click()">
+                        <div class="file-upload-icon">📷</div>
+                        <p>Cliquez pour télécharger votre photo d'identité</p>
+                        <p style="font-size: 12px; color: #666;">Format JPG, PNG - Max 2MB</p>
+                    </div>
+                    <input type="file" id="photoIdentite" style="display: none;" accept="image/*" required onchange="afficherApercuDocument('photoIdentite', this)">
+                    <div id="apercu-photoIdentite" class="file-preview" style="display: none;"></div>
+                </div>
+
+                <div class="form-group">
+                    <label>Pièce d'identité (recto-verso) <span class="required">*</span></label>
+                    <div class="file-upload" onclick="document.getElementById('pieceIdentite').click()">
+                        <div class="file-upload-icon">🆔</div>
+                        <p>Extrait de naissance</p>
+                        <p style="font-size: 12px; color: #666;">Format PDF, JPG, PNG - Max 5MB</p>
+                    </div>
+                    <input type="file" id="pieceIdentite" style="display: none;" accept="image/*,application/pdf" required onchange="afficherApercuDocument('pieceIdentite', this)">
+                    <div id="apercu-pieceIdentite" class="file-preview" style="display: none;"></div>
+                </div>
+
+                <div class="form-group">
+                    <label>Diplôme de baccalauréat <span class="required">*</span></label>
+                    <div class="file-upload" onclick="document.getElementById('diplomeBac').click()">
+                        <div class="file-upload-icon">🎓</div>
+                        <p>Télécharger votre diplôme de baccalauréat</p>
+                        <p style="font-size: 12px; color: #666;">Format PDF, JPG, PNG - Max 5MB</p>
+                    </div>
+                    <input type="file" id="diplomeBac" style="display: none;" accept="image/*,application/pdf" required onchange="afficherApercuDocument('diplomeBac', this)">
+                    <div id="apercu-diplomeBac" class="file-preview" style="display: none;"></div>
+                </div>
+
+                <div class="form-group">
+                    <label>Relevé de notes du baccalauréat <span class="required">*</span></label>
+                    <div class="file-upload" onclick="document.getElementById('releve').click()">
+                        <div class="file-upload-icon">📊</div>
+                        <p>Télécharger votre relevé de notes</p>
+                        <p style="font-size: 12px; color: #666;">Format PDF, JPG, PNG - Max 5MB</p>
+                    </div>
+                    <input type="file" id="releve" style="display: none;" accept="image/*,application/pdf" required onchange="afficherApercuDocument('releve', this)">
+                    <div id="apercu-releve" class="file-preview" style="display: none;"></div>
+                </div>
+
+                <div class="form-group">
+                    <label>Certificat de nationalité</label>
+                    <div class="file-upload" onclick="document.getElementById('certificatNationalite').click()">
+                        <div class="file-upload-icon">🌍</div>
+                        <p>Télécharger votre certificat de nationalité (optionnel)</p>
+                        <p style="font-size: 12px; color: #666;">Format PDF, JPG, PNG - Max 5MB</p>
+                    </div>
+                    <input type="file" id="certificatNationalite" style="display: none;" accept="image/*,application/pdf" onchange="afficherApercuDocument('certificatNationalite', this)">
+                    <div id="apercu-certificatNationalite" class="file-preview" style="display: none;"></div>
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button type="button" class="btn btn-secondary" onclick="showPage('etape2')">Précédent</button>
+                <button type="submit" class="btn btn-primary" style="flex: 1;">Étape suivante</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Processus de dépôt - Étape 4 -->
+<div id="etape4" class="page">
+    <div class="step-indicator">
+        <div class="step completed">
+            <div class="step-number">1</div>
+            <span>Informations personnelles</span>
+        </div>
+        <div class="step completed">
+            <div class="step-number">2</div>
+            <span>Choix de filière</span>
+        </div>
+        <div class="step completed">
+            <div class="step-number">3</div>
+            <span>Documents</span>
+        </div>
+        <div class="step active">
+            <div class="step-number">4</div>
+            <span>Résumé</span>
+        </div>
+    </div>
+
+    <div class="form-container">
+        <h2>Étape 4 : Résumé et validation</h2>
+        
+        <div style="background: #f8f9fa; padding: 25px; border-radius: 15px; margin-bottom: 30px;">
+            <h3 style="color: #667eea; margin-bottom: 20px;">Résumé complet de votre dossier</h3>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                <div>
+                    <h4 style="color: #333; margin-bottom: 10px;">Informations personnelles</h4>
+                    <div style="background: white; padding: 15px; border-radius: 8px;">
+                        <p id="resumeNomPrenom" style="margin: 5px 0; font-weight: 600;"></p>
+                        <p id="resumeNaissance" style="margin: 5px 0;"></p>
+                        <p id="resumeContact" style="margin: 5px 0;"></p>
+                        <p style="margin: 5px 0;"><strong>Nationalité:</strong> <span id="resumeNationalite"></span></p>
+                        <p style="margin: 5px 0;"><strong>Genre:</strong> <span id="resumeGenre"></span></p>
+                        <p style="margin: 5px 0;"><strong>Adresse:</strong> <span id="resumeAdresse"></span></p>
+                    </div>
+                </div>
+                
+                <div>
+                    <h4 style="color: #333; margin-bottom: 10px;">Informations baccalauréat</h4>
+                    <div style="background: white; padding: 15px; border-radius: 8px;" id="resumeBac"></div>
+                </div>
+            </div>
+            
+            <div style="margin-top: 20px;">
+                <h4 style="color: #333; margin-bottom: 10px;">Choix de formation</h4>
+                <div style="background: white; padding: 15px; border-radius: 8px;" id="resumeFormation"></div>
+            </div>
+            
+            <div style="margin-top: 20px;">
+                <h4 style="color: #333; margin-bottom: 10px;">Documents fournis</h4>
+                <div id="listeDocuments" style="background: white; padding: 15px; border-radius: 8px;"></div>
+            </div>
+        </div>
+        
+        <div class="info-box">
+            <strong>Vérification importante</strong>
+            <p>Veuillez vérifier attentivement toutes les informations avant de valider votre dossier. Une fois validé, vous recevrez un quitus que vous pourrez télécharger.</p>
+        </div>
+        
+        <form id="etape4Form" onsubmit="submitApplication(event)">
+            <div style="display: flex; align-items: center; margin-bottom: 30px;">
+                <input type="checkbox" id="confirmationDonnees" required style="margin-right: 10px; transform: scale(1.5);">
+                <label for="confirmationDonnees" style="cursor: pointer;">
+                    Je certifie que toutes les informations fournies sont exactes et complètes
+                </label>
+            </div>
+            
+            <div class="button-group">
+                <button type="button" class="btn btn-secondary" onclick="showPage('etape3')">Précédent</button>
+                <button type="submit" class="btn btn-primary" style="flex: 1;">Valider mon dossier</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- PAGE DE CONFIRMATION - AFFICHÉE APRÈS SOUMISSION -->
+<!-- Confirmation d'inscription - Affichée après soumission -->
+<div id="confirmationInscription" class="page">
+    <div style="text-align: center; margin-bottom: 40px;">
+        <div style="font-size: 80px; margin-bottom: 20px;">✅</div>
+        <h2 style="color: #28a745; border: none; padding: 0;">Dossier soumis avec succès!</h2>
+        <p style="color: #666; font-size: 1.1em; margin-top: 10px;">Voici le résumé de votre préinscription</p>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; max-width: 1200px; margin: 0 auto;">
+        <!-- Colonne gauche: Informations -->
+        <div>
+            <div style="background: white; padding: 25px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); margin-bottom: 20px;">
+                <h3 style="color: #667eea; margin-bottom: 20px; border-bottom: 2px solid #667eea; padding-bottom: 10px;">Informations de l'étudiant</h3>
+                
+                <div style="display: grid; gap: 15px;">
+                    <div>
+                        <p style="margin: 0; color: #999; font-size: 0.9em;">Nom Complet</p>
+                        <p style="margin: 5px 0 0 0; font-weight: 600; font-size: 1.1em;" id="confirmNomPrenom">-</p>
+                    </div>
+                    
+                    <div>
+                        <p style="margin: 0; color: #999; font-size: 0.9em;">Numéro de Dossier</p>
+                        <p style="margin: 5px 0 0 0; font-weight: 600; font-family: monospace; font-size: 1.1em; color: #667eea;" id="confirmNumeroDossier">-</p>
+                    </div>
+                    
+                    <div>
+                        <p style="margin: 0; color: #999; font-size: 0.9em;">Email</p>
+                        <p style="margin: 5px 0 0 0; font-weight: 600;" id="confirmEmail">-</p>
+                    </div>
+                    
+                    <div>
+                        <p style="margin: 0; color: #999; font-size: 0.9em;">Téléphone</p>
+                        <p style="margin: 5px 0 0 0; font-weight: 600;" id="confirmTelephone">-</p>
+                    </div>
+                    
+                    <div>
+                        <p style="margin: 0; color: #999; font-size: 0.9em;">Date de Naissance</p>
+                        <p style="margin: 5px 0 0 0; font-weight: 600;" id="confirmDateNaissance">-</p>
+                    </div>
+                </div>
+            </div>
+
+            <div style="background: white; padding: 25px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.1);">
+                <h3 style="color: #667eea; margin-bottom: 20px; border-bottom: 2px solid #667eea; padding-bottom: 10px;">Choix de Formation</h3>
+                
+                <div style="display: grid; gap: 15px;">
+                    <div style="padding: 12px; background: #d4edda; border-radius: 8px; border-left: 4px solid #28a745;">
+                        <p style="margin: 0; color: #666; font-size: 0.85em;">Premier choix (Priorité 1)</p>
+                        <p style="margin: 5px 0 0 0; font-weight: 600; color: #155724;" id="confirmPremierChoix">-</p>
+                    </div>
+                    
+                    <div style="padding: 12px; background: #fff3cd; border-radius: 8px; border-left: 4px solid #ffc107;">
+                        <p style="margin: 0; color: #666; font-size: 0.85em;">Deuxième choix (Priorité 2)</p>
+                        <p style="margin: 5px 0 0 0; font-weight: 600; color: #856404;" id="confirmDeuxiemeChoix">-</p>
+                    </div>
+                    
+                    <div style="padding: 12px; background: #f8d7da; border-radius: 8px; border-left: 4px solid #dc3545;">
+                        <p style="margin: 0; color: #666; font-size: 0.85em;">Troisième choix (Priorité 3)</p>
+                        <p style="margin: 5px 0 0 0; font-weight: 600; color: #721c24;" id="confirmTroisiemeChoix">-</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Colonne droite: Documents et Actions -->
+        <div>
+            <div style="background: white; padding: 25px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); margin-bottom: 20px;">
+                <h3 style="color: #667eea; margin-bottom: 20px; border-bottom: 2px solid #667eea; padding-bottom: 10px;">Documents Téléchargeables</h3>
+                
+                <div id="confirmDocuments" style="display: grid; gap: 10px;">
+                    <!-- Les documents seront générés dynamiquement -->
+                </div>
+            </div>
+
+            <div style="background: linear-gradient(135deg, #e8f4ff, #f0f8ff); padding: 25px; border-radius: 15px; border-left: 4px solid #667eea;">
+                <h3 style="color: #667eea; margin-bottom: 15px;">Prochaines Étapes</h3>
+                <ol style="margin: 0; padding-left: 20px; color: #555; line-height: 1.8;">
+                    <li><strong>Téléchargez votre quitus</strong> de préinscription (bouton ci-dessous)</li>
+                    <li><strong>Imprimez</strong> votre quitus et vos documents</li>
+                    <li><strong>Déposez physiquement</strong> votre dossier au Service Central de la Scolarité</li>
+                    <li><strong>Recevez confirmation</strong> de l'acceptation de votre dossier</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+
+    <!-- Boutons d'action -->
+    <div style="display: flex; gap: 15px; justify-content: center; margin-top: 40px; flex-wrap: wrap;">
+        <button class="btn btn-primary" id="btnTelechargerQuitusConfirm" style="padding: 15px 30px; font-size: 1.05em;">
+            📄 Télécharger mon Quitus
+        </button>
+        <button class="btn btn-secondary" onclick="navigateToUserPage('mesDossiers')" style="padding: 15px 30px; font-size: 1.05em;">
+            📋 Voir Mes Dossiers
+        </button>
+        <button class="btn btn-secondary" onclick="navigateToUserPage('dashboard')" style="padding: 15px 30px; font-size: 1.05em;">
+            🏠 Retour à l'Accueil
+        </button>
+    </div>
+</div>
+
+
+
+            <!-- Page Mes dossiers -->
+                   <!-- Page Mes dossiers -->
+            <div id="mesDossiers" class="page">
+                <h2 style="margin-bottom: 30px;">Mes dossiers</h2>
+                
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Date de dépôt</th>
+                            <th>Nom et Prenom</th>
+                            <th>Numero dossier</th>
+                            <th>Statut</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableauDossiers">
+                        <tr>
+                            <td colspan="5" style="text-align: center; padding: 40px; color: #666;">
+                                Aucun dossier déposé pour le moment
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+           <!-- Page de modification de dossier -->
+            <!-- Modifier la page de modification de dossier -->
+<!-- Page de modification de dossier - À REMPLACER COMPLÈTEMENT dans user.html -->
+<div id="modifierDossier" class="page">
+    <h2 style="margin-bottom: 30px;">Modifier mon dossier</h2>
+    
+    <div style="background: #d1ecf1; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #17a2b8;">
+        <strong>ℹ️ Information :</strong> Vous pouvez modifier votre dossier à tout moment, quel que soit son statut actuel.
+        <ul style="margin: 10px 0 0 20px; padding: 0;">
+            <li>Si votre dossier est <strong>approuvé</strong>, la modification le remettra en <strong>attente de validation</strong></li>
+            <li>Si votre dossier est <strong>rejeté</strong>, vous pouvez le corriger et le soumettre à nouveau</li>
+            <li>Si votre dossier est <strong>en attente</strong>, vous pouvez le modifier librement</li>
+        </ul>
+    </div>
+
+    <form id="modificationDossierForm" onsubmit="soumettreModificationDossier(event)">
+        <input type="hidden" id="modifDossierId">
+        
+        <!-- Informations personnelles -->
+        <h3 style="color: #667eea; margin: 30px 0 20px;">Informations personnelles</h3>
+        <div class="form-row">
+            <div class="form-group">
+                <label for="modifNom">Nom *</label>
+                <input type="text" id="modifNom" required>
+            </div>
+            <div class="form-group">
+                <label for="modifPrenom">Prénom *</label>
+                <input type="text" id="modifPrenom" required>
+            </div>
+        </div>
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label for="modifDateNaissance">Date de naissance *</label>
+                <input type="date" id="modifDateNaissance" required>
+            </div>
+            <div class="form-group">
+                <label for="modifLieuNaissance">Lieu de naissance *</label>
+                <input type="text" id="modifLieuNaissance" required>
+            </div>
+        </div>
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label for="modifNationalite">Nationalité *</label>
+                <input type="text" id="modifNationalite" required>
+            </div>
+            <div class="form-group">
+                <label for="modifGenre">Genre *</label>
+                <select id="modifGenre" required>
+                    <option value="">Sélectionner...</option>
+                    <option value="masculin">Masculin</option>
+                    <option value="feminin">Féminin</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label for="modifAdresse">Adresse *</label>
+            <textarea id="modifAdresse" rows="2" required></textarea>
+        </div>
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label for="modifTelephone">Téléphone *</label>
+                <input type="tel" id="modifTelephone" required>
+            </div>
+            <div class="form-group">
+                <label for="modifEmail">Email *</label>
+                <input type="email" id="modifEmail" required>
+            </div>
+        </div>
+
+        <!-- Informations bac -->
+        <h3 style="color: #667eea; margin: 30px 0 20px;">Informations du baccalauréat</h3>
+        <div class="form-row">
+            <div class="form-group">
+                <label for="modifTypeBac">Type de bac * <small style="font-weight: normal;">(Les filières seront actualisées automatiquement)</small></label>
+                <!-- Ce champ sera transformé en select dynamiquement -->
+                <input type="text" id="modifTypeBac" required placeholder="Chargement des types de bac...">
+                <div class="form-hint">
+                    <small>Sélectionnez votre type de bac pour voir les filières compatibles</small>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="modifLieuObtention">Lieu d'obtention *</label>
+                <select id="modifLieuObtention" required>
+                    <option value="">Sélectionner...</option>
+                    <option value="Dosso">Dosso</option>
+                    <option value="Niamey">Niamey</option>
+                    <option value="Tahoua">Tahoua</option>
+                    <option value="Agadez">Agadez</option>
+                    <option value="Maradi">Maradi</option>
+                    <option value="Tillabéri">Tillabéri</option>
+                    <option value="Zinder">Zinder</option>
+                    <option value="Diffa">Diffa</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label for="modifAnneeObtention">Année d'obtention *</label>
+                <select id="modifAnneeObtention" required>
+                    <option value="">Sélectionner...</option>
+                    <option value="2023-2024">2023-2024</option>
+                    <option value="2024-2025">2024-2025</option>
+                    <option value="2025-2026">2025-2026</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="modifMention">Mention *</label>
+                <select id="modifMention" required>
+                    <option value="">Sélectionner...</option>
+                    <option value="Passable">Passable</option>
+                    <option value="Bien">Bien</option>
+                    <option value="Très bien">Très bien</option>
+                    <option value="Excellent">Excellent</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Choix de filières -->
+        <h3 style="color: #667eea; margin: 30px 0 20px;">Choix de filières</h3>
+
+        <!-- Rappel du type de bac sélectionné -->
+        <div id="rappelTypeBacModif" style="background: #e8f4ff; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #667eea; display: none;">
+            <h4 style="margin: 0 0 10px 0; color: #667eea;">Type de bac sélectionné</h4>
+            <p id="typeBacSelectionneModif" style="margin: 0; font-weight: 600;">-</p>
+            <small style="color: #666;">Les filières ci-dessous sont compatibles avec votre type de bac</small>
+        </div>
+
+        <div class="form-group">
+            <label for="modifPremierChoix">Premier choix * <span style="color: #28a745; font-weight: bold; font-size: 12px;">(Priorité 1)</span></label>
+            <select id="modifPremierChoix" required>
+                <option value="">Les filières s'afficheront après la sélection du type de bac</option>
+            </select>
+            <div class="form-hint">
+                <small>Votre choix principal - privilégié lors de l'affectation</small>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="modifDeuxiemeChoix">Deuxième choix * <span style="color: #ffc107; font-weight: bold; font-size: 12px;">(Priorité 2)</span></label>
+            <select id="modifDeuxiemeChoix" required>
+                <option value="">Sélectionner d'abord le premier choix</option>
+            </select>
+            <div class="form-hint">
+                <small>Choix de secours en cas de non-acceptation du premier</small>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="modifTroisiemeChoix">Troisième choix * <span style="color: #dc3545; font-weight: bold; font-size: 12px;">(Priorité 3)</span></label>
+            <select id="modifTroisiemeChoix" required>
+                <option value="">Sélectionner d'abord les deux premiers choix</option>
+            </select>
+            <div class="form-hint">
+                <small>Dernier choix de sécurité</small>
+            </div>
+        </div>
+
+        <!-- Aide contextuelle -->
+        <div class="info-box" style="background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 8px; padding: 15px; margin: 20px 0;">
+            <h5 style="margin: 0 0 10px 0; color: #856404;">Conseils pour vos choix</h5>
+            <ul style="margin: 0; padding-left: 20px; color: #856404; font-size: 14px;">
+                <li>Classez vos choix par ordre de préférence réelle</li>
+                <li>Vérifiez les capacités d'accueil de chaque filière</li>
+                <li>Assurez-vous que les trois filières sont différentes</li>
+                <li>Les modifications du type de bac réinitialiseront vos choix de filières</li>
+            </ul>
+        </div>
+
+        <!-- Documents -->
+        <h3 style="color: #667eea; margin: 30px 0 20px;">Documents (optionnel - conserver les anciens ou remplacer)</h3>
+        
+        <div class="form-group">
+            <label>Photo d'identité</label>
+            <div id="modifPhotoActuelle" style="margin-bottom: 10px; padding: 10px; background: #f8f9fa; border-radius: 5px;"></div>
+            <input type="file" id="modifPhotoIdentite" accept="image/*">
+            <small style="color: #666;">Laissez vide pour conserver le document actuel</small>
+        </div>
+        
+        <div class="form-group">
+            <label>Pièce d'identité</label>
+            <div id="modifPieceActuelle" style="margin-bottom: 10px; padding: 10px; background: #f8f9fa; border-radius: 5px;"></div>
+            <input type="file" id="modifPieceIdentite" accept="image/*,application/pdf">
+            <small style="color: #666;">Laissez vide pour conserver le document actuel</small>
+        </div>
+        
+        <div class="form-group">
+            <label>Diplôme de baccalauréat</label>
+            <div id="modifDiplomeActuel" style="margin-bottom: 10px; padding: 10px; background: #f8f9fa; border-radius: 5px;"></div>
+            <input type="file" id="modifDiplomeBac" accept="image/*,application/pdf">
+            <small style="color: #666;">Laissez vide pour conserver le document actuel</small>
+        </div>
+        
+        <div class="form-group">
+            <label>Relevé de notes</label>
+            <div id="modifReleveActuel" style="margin-bottom: 10px; padding: 10px; background: #f8f9fa; border-radius: 5px;"></div>
+            <input type="file" id="modifReleve" accept="image/*,application/pdf">
+            <small style="color: #666;">Laissez vide pour conserver le document actuel</small>
+        </div>
+        
+        <div class="form-group">
+            <label>Certificat de nationalité</label>
+            <div id="modifCertificatActuel" style="margin-bottom: 10px; padding: 10px; background: #f8f9fa; border-radius: 5px;"></div>
+            <input type="file" id="modifCertificatNationalite" accept="image/*,application/pdf">
+            <small style="color: #666;">Laissez vide pour conserver le document actuel</small>
+        </div>
+
+        <div style="display: flex; gap: 15px; margin-top: 30px;">
+            <button type="button" class="btn btn-secondary" onclick="showPage('mesDossiers')">Annuler</button>
+            <button type="submit" class="btn btn-primary" style="flex: 1;">Enregistrer les modifications</button>
+        </div>
+    </form>
+</div>
+
+<script>
+// Script pour mettre à jour le rappel du type de bac quand il change
+document.addEventListener('DOMContentLoaded', function() {
+    // Observer les changements du champ Type de bac
+    const observer = new MutationObserver(function(mutations) {
+        const typeBacField = document.getElementById('modifTypeBac');
+        const rappelDiv = document.getElementById('rappelTypeBacModif');
+        const typeBacSelectionne = document.getElementById('typeBacSelectionneModif');
+        
+        if (typeBacField && (typeBacField.tagName === 'SELECT')) {
+            // Si le champ a été transformé en SELECT
+            typeBacField.addEventListener('change', function() {
+                if (this.value) {
+                    typeBacSelectionne.textContent = this.value;
+                    rappelDiv.style.display = 'block';
+                } else {
+                    rappelDiv.style.display = 'none';
+                }
+            });
+            
+            // Afficher le rappel s'il y a déjà une valeur
+            if (typeBacField.value) {
+                typeBacSelectionne.textContent = typeBacField.value;
+                rappelDiv.style.display = 'block';
+            }
+        }
+    });
+    
+    observer.observe(document.getElementById('modifierDossier'), {
+        childList: true,
+        subtree: true,
+        attributes: true
+    });
+});
+</script>
+<style>
+:root {
+        --primary-color: #667eea;
+        --secondary-color: #764ba2;
+        --success-color: #28a745;
+        --border-color: #e0e0e0;
+        --light-bg: #f8f9ff;
+    }
+
+    /* ==================== PAGE ET CONTAINER ==================== */
+    .page {
+        animation: slideUp 0.5s ease-out;
+    }
+
+    @keyframes slideUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .form-container {
+        background: white;
+        border-radius: 15px;
+        padding: 40px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    }
+
+    /* ==================== INDICATEUR D'ÉTAPES ==================== */
+    .step-indicator {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 40px;
+        position: relative;
+    }
+
+    .step-indicator::before {
+        content: '';
+        position: absolute;
+        top: 22px;
+        left: 5%;
+        right: 5%;
+        height: 2px;
+        background: var(--border-color);
+        z-index: 0;
+    }
+
+    .step {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        flex: 1;
+        position: relative;
+        z-index: 1;
+    }
+
+    .step-number {
+        width: 45px;
+        height: 45px;
+        border-radius: 50%;
+        background: white;
+        border: 3px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        color: #999;
+        margin-bottom: 10px;
+        transition: all 0.3s ease;
+    }
+
+    .step.active .step-number {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        border-color: var(--primary-color);
+        color: white;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    .step.completed .step-number {
+        background: var(--success-color);
+        border-color: var(--success-color);
+        color: white;
+    }
+
+    .step > span {
+        font-size: 0.9em;
+        color: #666;
+        text-align: center;
+        font-weight: 500;
+    }
+
+    .step.active > span {
+        color: var(--primary-color);
+        font-weight: 600;
+    }
+
+    /* ==================== TITRES ==================== */
+    h2 {
+        color: #333;
+        font-size: 1.8em;
+        margin-bottom: 30px;
+        padding-bottom: 15px;
+        border-bottom: 3px solid var(--primary-color);
+        position: relative;
+        padding-left: 15px;
+    }
+
+    h2::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 5px;
+        height: 30px;
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        border-radius: 3px;
+    }
+
+    /* ==================== SECTIONS ==================== */
+    .form-section {
+        margin-bottom: 30px;
+        padding-bottom: 30px;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .form-section:last-of-type {
+        border-bottom: none;
+    }
+
+    .section-title {
+        color: #555;
+        font-size: 1.1em;
+        margin-bottom: 20px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-weight: 600;
+        padding-left: 12px;
+        border-left: 4px solid var(--primary-color);
+    }
+
+    /* ==================== FORMULAIRE ==================== */
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        margin-bottom: 20px;
+    }
+
+    .form-row.full {
+        grid-template-columns: 1fr;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+    }
+
+    label {
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 8px;
+        font-size: 0.95em;
+    }
+
+    .required {
+        color: #dc3545;
+    }
+
+    input[type="text"],
+    input[type="email"],
+    input[type="tel"],
+    input[type="date"],
+    select,
+    textarea {
+        padding: 12px 15px;
+        border: 2px solid var(--border-color);
+        border-radius: 8px;
+        font-size: 0.95em;
+        font-family: inherit;
+        transition: all 0.3s ease;
+        background: white;
+    }
+
+    input[type="text"]:focus,
+    input[type="email"]:focus,
+    input[type="tel"]:focus,
+    input[type="date"]:focus,
+    select:focus,
+    textarea:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        background: var(--light-bg);
+        box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+    }
+
+    textarea {
+        resize: vertical;
+        min-height: 80px;
+    }
+
+    /* ==================== INDICES ==================== */
+    .form-hint {
+        font-size: 0.85em;
+        color: var(--primary-color);
+        margin-top: 5px;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    /* ==================== BOÎTE INFO ==================== */
+    .info-box {
+        background: linear-gradient(135deg, #e8f4ff, #f0f8ff);
+        border-left: 4px solid var(--primary-color);
+        border-radius: 8px;
+        padding: 20px;
+        margin: 30px 0;
+    }
+
+    .info-box strong {
+        color: var(--primary-color);
+    }
+
+    .info-box p {
+        margin: 10px 0 0 0;
+        color: #555;
+        line-height: 1.6;
+    }
+
+    .info-box ul {
+        margin: 0;
+        padding-left: 20px;
+    }
+
+    /* ==================== UPLOAD DE FICHIERS ==================== */
+    .file-upload {
+        border: 2px dashed var(--primary-color);
+        border-radius: 8px;
+        padding: 30px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        background: var(--light-bg);
+    }
+
+    .file-upload:hover {
+        background: #f0f2ff;
+        border-color: var(--secondary-color);
+        transform: translateY(-2px);
+    }
+
+    .file-upload-icon {
+        font-size: 2.5em;
+        margin-bottom: 10px;
+    }
+
+    .file-upload p {
+        margin: 5px 0;
+        color: #333;
+        font-weight: 500;
+    }
+
+    .file-upload p:last-child {
+        font-size: 0.85em;
+        color: #999;
+    }
+
+    .file-preview {
+        margin-top: 10px;
+        padding: 10px;
+        background: #f0f0f0;
+        border-radius: 5px;
+        font-size: 0.9em;
+        color: #666;
+    }
+
+    /* ==================== BOUTONS ==================== */
+    .button-group {
+        display: flex;
+        gap: 15px;
+        margin-top: 40px;
+        justify-content: flex-end;
+    }
+
+    .btn {
+        padding: 12px 30px;
+        border: none;
+        border-radius: 8px;
+        font-size: 1em;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        color: white;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+    }
+
+    .btn-primary:active {
+        transform: translateY(0);
+    }
+
+    .btn-secondary {
+        background: #f0f0f0;
+        color: #333;
+        border: 2px solid var(--border-color);
+    }
+
+    .btn-secondary:hover {
+        background: #e8e8e8;
+        border-color: #d0d0d0;
+    }
+
+    /* ==================== RESPONSIVE ==================== */
+    @media (max-width: 768px) {
+        .form-container {
+            padding: 25px;
+        }
+
+        .form-row {
+            grid-template-columns: 1fr;
+        }
+
+        .form-row.full {
+            grid-template-columns: 1fr;
+        }
+
+        .step-indicator {
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .step-indicator::before {
+            display: none;
+        }
+
+        h2 {
+            font-size: 1.5em;
+        }
+
+        .section-title {
+            font-size: 1em;
+        }
+
+        .button-group {
+            flex-direction: column;
+        }
+
+        .btn {
+            width: 100%;
+        }
+    }
+/* Styles pour les bandeaux d'information */
+.info-bandeau {
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+</style>
+
+            <!-- Page Profil -->
+            <div id="profil" class="page">
+                <h2 style="margin-bottom: 30px;">Mon profil</h2>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+                    <div>
+                        <h3 style="margin-bottom: 20px; color: #667eea;">Informations personnelles</h3>
+                        <form id="profilForm" onsubmit="updateProfile(event)">
+                            <div class="form-group">
+                                <label for="profilNom">Nom complet</label>
+                                <input type="text" id="profilNom" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="profilEmail">Email</label>
+                                <input type="email" id="profilEmail" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="profilTelephone">Téléphone</label>
+                                <input type="tel" id="profilTelephone" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Mettre à jour</button>
+                        </form>
+                    </div>
+                    
+                    <div>
+                        <h3 style="margin-bottom: 20px; color: #667eea;">Changer le mot de passe</h3>
+                        <form id="motDePasseForm" onsubmit="changePassword(event)">
+                            <div class="form-group">
+                                <label for="ancienMotDePasse">Ancien mot de passe</label>
+                                <input type="password" id="ancienMotDePasse" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="nouveauMotDePasse">Nouveau mot de passe</label>
+                                <input type="password" id="nouveauMotDePasse" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="confirmNouveauMotDePasse">Confirmer le nouveau mot de passe</label>
+                                <input type="password" id="confirmNouveauMotDePasse" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Changer le mot de passe</button>
+                        </form>
+                    </div>
+                </div>
+            </div>

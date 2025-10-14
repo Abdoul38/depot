@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Universite Djibo Hamani - Dépôt de Dossiers en Ligne</title>
+    
+   
+<link rel="stylesheet" href="Style.css">
+<link rel="stylesheet" href="Style.css">
+
+<script>
+// CORRECTION PRINCIPALE - Ajouter ces fonctions au début de votre script
+
+
+// Fonction pour s'assurer que Chart.js est chargé
+function waitForChartJS(callback) {
+    if (typeof Chart !== 'undefined') {
+        callback();
+    } else {
+        console.log('En attente de Chart.js...');
+        setTimeout(() => waitForChartJS(callback), 500);
+    }
+}
+
+// Initialisation des statistiques corrigée
+function initialiserStatistiques() {
+    console.log('Initialisation du module statistiques');
+    
+    waitForChartJS(() => {
+        console.log('Chart.js disponible, configuration...');
+        
+        // Configuration globale de Chart.js
+        Chart.defaults.font.family = 'Arial, sans-serif';
+        Chart.defaults.color = '#666';
+        Chart.defaults.plugins.legend.labels.padding = 15;
+        
+        console.log('Module statistiques initialisé avec succès');
+    });
+}
+
+// Fonction de débogage pour vérifier les éléments
+function verifierElementsStats() {
+    const elements = [
+        'statTotalCandidatures',
+        'statApprouvees', 
+        'statHommes',
+        'statFemmes',
+        'chartTopFilieres',
+        'chartRepartitionBac',
+        'chartEvolution',
+        'chartGenre'
+    ];
+    
+    console.log('=== VÉRIFICATION DES ÉLÉMENTS STATISTIQUES ===');
+    elements.forEach(id => {
+        const element = document.getElementById(id);
+        console.log(`${id}:`, element ? 'TROUVÉ' : 'MANQUANT');
+    });
+    console.log('=== FIN VÉRIFICATION ===');
+}
+
+// Fonction de test pour vérifier ApiClient
+function testerApiClient() {
+    console.log('=== TEST APICLIENT ===');
+    console.log('ApiClient défini:', typeof apiClient !== 'undefined');
+    console.log('Token présent:', apiClient?.token ? 'OUI' : 'NON');
+    console.log('Méthodes stats disponibles:');
+    console.log('- getStatsDashboard:', typeof apiClient?.getStatsDashboard === 'function');
+    console.log('- getStatsByGenre:', typeof apiClient?.getStatsByGenre === 'function');
+    console.log('=== FIN TEST ===');
+}
+
+// Fonction de test complète des statistiques
+async function testerStatistiques() {
+    console.log('🔍 DÉBUT TEST COMPLET STATISTIQUES');
+    
+    try {
+        // 1. Vérifier les éléments HTML
+        verifierElementsStats();
+        
+        // 2. Vérifier ApiClient
+        testerApiClient();
+        
+        // 3. Test d'une requête simple
+        if (typeof apiClient !== 'undefined' && apiClient.token) {
+            console.log('📊 Test requête dashboard...');
+            const response = await apiClient.getStatsDashboard();
+            console.log('✅ Réponse reçue:', response);
+        } else {
+            console.log('⚠️ Impossible de tester - ApiClient non prêt');
+        }
+        
+    } catch (error) {
+        console.error('❌ Erreur test:', error);
+    }
+    
+    console.log('🏁 FIN TEST STATISTIQUES');
+}
+
+// AJOUTER CES FONCTIONS DE DIAGNOSTIC
+window.debugStats = {
+    verifierElements: verifierElementsStats,
+    testerApi: testerApiClient,
+    testerComplete: testerStatistiques,
+    chargerDashboard: () => {
+        if (typeof chargerTableauBordStats !== 'undefined') {
+            chargerTableauBordStats();
+        } else {
+            console.error('Fonction chargerTableauBordStats non trouvée');
+        }
+    }
+};
+
+// Initialisation au chargement
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🚀 Initialisation page...');
+    
+    setTimeout(() => {
+        initialiserStatistiques();
+        
+        // Test automatique si en mode admin
+        if (localStorage.getItem('userRole') === 'admin') {
+            console.log('👑 Mode admin détecté - test des statistiques');
+            setTimeout(testerStatistiques, 3000);
+        }
+    }, 1000);
+});
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+window.addEventListener('DOMContentLoaded', function() {
+    if (typeof window.jspdf !== 'undefined' && window.jspdf.jsPDF) {
+        window.jsPDF = window.jspdf.jsPDF;
+        console.log('✅ jsPDF chargé avec succès');
+    } else {
+        console.error('❌ Erreur de chargement de jsPDF');
+    }
+});
+</script>
+</head>
+<body>
+    
+<div class="container">
+        <header>
+          <header class="header">
+        <div class="logo-section">
+            <img src="/uploads/logo-universite.png" alt="Logo Université" class="logo-image" onerror="this.style.display='none'">
+            <div class="logo-text">Université Djibo Hamani de Tahoua</div>
+        </div>
+        <nav class="nav-buttons">
+            <button class="btn btn-secondary" onclick="showPage('accueil')" id="homeBtn">Accueil</button>
+            <button class="btn btn-secondary" onclick="showPage('connexion')" id="loginBtn">Connexion</button>
+            
+            <button class="btn btn-primary" onclick="showPage('inscription')" id="registerBtn">Creer compte</button>
+            <button class="btn btn-primary" id="registerBtn">
+                <a href="inscription.html" style="color: white; text-decoration: none;">Inscription</a>
+            </button>
+            <button class="btn btn-secondary" onclick="logout()" id="logoutBtn" style="display: none;">Déconnexion</button>
+        </nav>
+    </header>
+        </header>
+        
+        <main class="main-content">
+            <!-- Page d'accueil -->
+            <div id="accueil" class="page active">
+                <h1 style="text-align: center; margin-bottom: 30px; color: #333;">Bienvenue à L'Université Djibo Hamani de Tahoua</h1>
+                <p style="text-align: center; font-size: 18px; margin-bottom: 40px; color: #666;">
+                    Plateforme moderne de dépôt de dossiers en ligne pour les établissements d'enseignement
+                </p>
+                
+                <div class="dashboard-grid">
+                    <div class="dashboard-card">
+                        <div class="card-icon">📋</div>
+                        <div class="card-title">Processus Simplifié</div>
+                        <div class="card-description">
+                            Déposez votre dossier en 4 étapes simples : informations personnelles, choix de filière, documents et validation.
+                        </div>
+                    </div>
+                    <div class="dashboard-card">
+                        <div class="card-icon">🔒</div>
+                        <div class="card-title">Sécurisé</div>
+                        <div class="card-description">
+                            Vos données sont protégées par des systèmes de sécurité avancés et un chiffrement de bout en bout.
+                        </div>
+                    </div>
+                    <div class="dashboard-card">
+                        <div class="card-icon">⚡</div>
+                        <div class="card-title">Rapide</div>
+                        <div class="card-description">
+                            Suivi en temps réel de votre dossier avec notifications automatiques et téléchargement du quitus.
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Conteneur pour user.html -->
+            <div id="user-content"></div>
+            
+            <!-- Conteneur pour admin.html -->
+            <div id="admin-content"></div>
+            
+            <!-- Conteneur pour models.html -->
+            <div id="models-content"></div>
+        </main>
+        
+        <footer>
+            <!-- Votre footer existant -->
+        </footer>
+    </div>
+
+
+            <script src="apiClient.js"></script>
+            <script src="inscription.js"></script>
+            <script src="stat.js"></script>
+            <script src="formation.js"></script>
+
+    <script>
+// Fonction pour charger un fichier HTML externe
+async function includeHTML(file, containerId) {
+    try {
+        const response = await fetch(file);
+        
+        if (!response.ok) {
+            throw new Error(`Erreur HTTP: ${response.status}`);
+        }
+        
+        const html = await response.text();
+        document.getElementById(containerId).innerHTML = html;
+        
+        console.log(`✓ ${file} chargé avec succès`);
+        return true;
+    } catch (error) {
+        console.error(`Erreur lors du chargement de ${file}:`, error);
+        document.getElementById(containerId).innerHTML = 
+            `<p style="color: red;">Erreur de chargement: ${file}</p>`;
+        return false;
+    }
+}
+
+// Variable pour suivre si les fichiers sont chargés
+let filesLoaded = false;
+
+// Charger tous les fichiers et initialiser l'application
+async function initializeApp() {
+    if (filesLoaded) return;
+    
+    console.log('🚀 Chargement des pages...');
+    
+    try {
+        // Charger tous les fichiers en parallèle
+        await Promise.all([
+            includeHTML('user.html', 'user-content'),
+            includeHTML('admin.html', 'admin-content'),
+            includeHTML('models.html', 'models-content')
+        ]);
+        
+        filesLoaded = true;
+        console.log('✅ Toutes les pages chargées');
+        
+        // Initialiser l'application après le chargement
+        initAfterLoad();
+        
+    } catch (error) {
+        console.error('❌ Erreur lors du chargement des pages:', error);
+    }
+}
+
+// Fonction d'initialisation après chargement des fichiers
+function initAfterLoad() {
+    // Vérifier si l'utilisateur est connecté
+    const token = localStorage.getItem('token');
+    const role = localStorage.getItem('userRole');
+    
+    console.log('Token:', token ? 'Présent' : 'Absent');
+    console.log('Rôle:', role);
+    
+    if (token) {
+        // Utilisateur connecté
+        document.getElementById('loginBtn').style.display = 'none';
+        document.getElementById('registerBtn').style.display = 'none';
+        document.getElementById('logoutBtn').style.display = 'block';
+        
+        // Rediriger vers la bonne page selon le rôle
+        if (role === 'admin') {
+            showPage('adminPanel');
+        } else {
+            showPage('dashboard');
+        }
+    } else {
+        // Utilisateur non connecté
+        document.getElementById('loginBtn').style.display = 'block';
+        document.getElementById('registerBtn').style.display = 'block';
+        document.getElementById('logoutBtn').style.display = 'none';
+        showPage('accueil');
+    }
+}
+
+// Charger au démarrage - UN SEUL événement DOMContentLoaded
+window.addEventListener('DOMContentLoaded', function() {
+    console.log('📄 DOM chargé');
+    
+    // Charger les pages HTML d'abord
+    initializeApp();
+    
+    // Initialiser les statistiques après un délai
+    setTimeout(() => {
+        if (typeof initialiserStatistiques === 'function') {
+            initialiserStatistiques();
+        }
+    }, 1000);
+});
+
+
+</script>
+    
+    <script>
+
+
+// Fonction pour télécharger un document spécifique
+async function telechargerDocument(applicationId, documentType) {
+    try {
+        UIHelpers.showLoading(true);
+        await apiClient.downloadDocument(applicationId, documentType);
+        UIHelpers.showSuccess('Document téléchargé avec succès');
+    } catch (error) {
+        console.error('Erreur téléchargement document:', error);
+        UIHelpers.showError('Erreur lors du téléchargement du document');
+    } finally {
+        UIHelpers.showLoading(false);
+    }
+}
+
+// Fonction pour télécharger le quitus depuis les détails
+async function telechargerQuitusDepuisDetails(applicationId) {
+    try {
+        UIHelpers.showLoading(true);
+        
+        // Récupérer les données du dossier
+        const response = await apiClient.getApplication(applicationId);
+        const application = response.application;
+        
+        // Générer le quitus avec les données
+        await genererQuitusAvecDonnees(application);
+        
+    } catch (error) {
+        console.error('Erreur téléchargement quitus:', error);
+        UIHelpers.showError('Erreur lors du téléchargement du quitus');
+    } finally {
+        UIHelpers.showLoading(false);
+    }
+}
+
+// Fonction pour fermer le modal
+function fermerModalDetails() {
+    const overlay = document.getElementById('detailsModalOverlay');
+    if (overlay) {
+        overlay.remove();
+    }
+}
+// Variables globales
+
+
+// Mise à jour de la navigation admin
+function showAdminSection(section) {
+    if (section === 'gestionFormations') {
+        showPage('gestionFormations');
+        // Ouvrir l'onglet facultés par défaut
+        setTimeout(() => openFormationTab('facultes'), 100);
+    } else {
+        showPage(section);
+    }
+}
+
+
+
+</script>
+
+<script>
+// Fonction pour ajouter un étudiant manuellement
+async function ajouterEtudiantManuel(event) {
+    event.preventDefault();
+    
+    try {
+        UIHelpers.showLoading(true);
+        
+        const data = {
+            numero_dossier: document.getElementById('addNumeroDossier').value.trim(),
+            matricule: document.getElementById('addMatricule').value.trim() || null,
+            nom: document.getElementById('addNom').value.trim(),
+            prenom: document.getElementById('addPrenom').value.trim(),
+            date_naissance: document.getElementById('addDateNaissance').value,
+            lieu_naissance: document.getElementById('addLieuNaissance').value.trim(),
+            nationalite: document.getElementById('addNationalite').value.trim(),
+            genre: document.getElementById('addGenre').value,
+            adresse: document.getElementById('addAdresse').value.trim(),
+            telephone: document.getElementById('addTelephone').value.trim(),
+            email: document.getElementById('addEmail').value.trim(),
+            type_bac: document.getElementById('addTypeBac').value || null,
+            lieu_obtention: document.getElementById('addLieuObtention').value.trim() || null,
+            annee_obtention: document.getElementById('addAnneeObtention').value.trim() || null,
+            mention: document.getElementById('addMention').value || null,
+            statut: document.getElementById('addStatut').value,
+            peut_inscrire: document.getElementById('addPeutInscrire').checked
+        };
+        
+        // Appel API pour créer l'étudiant
+        const response = await apiClient.request('/admin/etudiants/creer', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        
+        closeModal('ajoutEtudiantModal');
+        rechercherEtudiants();
+        UIHelpers.showSuccess('Étudiant ajouté avec succès');
+        
+        // Réinitialiser le formulaire
+        document.getElementById('ajoutEtudiantManuelForm').reset();
+        
+    } catch (error) {
+        console.error('Erreur ajout étudiant:', error);
+        UIHelpers.showError(error.message || 'Erreur lors de l\'ajout');
+    } finally {
+        UIHelpers.showLoading(false);
+    }
+}
+
+// Charger les types de bac pour le formulaire
+async function chargerTypesBacPourAjout() {
+    try {
+        const response = await apiClient.getTypeBacs();
+        const select = document.getElementById('addTypeBac');
+        
+        select.innerHTML = '<option value="">Aucun</option>';
+        
+        if (response.typeBacs) {
+            response.typeBacs.forEach(type => {
+                const option = document.createElement('option');
+                option.value = type.nom;
+                option.textContent = `${type.nom} - ${type.libelle}`;
+                select.appendChild(option);
+            });
+        }
+    } catch (error) {
+        console.error('Erreur chargement types de bac:', error);
+    }
+}
+
+// Ouvrir le modal d'ajout
+function ouvrirModalAjoutEtudiant() {
+    chargerTypesBacPourAjout();
+    openModal('ajoutEtudiantModal');
+}
+</script>
+<!-- Modal Inscription Admin -->
+<!-- Modal Inscription Admin - VERSION SIMPLIFIÉE -->
+
+</body>
+</html>

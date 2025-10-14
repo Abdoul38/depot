@@ -1,0 +1,915 @@
+<!-- Panel Admin -->
+            <div id="adminPanel" class="page">
+                <h2 style="margin-bottom: 30px;">Panel Administrateur</h2>
+                
+                <div class="dashboard-grid" style="margin-bottom: 40px;">
+                    <div class="dashboard-card" onclick="showAdminSection('gestionUtilisateurs')">
+                        <div class="card-icon">👥</div>
+                        <div class="card-title">Gestion des utilisateurs</div>
+                        <div class="card-description">
+                            Voir, modifier, approuver ou supprimer les comptes utilisateurs
+                        </div>
+                    </div>
+                    <div class="dashboard-card" onclick="showAdminSection('gestionDossiers')">
+                        <div class="card-icon">📁</div>
+                        <div class="card-title">Gestion des dossiers</div>
+                        <div class="card-description">
+                            Examiner, approuver ou rejeter les dossiers déposés
+                        </div>
+                    </div>
+                    <div class="dashboard-card" onclick="showAdminSection('statistiques')">
+                        <div class="card-icon">📊</div>
+                        <div class="card-title">Statistiques</div>
+                        <div class="card-description">
+                            Voir les statistiques détaillées des dépôts et utilisateurs
+                        </div>
+                    </div>
+                    <div class="dashboard-card" onclick="showAdminSection('gestionFormations')">
+                        <div class="card-icon">🏫</div>
+                        <div class="card-title">Gestion des Formations</div>
+                        <div class="card-description">
+                            Gérer les facultés, filières et types de bac
+                        </div>
+                    </div>
+                                    <div class="dashboard-card" onclick="showAdminSection('gestionEtudiants')">
+                    <div class="card-icon">🎓</div>
+                    <div class="card-title">Gestion des Étudiants</div>
+                    <div class="card-description">
+                        Voir, modifier et gérer les étudiants inscrits
+                    </div>
+                </div>
+
+                <div class="dashboard-card" onclick="showAdminSection('configInscription')">
+                    <div class="card-icon">⚙️</div>
+                    <div class="card-title">Configuration Inscription</div>
+                    <div class="card-description">
+                        Gérer les autorisations et restrictions d'inscription
+                    </div>
+                </div>
+                    <div class="dashboard-card" onclick="showAdminSection('importExport')">
+                        <div class="card-icon">📤</div>
+                        <div class="card-title">Import/Export</div>
+                        <div class="card-description">
+                            Importer et exporter les données en différents formats
+                        </div>
+                    </div>
+                    <div class="dashboard-card" onclick="startApplicationProcess()">
+                        <div class="card-icon">📤</div>
+                        <div class="card-title">Nouveau dépôt</div>
+                        <div class="card-description">
+                            Commencer un nouveau dépôt de dossier en suivant le processus guidé.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section Admin - Gestion des utilisateurs -->
+            <div id="gestionUtilisateurs" class="page">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                    <h2>Gestion des utilisateurs</h2>
+                    <div>
+                        
+                        <button class="btn btn-primary" onclick="openModal('ajoutUtilisateurModal')">+ Ajouter un utilisateur</button>
+                    </div>
+                </div>
+                
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Nom</th>
+                            <th>Email</th>
+                            <th>Téléphone</th>
+                            <th>Date d'inscription</th>
+                            <th>Statut</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableauUtilisateurs">
+                        <!-- Les données seront ajoutées dynamiquement -->
+                    </tbody>
+                </table>
+            </div>
+            <!-- Page Gestion des Étudiants -->
+<div id="gestionEtudiants" class="page">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+        <h2>Gestion des Étudiants</h2>
+        <div>
+            
+            <button class="btn btn-primary" onclick="openModal('ajoutEtudiantModal')">+ Ajouter</button>
+        </div>
+    </div>
+    <div class="dashboard-grid" style="grid-template-columns: 1fr 1fr;">
+        <!-- Import -->
+        <div class="dashboard-card">
+            <h3>📥 Importer des étudiants</h3>
+            <p style="margin: 15px 0; color: #666;">
+                Importez une liste d'étudiants depuis un fichier Excel
+            </p>
+            
+            <button class="btn btn-secondary" onclick="apiClient.telechargerModeleExcel()" style="width: 100%; margin-bottom: 15px;">
+                📄 Télécharger le modèle Excel
+            </button>
+            
+            <div class="file-upload" onclick="document.getElementById('importEtudiantsFile').click()" style="margin-bottom: 15px;">
+                <div class="file-upload-icon">📁</div>
+                <p>Cliquez pour sélectionner le fichier Excel</p>
+            </div>
+            <input type="file" id="importEtudiantsFile" style="display: none;" accept=".xlsx,.xls" onchange="importerFichierEtudiants(this.files[0])">
+            
+            <div id="importResult" style="display: none; margin-top: 15px;"></div>
+        </div>
+        
+        <!-- Export -->
+        <div class="dashboard-card">
+            <h3>📤 Exporter les inscriptions</h3>
+            <p style="margin: 15px 0; color: #666;">
+                Téléchargez la liste complète des inscriptions
+            </p>
+            
+            <button class="btn btn-primary" onclick="apiClient.exporterInscriptions()" style="width: 100%;">
+                💾 Exporter toutes les inscriptions
+            </button>
+        </div>
+    </div>
+    
+    <!-- Filtres de recherche -->
+    <div style="display: flex; gap: 15px; margin-bottom: 20px;">
+        <input type="text" id="searchEtudiant" placeholder="Rechercher (nom, prénom, email, matricule...)" 
+               style="flex: 1; padding: 10px; border-radius: 5px; border: 1px solid #ddd;"
+               onkeyup="if(event.key==='Enter') rechercherEtudiants()">
+               
+        <select id="filtreStatutEtudiant" onchange="rechercherEtudiants()" 
+                style="padding: 10px; border-radius: 5px; border: 1px solid #ddd;">
+            <option value="">Tous les statuts</option>
+            <option value="actif">Actif</option>
+            <option value="inactif">Inactif</option>
+            <option value="diplome">Diplômé</option>
+            <option value="abandonne">Abandon</option>
+        </select>
+        <button class="btn btn-primary" onclick="rechercherEtudiants()">Rechercher</button>
+        
+    </div>
+    
+<div style="overflow-x: auto;">
+    <table class="table" style="font-size: 13px;">
+    <thead>
+        <tr>
+            <th style="min-width: 100px;">Matricule</th>
+            <th style="min-width: 150px;">Identité</th>
+            <th style="min-width: 120px;">Contact</th>
+            <th style="min-width: 150px;">Formation</th>
+            <th style="min-width: 80px;">Statut Inscription</th>
+            <th style="min-width: 80px;">Statut</th>
+            <th style="min-width: 70px;">Autorisé</th>
+            <th style="min-width: 200px;">Actions</th>
+        </tr>
+    </thead>
+    <tbody id="tableauEtudiants"></tbody>
+</table>
+</div>
+</div>
+
+<!-- Page Configuration Inscriptions -->
+<div id="configInscription" class="page">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+        <h2>Configuration des Inscriptions</h2>
+        
+    </div>
+    <div class="dashboard-card" style="margin-bottom: 30px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <h3 style="color: white; margin: 0 0 10px 0;">🔒 Contrôle Global des Inscriptions</h3>
+            <p style="margin: 0; font-size: 14px; opacity: 0.9;" id="statutGlobalTexte">
+                Chargement...
+            </p>
+            <p style="margin: 10px 0 0 0; font-size: 12px; opacity: 0.8;" id="statsGlobalesTexte">
+                
+            </p>
+        </div>
+        <div>
+            <button 
+                id="btnToggleGlobal" 
+                class="btn" 
+                style="padding: 15px 30px; font-size: 16px; font-weight: bold; background: white; color: #667eea;"
+                onclick="toggleInscriptionsGlobal()">
+                🔄 Chargement...
+            </button>
+        </div>
+    </div>
+    
+    <!-- Message personnalisé (visible si bloqué) -->
+    <div id="messageGlobalContainer" style="margin-top: 20px; display: none;">
+        <label style="color: white; font-weight: 600;">Message affiché aux étudiants :</label>
+        <textarea 
+            id="messageGlobalRaison" 
+            rows="2" 
+            style="width: 100%; margin-top: 10px; padding: 10px; border-radius: 5px; border: none;"
+            placeholder="Ex: Les inscriptions sont temporairement fermées pour maintenance..."></textarea>
+        <button 
+            class="btn btn-secondary" 
+            style="margin-top: 10px; background: white; color: #667eea;"
+            onclick="mettreAJourMessageGlobal()">
+            💾 Mettre à jour le message
+        </button>
+    </div>
+</div>
+    
+    <!-- Configuration globale -->
+    <div class="dashboard-card" style="margin-bottom: 30px;">
+        <h3>Configuration Globale</h3>
+        <form id="configInscriptionForm" onsubmit="sauvegarderConfigInscription(event)">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="configActif"> Inscriptions ouvertes
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label for="configAnnee">Année universitaire</label>
+                    <input type="text" id="configAnnee" value="2024-2025" required>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="configDateOuverture">Date d'ouverture</label>
+                    <input type="datetime-local" id="configDateOuverture">
+                </div>
+                <div class="form-group">
+                    <label for="configDateFermeture">Date de fermeture</label>
+                    <input type="datetime-local" id="configDateFermeture">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="configMessage">Message de fermeture</label>
+                <textarea id="configMessage" rows="3" placeholder="Message à afficher quand les inscriptions sont fermées"></textarea>
+            </div>
+            
+            <button type="submit" class="btn btn-primary">Enregistrer</button>
+        </form>
+    </div>
+    
+    <!-- Restrictions -->
+    <div class="dashboard-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h3>Restrictions d'Inscription</h3>
+            <button class="btn btn-primary" onclick="openModal('ajoutRestrictionModal')">+ Ajouter une restriction</button>
+        </div>
+        
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Type</th>
+                    <th>Cible</th>
+                    <th>Raison</th>
+                    <th>Statut</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="tableauRestrictions"></tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal Modification Étudiant -->
+<div id="modifierEtudiantModal" class="modal">
+    <div class="modal-content" style="max-width: 800px;">
+        <span class="close" onclick="closeModal('modifierEtudiantModal')">&times;</span>
+        <h3>Modifier l'étudiant</h3>
+        
+        <form id="modifierEtudiantForm" onsubmit="sauvegarderEtudiant(event)">
+            <input type="hidden" id="editEtudiantId">
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="editMatricule">Matricule</label>
+                    <input type="text" id="editMatricule">
+                </div>
+                <div class="form-group">
+                    <label for="editNumeroDossier">Numéro de dossier</label>
+                    <input type="text" id="editNumeroDossier" readonly>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="editNom">Nom</label>
+                    <input type="text" id="editNom" required>
+                </div>
+                <div class="form-group">
+                    <label for="editPrenom">Prénom</label>
+                    <input type="text" id="editPrenom" required>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="editDateNaissance">Date de naissance</label>
+                    <input type="date" id="editDateNaissance" required>
+                </div>
+                <div class="form-group">
+                    <label for="editLieuNaissance">Lieu de naissance</label>
+                    <input type="text" id="editLieuNaissance" required>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="editEmail">Email</label>
+                    <input type="email" id="editEmail" required>
+                </div>
+                <div class="form-group">
+                    <label for="editTelephone">Téléphone</label>
+                    <input type="tel" id="editTelephone" required>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="editStatut">Statut</label>
+                    <select id="editStatut" required>
+                        <option value="actif">Actif</option>
+                        <option value="inactif">Inactif</option>
+                        <option value="diplome">Diplômé</option>
+                        <option value="abandonne">Abandon</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="editPeutInscrire"> Peut s'inscrire
+                    </label>
+                </div>
+            </div>
+            
+            <button type="submit" class="btn btn-primary" style="width: 100%;">Enregistrer</button>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Ajout Restriction -->
+<div id="ajoutRestrictionModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal('ajoutRestrictionModal')">&times;</span>
+        <h3>Ajouter une restriction</h3>
+        
+        <form id="ajoutRestrictionForm" onsubmit="sauvegarderRestriction(event)">
+            <div class="form-group">
+                <label for="restrictionType">Type de restriction</label>
+                <select id="restrictionType" required onchange="updateRestrictionFields()">
+                    <option value="">Sélectionner...</option>
+                    <option value="etudiant">Étudiant spécifique</option>
+                    <option value="filiere">Filière complète</option>
+                    <option value="niveau">Niveau (toutes filières)</option>
+                    <option value="filiere_niveau">Filière + Niveau</option>
+                </select>
+            </div>
+            
+            <div class="form-group" id="restrictionEtudiantField" style="display: none;">
+                <label for="restrictionEtudiant">Étudiant</label>
+                <select id="restrictionEtudiant">
+                    <option value="">Sélectionner un étudiant...</option>
+                </select>
+            </div>
+            
+            <div class="form-group" id="restrictionFiliereField" style="display: none;">
+                <label for="restrictionFiliere">Filière</label>
+                <select id="restrictionFiliere">
+                    <option value="">Sélectionner une filière...</option>
+                </select>
+            </div>
+            
+            <div class="form-group" id="restrictionNiveauField" style="display: none;">
+                <label for="restrictionNiveau">Niveau</label>
+                <select id="restrictionNiveau">
+                    <option value="">Sélectionner un niveau...</option>
+                    <option value="L1">L1</option>
+                    <option value="L2">L2</option>
+                    <option value="L3">L3</option>
+                    <option value="M1">M1</option>
+                    <option value="M2">M2</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="restrictionRaison">Raison de la restriction</label>
+                <textarea id="restrictionRaison" rows="3" required></textarea>
+            </div>
+            
+            <button type="submit" class="btn btn-primary" style="width: 100%;">Créer la restriction</button>
+        </form>
+    </div>
+</div>
+            <!-- Section Admin - Gestion des dossiers -->
+            <div id="gestionDossiers" class="page">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                    <h2>Gestion des dossiers</h2>
+                    
+                </div>
+                <div style="display: flex; gap: 15px; margin-bottom: 20px;">
+                  <div style="flex: 1;">
+                   
+                     <input type="text"  id="rechercheDossier" placeholder="Rechercher..."  oninput="rechercherDossiersDebounced() " style="width: 100%; padding: 8px; border-radius: 5px; border: 1px solid #ddd;">
+                  </div>
+                  <button class="btn btn-primary" onclick="rechercherDossiers()" style="padding: 8px 20px;">🔍 Rechercher</button>
+                  <button class="btn btn-secondary" onclick="reinitialiserRecherche()" style="padding: 8px 20px;">🔄 Réinitialiser</button>
+                </div>
+                
+                <div style="display: flex; gap: 15px; margin-bottom: 20px;">
+                    <select id="filtreStatut" style="padding: 8px; border-radius: 5px; border: 1px solid #ddd;">
+                        <option value="">Tous les statuts</option>
+                        <option value="en-attente">En attente</option>
+                        <option value="approuve">Approuvé</option>
+                        <option value="rejete">Rejeté</option>
+                    </select>
+                    <select id="filtreFiliere" style="padding: 8px; border-radius: 5px; border: 1px solid #ddd;">
+                        <option value="">Toutes les filières</option>
+                        <option value="informatique">Informatique</option>
+                        <option value="mathematiques">Mathématiques</option>
+                        <option value="physique">Physique</option>
+                    </select>
+                </div>
+                
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Candidat</th>
+                            <th>Numero dossier</th>
+                            <th>Statut</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableauDossiersAdmin">
+                        <!-- Les données seront ajoutées dynamiquement -->
+                    </tbody>
+                </table>
+            </div>
+           <!-- Section Admin - Gestion des facultés et filières -->
+<div id="gestionFormations" class="page">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+        <h2>Gestion des formations</h2>
+     
+    </div>
+
+    <!-- Onglets -->
+    <div class="tabs" style="margin-bottom: 30px;">
+        <button class="tab-btn active" onclick="openFormationTab('facultes')">Facultés</button>
+        <button class="tab-btn" onclick="openFormationTab('filieres')">Filières</button>
+        <button class="tab-btn" onclick="openFormationTab('diplomes')">Diplomes</button>
+        <button class="tab-btn" onclick="openFormationTab('typeBacs')">Types de Bac</button>
+    </div>
+
+    <!-- Contenu des onglets -->
+    <div id="facultes-tab" class="tab-content active">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h3>Gestion des facultés</h3>
+            <button class="btn btn-primary" onclick="openModal('ajoutFaculteModal')">+ Ajouter une faculté</button>
+        </div>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Nom</th>
+                    <th>Libellé</th>
+                    <th>Description</th>
+                    <th>Nombre de filières</th>
+                    <th>Statut</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="tableauFacultes">
+                <!-- Les données seront ajoutées dynamiquement -->
+            </tbody>
+        </table>
+    </div>
+    <div id="diplomes-tab" class="tab-content">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h3>Gestion des diplomes</h3>
+            <button class="btn btn-primary" onclick="ouvrirModalDiplome()" id="btnAjoutDiplome">+ Ajouter un Diplome</button>
+        </div>
+        <table class="table">
+            <thead>
+                <tr>
+        <th>Filiere</th>
+        <th>Niveau</th>
+        <th>Faculté</th>
+        <th>Statut</th>
+        <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="tableauDiplomes">
+                <!-- Les données seront ajoutées dynamiquement -->
+            </tbody>
+        </table>
+    </div>
+
+    <div id="filieres-tab" class="tab-content">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h3>Gestion des filières</h3>
+            <button class="btn btn-primary" onclick="ouvrirModalFiliere()" id="btnAjoutFiliere">+ Ajouter une filière</button>
+        </div>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Nom</th>
+                    <th>Libellé</th>
+                    <th>Faculté</th>
+                    <th>Capacité max</th>
+                    <th>Types de bac autorisés</th>
+                    <th>Candidatures</th>
+                    <th>Statut</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="tableauFilieres">
+                <!-- Les données seront ajoutées dynamiquement -->
+            </tbody>
+        </table>
+    </div>
+
+    
+
+    <div id="typeBacs-tab" class="tab-content">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h3>Gestion des types de bac</h3>
+            <button class="btn btn-primary" onclick="openModal('ajoutTypeBacModal')">+ Ajouter un type de bac</button>
+        </div>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Nom</th>
+                    <th>Libellé</th>
+                    <th>Description</th>
+                    <th>Nombre de filières</th>
+                    <th>Statut</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="tableauTypeBacs">
+                <!-- Les données seront ajoutées dynamiquement -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+            <!-- Section Admin - Statistiques -->
+            <!-- Remplacer la section statistiques existante dans votre index.html -->
+<div id="statistiques" class="page">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+        <h2>Statistiques Avancées</h2>
+        <div style="display: flex; gap: 10px;">
+            
+            <button class="btn btn-primary" onclick="exporterToutesStatistiques()">📊 Export Complet</button>
+        </div>
+    </div>
+
+    <!-- Navigation par onglets -->
+    <div class="tabs" style="margin-bottom: 30px;">
+        <button class="tab-btn active" onclick="ouvrirOngletStats(event, 'tableau-bord')">📈 Tableau de Bord</button>
+        <button class="tab-btn" onclick="ouvrirOngletStats(event, 'genre')">👥 Par Genre</button>
+        <button class="tab-btn" onclick="ouvrirOngletStats(event, 'type-bac')">🎓 Par Type de Bac</button>
+        <button class="tab-btn" onclick="ouvrirOngletStats(event, 'facultes')">🏛️ Par Faculté</button>
+        <button class="tab-btn" onclick="ouvrirOngletStats(event, 'filieres')">📚 Par Filière</button>
+        <button class="tab-btn" onclick="ouvrirOngletStats(event, 'temporelles')">📅 Évolution</button>
+        <button class="tab-btn" onclick="ouvrirOngletStats(event, 'avancees')">🔍 Analyses Avancées</button>
+    </div>
+
+    <!-- Tableau de Bord Principal -->
+    <div id="stats-tableau-bord" class="stats-tab-content active">
+        <!-- Résumé général -->
+        <div class="dashboard-grid" style="grid-template-columns: repeat(4, 1fr); margin-bottom: 30px;">
+            <div class="dashboard-card" style="background: linear-gradient(135deg, #667eea, #764ba2); color: white;">
+                <div class="card-icon" style="color: white;">📊</div>
+                <div class="card-title">Total Candidatures</div>
+                <div style="font-size: 32px; font-weight: bold;" id="statTotalCandidatures">0</div>
+            </div>
+            <div class="dashboard-card" style="background: linear-gradient(135deg, #28a745, #20c997); color: white;">
+                <div class="card-icon" style="color: white;">✅</div>
+                <div class="card-title">Approuvées</div>
+                <div style="font-size: 32px; font-weight: bold;" id="statApprouvees">0</div>
+            </div>
+            <div class="dashboard-card" style="background: linear-gradient(135deg, #17a2b8, #6f42c1); color: white;">
+                <div class="card-icon" style="color: white;">👨</div>
+                <div class="card-title">Hommes</div>
+                <div style="font-size: 32px; font-weight: bold;" id="statHommes">0</div>
+            </div>
+            <div class="dashboard-card" style="background: linear-gradient(135deg, #e83e8c, #fd7e14); color: white;">
+                <div class="card-icon" style="color: white;">👩</div>
+                <div class="card-title">Femmes</div>
+                <div style="font-size: 32px; font-weight: bold;" id="statFemmes">0</div>
+            </div>
+        </div>
+
+        <!-- Graphiques principaux -->
+        <div class="dashboard-grid" style="grid-template-columns: 1fr 1fr;">
+            <div class="dashboard-card">
+                <h3>Top 5 des Filières</h3>
+                <div style="position: relative; height: 300px;">
+                    <canvas id="chartTopFiliere"></canvas>
+                </div>
+            </div>
+            <div class="dashboard-card">
+                <h3>Répartition par Type de Bac</h3>
+                <div style="position: relative; height: 300px;">
+                    <canvas id="chartRepartitionBacs"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Évolution temporelle -->
+        <div class="dashboard-card" style="margin-top: 20px;">
+            <h3>📈 Évolution des 6 Derniers Mois</h3>
+            <div style="position: relative; height: 350px;">
+                <canvas id="chartEvolution"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistiques par Genre -->
+    <div id="stats-genre" class="stats-tab-content">
+        <div class="dashboard-grid">
+            <div class="dashboard-card">
+                <h3>👥 Répartition par Genre</h3>
+                <div style="position: relative; height: 300px;">
+                    <canvas id="chartGenre"></canvas>
+                </div>
+                <div id="detailsGenre" style="margin-top: 20px;"></div>
+            </div>
+            <div class="dashboard-card">
+                <h3>📊 Taux d'Approbation par Genre</h3>
+                <div style="position: relative; height: 300px;">
+                    <canvas id="chartGenreApprobation"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Tableau détaillé -->
+        <div class="dashboard-card" style="margin-top: 20px;">
+            <h3>📋 Détails par Genre</h3>
+            <table class="table" id="tableauGenre">
+                <thead>
+                    <tr>
+                        <th>Genre</th>
+                        <th>Total Candidatures</th>
+                        <th>Approuvées</th>
+                        <th>Rejetées</th>
+                        <th>En Attente</th>
+                        <th>Taux d'Approbation</th>
+                    </tr>
+                </thead>
+                <tbody id="detailsTableauGenre"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Statistiques par Type de Bac -->
+    <div id="stats-type-bac" class="stats-tab-content">
+        <div class="dashboard-grid">
+            <div class="dashboard-card">
+                <h3>🎓 Distribution par Type de Bac</h3>
+                <div style="position: relative; height: 300px;">
+                    <canvas id="chartTypeBac"></canvas>
+                </div>
+            </div>
+            <div class="dashboard-card">
+                <h3>📈 Performances par Type de Bac</h3>
+                <div style="position: relative; height: 300px;">
+                    <canvas id="chartTypeBacPerformance"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistiques par Faculté -->
+    <div id="stats-facultes" class="stats-tab-content">
+        <div class="dashboard-card">
+            <h3>🏛️ Répartition des Choix par Faculté</h3>
+            <div style="position: relative; height: 400px;">
+                <canvas id="chartFacultes"></canvas>
+            </div>
+        </div>
+        
+        <!-- Détails par faculté -->
+        <div class="dashboard-grid" style="margin-top: 20px;">
+            <div class="dashboard-card">
+                <h3>🎯 Préférences de Choix</h3>
+                <div style="position: relative; height: 300px;">
+                    <canvas id="chartChoixFacultes"></canvas>
+                </div>
+            </div>
+            <div class="dashboard-card">
+                <h3>📊 Taux de Succès par Faculté</h3>
+                <div id="detailsFacultes"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistiques par Filière -->
+    <div id="stats-filieres" class="stats-tab-content">
+        <div class="dashboard-card">
+            <h3>📚 Top 15 des Filières les Plus Demandées</h3>
+            <div style="position: relative; height: 500px;">
+                <canvas id="chartFilieres"></canvas>
+            </div>
+        </div>
+        
+        <div class="dashboard-card" style="margin-top: 20px;">
+            <h3>📋 Détails par Filière</h3>
+            <div style="max-height: 400px; overflow-y: auto;">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Filière</th>
+                            <th>Total</th>
+                            <th>Approuvées</th>
+                            <th>Taux d'Approbation</th>
+                            <th>Popularité</th>
+                        </tr>
+                    </thead>
+                    <tbody id="detailsFilieres"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistiques Temporelles -->
+    <div id="stats-temporelles" class="stats-tab-content">
+        <div class="dashboard-card">
+            <h3>📅 Évolution Temporelle des Candidatures</h3>
+            <div style="position: relative; height: 400px;">
+                <canvas id="chartTemporel"></canvas>
+            </div>
+        </div>
+        
+        <div class="dashboard-grid" style="margin-top: 20px;">
+            <div class="dashboard-card">
+                <h3>📊 Tendances Mensuelles</h3>
+                <div style="position: relative; height: 300px;">
+                    <canvas id="chartTendances"></canvas>
+                </div>
+            </div>
+            <div class="dashboard-card">
+                <h3>🎯 Pic d'Activité</h3>
+                <div id="analyseActivite"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Analyses Avancées -->
+    <div id="stats-avancees" class="stats-tab-content">
+        <h3 style="text-align: center; margin-bottom: 30px; color: #667eea;">🔍 Analyses Croisées et Insights</h3>
+        
+        <div class="dashboard-grid">
+            <div class="dashboard-card">
+                <h3>👥×🎓 Genre × Type de Bac</h3>
+                <div style="position: relative; height: 300px;">
+                    <canvas id="chartGenreBac"></canvas>
+                </div>
+            </div>
+            <div class="dashboard-card">
+                <h3>🏆 Mentions par Filière</h3>
+                <div style="position: relative; height: 300px;">
+                    <canvas id="chartMentionsFilieres"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <div class="dashboard-grid" style="margin-top: 20px;">
+            <div class="dashboard-card">
+                <h3>🌍 Répartition Géographique</h3>
+                <div style="position: relative; height: 300px;">
+                    <canvas id="chartLieuObtention"></canvas>
+                </div>
+            </div>
+            <div class="dashboard-card">
+                <h3>📈 Indices de Performance</h3>
+                <div id="indicesPerformance">
+                    <div style="text-align: center; padding: 20px;">
+                        <div class="stat-badge primary" style="display: block; margin: 10px 0; padding: 10px;">
+                            <strong>Taux Global d'Approbation</strong>
+                            <div style="font-size: 24px; margin-top: 5px;" id="tauxGlobalApprobation">--%</div>
+                        </div>
+                        <div class="stat-badge success" style="display: block; margin: 10px 0; padding: 10px;">
+                            <strong>Filière la Plus Demandée</strong>
+                            <div style="margin-top: 5px;" id="filierePlusDemanndee">--</div>
+                        </div>
+                        <div class="stat-badge warning" style="display: block; margin: 10px 0; padding: 10px;">
+                            <strong>Diversité des Profils</strong>
+                            <div style="margin-top: 5px;" id="diversiteProfils">--</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Insights automatiques -->
+        <div class="dashboard-card" style="margin-top: 20px;">
+            <h3>🧠 Insights Automatiques</h3>
+            <div id="insightsAutomatiques" style="padding: 20px;">
+                <div style="text-align: center; color: #666;">
+                    <div style="font-size: 48px; margin-bottom: 10px;">📊</div>
+                    <p>Chargement des analyses en cours...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Boutons d'export par section -->
+    <div style="position: fixed; bottom: 20px; right: 20px; z-index: 100;">
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+            <button class="btn btn-primary" onclick="exporterStatistiquesActuelles()" 
+                    style="border-radius: 50px; padding: 12px 20px; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);">
+                💾 Export Section
+            </button>
+            <button class="btn btn-secondary" onclick="imprimerRapport()" 
+                    style="border-radius: 50px; padding: 12px 20px;">
+                🖨️ Imprimer
+            </button>
+        </div>
+    </div>
+</div>
+
+
+            <!-- Section Admin - Import/Export -->
+           <div id="importExport" class="page">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+        <h2>Import/Export des données</h2>
+        
+    </div>
+    
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+        
+        <!-- EXPORTS -->
+        <div style="background: #f8f9fa; padding: 25px; border-radius: 15px;">
+            <h3 style="color: #667eea; margin-bottom: 20px;">📤 Export des données</h3>
+            
+            <!-- Export Excel Dossiers Approuvés - NOUVEAU -->
+            <div style="background: #e8f4ff; padding: 15px; border-radius: 10px; margin-bottom: 20px; border-left: 4px solid #28a745;">
+                <h4 style="color: #28a745; margin: 0 0 10px 0;">📊 Export Excel Complet</h4>
+                <p style="font-size: 13px; color: #666; margin-bottom: 10px;">
+                    Export Excel avec 3 onglets : Dossiers approuvés, Statistiques par faculté, Par filière
+                </p>
+                <button class="btn" style="width: 100%; background: #28a745; color: white;" 
+        onclick="exporterApprouvesExcel()">
+    📥 Télécharger Excel Dossiers Approuvés
+</button>
+            </div>
+            
+            <!-- Exports par section -->
+            <div style="margin-bottom: 15px;">
+                <h4 style="margin-bottom: 10px;">Par Section</h4>
+                
+                <button class="btn btn-primary" onclick="exporterParFaculte()" style="width: 100%; margin-bottom: 10px;">
+    🏛️ Export par Faculté (Excel)
+</button>
+
+<button class="btn btn-primary" onclick="exporterParGenre()" style="width: 100%; margin-bottom: 10px;">
+    👥 Export par Genre (Excel)
+</button>
+
+<button class="btn btn-primary" onclick="exporterParStatut()" style="width: 100%; margin-bottom: 10px;">
+    📊 Export par Statut (Excel)
+</button>
+            </div>
+            
+            <!-- Exports classiques -->
+            <div style="border-top: 2px solid #ddd; padding-top: 15px; margin-top: 15px;">
+                <h4 style="margin-bottom: 10px;">Exports Classiques (CSV)</h4>
+                
+                <button class="btn btn-secondary" onclick="exportData('users')" style="width: 100%; margin-bottom: 10px;">
+                    👤 Exporter les utilisateurs
+                </button>
+                
+                <button class="btn btn-secondary" onclick="apiClient.exportCandidaturesComplete()" style="width: 100%; margin-bottom: 10px;">
+                    📋 Export Candidatures Complet (CSV)
+                </button>
+                
+                <button class="btn btn-secondary" onclick="exportData('applications')" style="width: 100%;">
+                    📄 Export Simple Candidatures
+                </button>
+            </div>
+        </div>
+        
+        <!-- IMPORT -->
+        <div style="background: #f8f9fa; padding: 25px; border-radius: 15px;">
+            <h3 style="color: #667eea; margin-bottom: 20px;">📥 Import des données</h3>
+            
+            <div class="file-upload" onclick="document.getElementById('importFile').click()">
+                <div class="file-upload-icon">📁</div>
+                <p>Cliquez pour importer un fichier</p>
+                <p style="font-size: 12px; color: #666;">Formats acceptés: CSV, JSON</p>
+            </div>
+            <input type="file" id="importFile" style="display: none;" accept=".csv,.json" onchange="importData(this)">
+            
+            <div style="margin-top: 20px; padding: 15px; background: #fff3cd; border-radius: 8px; border-left: 4px solid #ffc107;">
+                <h4 style="color: #856404; margin: 0 0 10px 0;">ℹ️ Information</h4>
+                <p style="font-size: 13px; color: #856404; margin: 0;">
+                    L'import de données nécessite un fichier au format spécifique. 
+                    Contactez l'administrateur système pour plus d'informations.
+                </p>
+            </div>
+        </div>
+    </div>
+ 
+        </main>
+    </div>
