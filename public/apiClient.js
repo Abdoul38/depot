@@ -3119,7 +3119,7 @@ async function genererQuitusAvecDonnees(application) {
 
     // Photo
     const photoX = 22;
-    const photoY = y;
+    const photoY = 75;
     const photoWidth = 28;
     const photoHeight = 33;
     let photoAdded = false;
@@ -3129,23 +3129,18 @@ async function genererQuitusAvecDonnees(application) {
         ? JSON.parse(application.documents) 
         : application.documents || {};
 
-      console.log('📸 Documents reçus:', documents);
-      console.log('📸 Photo identité:', documents?.photoIdentite);
-
       if (documents?.photoIdentite && documents.photoIdentite !== 'Non fourni') {
-        // ✅ CORRECTION: Utiliser l'URL complète de l'API
-        const photoUrl = `https://depot-w4hn.onrender.com/uploads/${documents.photoIdentite}`;
-        console.log('📸 URL photo:', photoUrl);
+        // ✅ URL Cloudinary directe (pas besoin de proxy)
+        const photoUrl = documents.photoIdentite;
         
-        await new Promise((resolve) => {
+        console.log('📸 Chargement photo depuis Cloudinary:', photoUrl);
+
+        await new Promise((resolve, reject) => {
           const img = new Image();
-          // ✅ IMPORTANT: CrossOrigin pour éviter les erreurs CORS
           img.crossOrigin = 'Anonymous';
           
           img.onload = function() {
             try {
-              console.log('✅ Image chargée, dimensions:', img.width, 'x', img.height);
-              
               const canvas = document.createElement('canvas');
               const ctx = canvas.getContext('2d');
               
@@ -3158,6 +3153,7 @@ async function genererQuitusAvecDonnees(application) {
               ctx.fillStyle = 'white';
               ctx.fillRect(0, 0, pixelWidth, pixelHeight);
               
+              // Calcul ratio
               const imgRatio = img.width / img.height;
               const canvasRatio = pixelWidth / pixelHeight;
               
@@ -3185,40 +3181,30 @@ async function genererQuitusAvecDonnees(application) {
               doc.rect(photoX, photoY, photoWidth, photoHeight);
               
               photoAdded = true;
-              console.log('✅ Photo ajoutée au PDF');
+              console.log('✅ Photo ajoutée depuis Cloudinary');
               resolve();
               
             } catch (error) {
               console.error('❌ Erreur traitement photo:', error);
-              resolve();
+              reject(error);
             }
           };
           
           img.onerror = (error) => {
             console.error('❌ Erreur chargement image:', error);
-            console.error('❌ URL tentée:', photoUrl);
-            resolve();
+            reject(error);
           };
           
-          // Timeout de sécurité
-          setTimeout(() => {
-            console.warn('⚠️ Timeout chargement photo (5s)');
-            resolve();
-          }, 5000);
-          
-          // ✅ Charger l'image
-          console.log('📥 Chargement de l\'image...');
+          // ✅ Charger l'image Cloudinary
           img.src = photoUrl;
         });
-      } else {
-        console.warn('⚠️ Pas de photo d\'identité disponible');
       }
     } catch (error) {
-      console.error('❌ Erreur traitement photo:', error);
+      console.warn('⚠️ Photo non disponible:', error);
     }
 
     if (!photoAdded) {
-      console.log('📦 Affichage cadre par défaut (pas de photo)');
+      // Placeholder si pas de photo
       doc.setDrawColor(0, 0, 0);
       doc.setLineWidth(0.3);
       doc.rect(photoX, photoY, photoWidth, photoHeight);
@@ -3226,6 +3212,7 @@ async function genererQuitusAvecDonnees(application) {
       doc.setTextColor(150, 150, 150);
       doc.text('PHOTO', photoX + photoWidth/2, photoY + photoHeight/2, { align: 'center' });
     }
+
 
     // Informations personnelles (COMPACTÉES)
     const infoX = 56;
