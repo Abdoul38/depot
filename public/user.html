@@ -607,28 +607,312 @@
 
             <!-- Page Mes dossiers -->
                    <!-- Page Mes dossiers -->
-            <div id="mesDossiers" class="page">
-                <h2 style="margin-bottom: 30px;">Mes dossiers</h2>
-                
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Date de dépôt</th>
-                            <th>Nom et Prenom</th>
-                            <th>Numero dossier</th>
-                            <th>Statut</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tableauDossiers">
-                        <tr>
-                            <td colspan="5" style="text-align: center; padding: 40px; color: #666;">
-                                Aucun dossier déposé pour le moment
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+           <!-- Page Mes dossiers - VERSION RESPONSIVE -->
+<div id="mesDossiers" class="page">
+    <h2 style="margin-bottom: 30px;">📋 Mes dossiers</h2>
+    
+    <!-- Option 1: Tableau avec scroll horizontal (par défaut) -->
+    <div class="table-responsive scroll-indicator" id="tableContainer">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Date de dépôt</th>
+                    <th>Nom et Prénom</th>
+                    <th>Numéro dossier</th>
+                    <th>Statut</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="tableauDossiers">
+                <tr>
+                    <td colspan="5" style="text-align: center; padding: 40px; color: #666;">
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📂</div>
+                            <div class="empty-state-text">Aucun dossier déposé pour le moment</div>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Option 2: Version cartes pour mobile (affichée automatiquement en dessous de 768px) -->
+    <div id="mobileCardsContainer" style="display: none;">
+        <!-- Les cartes seront générées dynamiquement -->
+    </div>
+</div>
+
+<script>
+// Script pour gérer le scroll et l'indicateur
+document.addEventListener('DOMContentLoaded', function() {
+    const tableContainer = document.querySelector('.table-responsive');
+    
+    if (tableContainer) {
+        // Détecter le premier scroll et masquer l'indicateur
+        tableContainer.addEventListener('scroll', function() {
+            this.classList.add('scrolled');
+        }, { once: true });
+        
+        // Afficher un indicateur visuel sur mobile
+        if (window.innerWidth <= 768) {
+            tableContainer.style.borderLeft = '4px solid #667eea';
+            tableContainer.style.borderRight = '4px solid #667eea';
+        }
+    }
+});
+
+// Fonction pour basculer entre tableau et cartes selon la largeur d'écran
+function toggleViewMode() {
+    const tableContainer = document.getElementById('tableContainer');
+    const cardsContainer = document.getElementById('mobileCardsContainer');
+    const isMobile = window.innerWidth <= 768;
+    
+    if (isMobile && cardsContainer && cardsContainer.children.length > 0) {
+        // Afficher les cartes sur mobile si elles existent
+        tableContainer.style.display = 'none';
+        cardsContainer.style.display = 'block';
+    } else {
+        // Afficher le tableau sur desktop
+        tableContainer.style.display = 'block';
+        cardsContainer.style.display = 'none';
+    }
+}
+
+// Écouter les changements de taille d'écran
+window.addEventListener('resize', toggleViewMode);
+window.addEventListener('load', toggleViewMode);
+</script>
+
+<style>
+/* Styles intégrés - À AJOUTER dans votre fichier CSS principal */
+
+/* Conteneur responsive */
+.table-responsive {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin-bottom: 20px;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+/* Table */
+.table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.table thead {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+}
+
+.table th {
+    padding: 15px;
+    text-align: left;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.table td {
+    padding: 12px 15px;
+    border-bottom: 1px solid #f0f0f0;
+    white-space: nowrap;
+}
+
+.table tbody tr:hover {
+    background-color: #f8f9fa;
+}
+
+/* Badges de statut */
+.status-badge {
+    padding: 5px 12px;
+    border-radius: 15px;
+    font-size: 12px;
+    font-weight: 600;
+    display: inline-block;
+    white-space: nowrap;
+}
+
+.status-approved {
+    background: #d4edda;
+    color: #155724;
+}
+
+.status-rejected {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.status-pending {
+    background: #fff3cd;
+    color: #856404;
+}
+
+/* Boutons */
+.table .btn {
+    padding: 6px 12px;
+    margin: 2px;
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+/* ===== RESPONSIVE MOBILE ===== */
+@media (max-width: 768px) {
+    .table-responsive {
+        margin: 0 -15px;
+        padding: 0 15px;
+        border-radius: 0;
+    }
+    
+    .table {
+        min-width: 900px; /* Largeur minimum pour voir toutes les colonnes */
+    }
+    
+    .table th,
+    .table td {
+        padding: 10px;
+        font-size: 13px;
+    }
+    
+    /* Boutons empilés verticalement */
+    .table td:last-child {
+        min-width: 150px;
+    }
+    
+    .table .btn {
+        display: block;
+        width: 100%;
+        margin: 3px 0;
+        padding: 8px;
+        font-size: 12px;
+    }
+    
+    /* Indicateur de scroll */
+    .scroll-indicator::after {
+        content: '👉 Faites glisser pour voir plus';
+        display: block;
+        text-align: center;
+        padding: 8px;
+        font-size: 11px;
+        color: #667eea;
+        font-weight: 600;
+        background: linear-gradient(90deg, transparent, #f0f2ff, transparent);
+        animation: pulse 2s infinite;
+    }
+    
+    .scroll-indicator.scrolled::after {
+        display: none;
+    }
+    
+    @keyframes pulse {
+        0%, 100% { opacity: 0.5; }
+        50% { opacity: 1; }
+    }
+}
+
+/* Barre de scroll personnalisée */
+.table-responsive::-webkit-scrollbar {
+    height: 8px;
+}
+
+.table-responsive::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border-radius: 10px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb:hover {
+    background: #667eea;
+}
+
+/* État vide */
+.empty-state {
+    text-align: center;
+    padding: 40px 20px;
+}
+
+.empty-state-icon {
+    font-size: 60px;
+    margin-bottom: 15px;
+    opacity: 0.5;
+}
+
+.empty-state-text {
+    font-size: 16px;
+    color: #999;
+}
+
+/* ===== VERSION CARTES MOBILE (optionnel) ===== */
+.mobile-card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 15px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+    border-left: 4px solid #667eea;
+}
+
+.mobile-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #f0f0f0;
+}
+
+.mobile-card-title {
+    font-weight: 600;
+    color: #333;
+    font-size: 16px;
+}
+
+.mobile-card-date {
+    font-size: 12px;
+    color: #666;
+}
+
+.mobile-card-info {
+    display: grid;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.mobile-card-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 5px 0;
+}
+
+.mobile-card-label {
+    font-weight: 600;
+    color: #666;
+    font-size: 13px;
+}
+
+.mobile-card-value {
+    color: #333;
+    font-size: 14px;
+    font-family: monospace;
+}
+
+.mobile-card-actions {
+    display: grid;
+    gap: 8px;
+}
+
+.mobile-card-actions .btn {
+    width: 100%;
+    padding: 12px;
+    font-size: 14px;
+}
+</style>
            <!-- Page de modification de dossier -->
             <!-- Modifier la page de modification de dossier -->
 <!-- Page de modification de dossier - À REMPLACER COMPLÈTEMENT dans user.html -->
