@@ -259,7 +259,7 @@ async function sauvegarderFaculte(event) {
     event.preventDefault();
     
     try {
-        
+        UIHelpers.showLoading(true);
         
         const faculteData = {
             nom: document.getElementById('faculteNom').value,
@@ -275,8 +275,14 @@ async function sauvegarderFaculte(event) {
         
         await apiClient.saveFaculte(faculteData);
         
+        // ✅ Vider le cache
+        viderCacheApresModification('faculte');
+        
         closeModal('ajoutFaculteModal');
-        chargerFacultes();
+        
+        // ✅ Recharger
+        setTimeout(() => chargerFacultes(), 300);
+        
         UIHelpers.showSuccess(`Faculté ${id ? 'modifiée' : 'ajoutée'} avec succès`);
         
     } catch (error) {
@@ -293,9 +299,16 @@ async function supprimerFaculte(id) {
     }
     
     try {
+        UIHelpers.showLoading(true);
         
         await apiClient.deleteFaculte(id);
-        chargerFacultes();
+        
+        // ✅ Vider le cache
+        viderCacheApresModification('faculte');
+        
+        // ✅ Recharger
+        setTimeout(() => chargerFacultes(), 300);
+        
         UIHelpers.showSuccess('Faculté supprimée avec succès');
     } catch (error) {
         console.error('Erreur suppression faculté:', error);
@@ -514,37 +527,69 @@ async function sauvegarderFiliere(event) {
     event.preventDefault();
     
     try {
+        UIHelpers.showLoading(true);
         
+        console.log('💾 Début sauvegarde filière');
         
-        // Récupérer les types de bac sélectionnés
         const typesBacIds = [];
-        document.querySelectorAll('#typesBacContainer input[type="checkbox"]:checked').forEach(checkbox => {
-            typesBacIds.push(checkbox.value);
+        const selectedCheckboxes = document.querySelectorAll('#typesBacContainer input[type="checkbox"]:checked');
+        
+        console.log(`📋 ${selectedCheckboxes.length} types de bac sélectionnés`);
+        
+        selectedCheckboxes.forEach(checkbox => {
+            const typeBacId = parseInt(checkbox.value);
+            if (!isNaN(typeBacId)) {
+                typesBacIds.push(typeBacId);
+            }
         });
         
+        console.log('🏷️ IDs des types de bac:', typesBacIds);
+        
+        const nom = document.getElementById('filiereNom').value?.trim();
+        const libelle = document.getElementById('filiereLibelle').value?.trim();
+        const faculteId = document.getElementById('filiereFaculte').value;
+        
+        if (!nom || !libelle || !faculteId) {
+            throw new Error('Le nom, le libellé et la faculté sont obligatoires');
+        }
+        
+        if (typesBacIds.length === 0) {
+            throw new Error('Veuillez sélectionner au moins un type de bac autorisé');
+        }
+        
         const filiereData = {
-            nom: document.getElementById('filiereNom').value,
-            libelle: document.getElementById('filiereLibelle').value,
-            faculte_id: document.getElementById('filiereFaculte').value,
+            nom: nom.toUpperCase(),
+            libelle: libelle,
+            faculte_id: parseInt(faculteId),
             capacite_max: document.getElementById('filiereCapacite').value || null,
-            description: document.getElementById('filiereDescription').value,
+            description: document.getElementById('filiereDescription').value?.trim() || null,
             active: document.getElementById('filiereActive').checked,
             types_bac_ids: typesBacIds
         };
         
         const id = document.getElementById('filiereId').value;
         if (id) {
-            filiereData.id = id;
+            filiereData.id = parseInt(id);
         }
+        
+        console.log('📤 Données à envoyer:', filiereData);
         
         await apiClient.saveFiliere(filiereData);
         
+        console.log('✅ Filière sauvegardée avec succès');
+        
+        // ✅ Vider le cache
+        viderCacheApresModification('filiere');
+        
         closeModal('ajoutFiliereModal');
-        chargerFilieres();
+        
+        // ✅ Recharger
+        setTimeout(() => chargerFilieres(), 300);
+        
         UIHelpers.showSuccess(`Filière ${id ? 'modifiée' : 'ajoutée'} avec succès`);
         
     } catch (error) {
-        console.error('Erreur sauvegarde filière:', error);
+        console.error('❌ Erreur sauvegarde filière:', error);
         UIHelpers.showError(error.message || 'Erreur lors de la sauvegarde');
     } finally {
         UIHelpers.showLoading(false);
@@ -557,6 +602,7 @@ async function sauvegarderDiplome(event) {
     try {
         console.log('💾 Sauvegarde diplôme...');
         
+        UIHelpers.showLoading(true);
         
         const diplomeData = {
             libelle: document.getElementById('diplomeLibelle').value.trim(),
@@ -572,7 +618,6 @@ async function sauvegarderDiplome(event) {
         
         console.log('📤 Données à envoyer:', diplomeData);
         
-        // Validation
         if (!diplomeData.libelle || !diplomeData.faculte_id || !diplomeData.filiere_id) {
             throw new Error('Tous les champs sont obligatoires');
         }
@@ -585,8 +630,13 @@ async function sauvegarderDiplome(event) {
         
         console.log('✅ Diplôme sauvegardé');
         
+        // ✅ Vider le cache
+        viderCacheApresModification('diplome');
+        
         closeModal('ajoutDiplomeModal');
-        await chargerDiplomes();
+        
+        // ✅ Recharger
+        setTimeout(() => chargerDiplomes(), 300);
         
         UIHelpers.showSuccess(`Diplôme ${id ? 'modifié' : 'ajouté'} avec succès`);
         
@@ -597,6 +647,7 @@ async function sauvegarderDiplome(event) {
         UIHelpers.showLoading(false);
     }
 }
+
 
 function modifierDiplome(id) {
     console.log('🔧 Modification diplôme ID:', id);
@@ -615,9 +666,16 @@ async function supprimerDiplome(id) {
     }
     
     try {
+        UIHelpers.showLoading(true);
         
         await apiClient.deleteDiplome(id);
-        await chargerDiplomes();
+        
+        // ✅ Vider le cache
+        viderCacheApresModification('diplome');
+        
+        // ✅ Recharger
+        setTimeout(() => chargerDiplomes(), 300);
+        
         UIHelpers.showSuccess('Diplôme supprimé avec succès');
     } catch (error) {
         console.error('❌ Erreur suppression diplôme:', error);
@@ -652,7 +710,7 @@ async function sauvegarderTypeBac(event) {
     event.preventDefault();
     
     try {
-        
+        UIHelpers.showLoading(true);
         
         const typeBacData = {
             nom: document.getElementById('typeBacNom').value,
@@ -668,8 +726,14 @@ async function sauvegarderTypeBac(event) {
         
         await apiClient.saveTypeBac(typeBacData);
         
+        // ✅ Vider le cache
+        viderCacheApresModification('typebac');
+        
         closeModal('ajoutTypeBacModal');
-        chargerTypeBacs();
+        
+        // ✅ Recharger
+        setTimeout(() => chargerTypeBacs(), 300);
+        
         UIHelpers.showSuccess(`Type de bac ${id ? 'modifié' : 'ajouté'} avec succès`);
         
     } catch (error) {
