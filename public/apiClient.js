@@ -1853,27 +1853,59 @@ async function nextStep(event, nextStepNumber) {
 }
 
 function afficherResume() {
-    // Informations personnelles complètes
+    // Informations personnelles
     document.getElementById('resumeNomPrenom').textContent = 
         `${currentApplicationData.prenom} ${currentApplicationData.nom}`;
+    
     document.getElementById('resumeNaissance').textContent = 
-        `Né(e) le ${new Date(currentApplicationData.dateNaissance).toLocaleDateString('fr-FR')} à ${currentApplicationData.lieuNaissance}`;
+        `${new Date(currentApplicationData.dateNaissance).toLocaleDateString('fr-FR')} à ${currentApplicationData.lieuNaissance}`;
+    
     document.getElementById('resumeContact').textContent = 
         `${currentApplicationData.email} | ${currentApplicationData.telephone}`;
     
+    document.getElementById('resumeNationalite').textContent = 
+        currentApplicationData.nationalite;
+    
+    document.getElementById('resumeGenre').textContent = 
+        currentApplicationData.genre === 'masculin' ? 'Masculin' : 'Féminin';
+    
+    document.getElementById('resumeAdresse').textContent = 
+        currentApplicationData.adresse;
+    
     // Informations baccalauréat
     document.getElementById('resumeBac').innerHTML = `
-        <strong>Type de bac:</strong> ${currentApplicationData.typeBac}<br>
-        <strong>Lieu d'obtention:</strong> ${currentApplicationData.lieuObtention}<br>
-        <strong>Année d'obtention:</strong> ${currentApplicationData.anneeObtention}<br>
-        <strong>Mention:</strong> ${currentApplicationData.mention}
+        <div class="resume-item">
+            <span class="resume-label">Type de bac</span>
+            <span class="resume-value">${currentApplicationData.typeBac}</span>
+        </div>
+        <div class="resume-item">
+            <span class="resume-label">Lieu d'obtention</span>
+            <span class="resume-value">${currentApplicationData.lieuObtention}</span>
+        </div>
+        <div class="resume-item">
+            <span class="resume-label">Année d'obtention</span>
+            <span class="resume-value">${currentApplicationData.anneeObtention}</span>
+        </div>
+        <div class="resume-item">
+            <span class="resume-label">Mention</span>
+            <span class="resume-value">${currentApplicationData.mention}</span>
+        </div>
     `;
     
     // Formation
     document.getElementById('resumeFormation').innerHTML = `
-        <strong>Premier choix:</strong> ${currentApplicationData.premierChoix}<br>
-        <strong>Deuxième choix:</strong> ${currentApplicationData.deuxiemeChoix}<br>
-        <strong>Troisième choix:</strong> ${currentApplicationData.troisiemeChoix}
+        <div class="resume-item">
+            <span class="resume-label">Premier choix (Priorité 1)</span>
+            <span class="resume-value" style="color: #28a745;">${currentApplicationData.premierChoix}</span>
+        </div>
+        <div class="resume-item">
+            <span class="resume-label">Deuxième choix (Priorité 2)</span>
+            <span class="resume-value" style="color: #ffc107;">${currentApplicationData.deuxiemeChoix}</span>
+        </div>
+        <div class="resume-item">
+            <span class="resume-label">Troisième choix (Priorité 3)</span>
+            <span class="resume-value" style="color: #dc3545;">${currentApplicationData.troisiemeChoix}</span>
+        </div>
     `;
     
     // Documents avec aperçus
@@ -1881,11 +1913,11 @@ function afficherResume() {
     listeDocuments.innerHTML = '';
     
     const documentTypes = {
-        'photoIdentite': 'Photo d\'identité',
-        'pieceIdentite': 'Pièce d\'identité',
-        'diplomeBac': 'Diplôme de baccalauréat',
-        'releve': 'Relevé de notes',
-        'certificatNationalite': 'Certificat de nationalité'
+        'photoIdentite': '📷 Photo d\'identité',
+        'pieceIdentite': '🆔 Pièce d\'identité',
+        'diplomeBac': '🎓 Diplôme de baccalauréat',
+        'releve': '📊 Relevé de notes',
+        'certificatNationalite': '🌍 Certificat de nationalité'
     };
     
     Object.entries(documentTypes).forEach(([type, label]) => {
@@ -1894,11 +1926,6 @@ function afficherResume() {
         
         const div = document.createElement('div');
         div.className = 'document-resume-item';
-        div.style.marginBottom = '15px';
-        div.style.padding = '10px';
-        div.style.border = '1px solid #e1e5e9';
-        div.style.borderRadius = '8px';
-        div.style.background = '#f8f9fa';
         
         if (file) {
             if (file.type.startsWith('image/')) {
@@ -1906,12 +1933,12 @@ function afficherResume() {
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     div.innerHTML = `
-                        <div style="display: flex; align-items: center; gap: 15px;">
-                            <img src="${e.target.result}" alt="Aperçu" style="width: 60px; height: 60px; object-fit: cover; border-radius: 5px;">
-                            <div style="flex: 1;">
-                                <div style="font-weight: 600; color: #28a745;">${label}</div>
-                                <div style="font-size: 12px; color: #666;">${file.name}</div>
-                                <div style="font-size: 11px; color: #999;">${(file.size / 1024 / 1024).toFixed(2)} MB</div>
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <img src="${e.target.result}" alt="Aperçu" style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px; border: 2px solid #28a745;">
+                            <div style="flex: 1; min-width: 0;">
+                                <div style="font-weight: 600; color: #28a745; font-size: 0.9em;">${label}</div>
+                                <div style="font-size: 0.75em; color: #666; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${file.name}</div>
+                                <div style="font-size: 0.7em; color: #999;">${(file.size / 1024 / 1024).toFixed(2)} MB</div>
                             </div>
                         </div>
                     `;
@@ -1920,19 +1947,19 @@ function afficherResume() {
             } else {
                 // Pour les PDF
                 div.innerHTML = `
-                    <div style="display: flex; align-items: center; gap: 15px;">
-                        <div style="width: 60px; height: 60px; background: #dc3545; color: white; display: flex; align-items: center; justify-content: center; border-radius: 5px; font-size: 24px;">📄</div>
-                        <div style="flex: 1;">
-                            <div style="font-weight: 600; color: #28a745;">${label}</div>
-                            <div style="font-size: 12px; color: #666;">${file.name}</div>
-                            <div style="font-size: 11px; color: #999;">${(file.size / 1024 / 1024).toFixed(2)} MB</div>
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="width: 50px; height: 50px; background: #dc3545; color: white; display: flex; align-items: center; justify-content: center; border-radius: 8px; font-size: 20px;">📄</div>
+                        <div style="flex: 1; min-width: 0;">
+                            <div style="font-weight: 600; color: #28a745; font-size: 0.9em;">${label}</div>
+                            <div style="font-size: 0.75em; color: #666; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${file.name}</div>
+                            <div style="font-size: 0.7em; color: #999;">${(file.size / 1024 / 1024).toFixed(2)} MB</div>
                         </div>
                     </div>
                 `;
             }
         } else {
             div.innerHTML = `
-                <div style="color: #dc3545; font-style: italic;">
+                <div style="color: #dc3545; font-style: italic; font-size: 0.9em;">
                     ${label}: Non fourni
                 </div>
             `;
@@ -2037,65 +2064,118 @@ function afficherConfirmationInscription(application) {
         document.getElementById('confirmDeuxiemeChoix').textContent = application.deuxieme_choix;
         document.getElementById('confirmTroisiemeChoix').textContent = application.troisieme_choix;
         
-        // Documents
+        // ✅ CORRECTION: Documents avec style approprié
         const documentsContainer = document.getElementById('confirmDocuments');
         const documentTypes = {
-            'photoIdentite': '📷 Photo d\'identité',
-            'pieceIdentite': '🆔 Pièce d\'identité',
-            'diplomeBac': '🎓 Diplôme de Bac',
-            'releve': '📊 Relevé de notes',
-            'certificatNationalite': '🌍 Certificat de nationalité'
+            'photoIdentite': { label: '📷 Photo d\'identité', icon: '📷' },
+            'pieceIdentite': { label: '🆔 Pièce d\'identité', icon: '🆔' },
+            'diplomeBac': { label: '🎓 Diplôme de Bac', icon: '🎓' },
+            'releve': { label: '📊 Relevé de notes', icon: '📊' },
+            'certificatNationalite': { label: '🌍 Certificat de nationalité', icon: '🌍' }
         };
         
         const documents = typeof application.documents === 'string' 
             ? JSON.parse(application.documents) 
             : application.documents || {};
         
+        console.log('📎 Documents reçus:', documents);
+        
         documentsContainer.innerHTML = '';
-        Object.entries(documentTypes).forEach(([type, label]) => {
-            const filename = documents[type];
-            const isPresent = filename && filename !== 'Non fourni' && filename !== 'Optionnel';
+        
+        Object.entries(documentTypes).forEach(([type, config]) => {
+            const docData = documents[type];
             
-            const btn = document.createElement('button');
-            btn.className = 'btn';
-            btn.style.cssText = `
-                padding: 12px 15px;
-                background: ${isPresent ? '#d1ecf1' : '#e9ecef'};
-                color: ${isPresent ? '#0c5460' : '#6c757d'};
+            // Vérifier si le document existe (URL Cloudinary ou nom de fichier)
+            const isPresent = docData && 
+                             docData !== 'Non fourni' && 
+                             docData !== 'Optionnel' &&
+                             docData !== '';
+            
+            const docDiv = document.createElement('div');
+            docDiv.className = 'document-item';
+            docDiv.style.cssText = `
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 15px;
+                background: ${isPresent ? '#d1ecf1' : '#f8f9fa'};
                 border: 1px solid ${isPresent ? '#bee5eb' : '#dee2e6'};
                 border-radius: 8px;
-                text-align: left;
-                cursor: ${isPresent ? 'pointer' : 'default'};
+                margin-bottom: 10px;
+                transition: all 0.3s ease;
             `;
             
             if (isPresent) {
-                btn.innerHTML = `<span>${label}</span>`;
-                btn.onclick = () => telechargerDocument(application.id, type);
-            } else {
-                btn.innerHTML = `<span>${label}</span> <small style="float: right;">Non fourni</small>`;
-                btn.disabled = true;
+                docDiv.style.cursor = 'pointer';
+                docDiv.onmouseenter = () => {
+                    docDiv.style.background = '#bee5eb';
+                    docDiv.style.transform = 'translateX(5px)';
+                };
+                docDiv.onmouseleave = () => {
+                    docDiv.style.background = '#d1ecf1';
+                    docDiv.style.transform = 'translateX(0)';
+                };
             }
             
-            documentsContainer.appendChild(btn);
+            docDiv.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 12px; flex: 1;">
+                    <span style="font-size: 1.5em;">${config.icon}</span>
+                    <div style="flex: 1;">
+                        <div style="font-weight: 600; color: ${isPresent ? '#0c5460' : '#6c757d'};">
+                            ${config.label}
+                        </div>
+                        ${isPresent ? `
+                            <div style="font-size: 0.75em; color: #666; margin-top: 3px;">
+                                ✅ Document disponible
+                            </div>
+                        ` : `
+                            <div style="font-size: 0.75em; color: #999; font-style: italic; margin-top: 3px;">
+                                ❌ Non fourni
+                            </div>
+                        `}
+                    </div>
+                </div>
+                ${isPresent ? `
+                    <button 
+                        onclick="telechargerDocumentConfirmation('${application.id}', '${type}')" 
+                        class="btn-download-doc"
+                        style="
+                            padding: 8px 16px;
+                            background: #17a2b8;
+                            color: white;
+                            border: none;
+                            border-radius: 6px;
+                            font-weight: 600;
+                            cursor: pointer;
+                            transition: all 0.3s ease;
+                            font-size: 0.9em;
+                        "
+                        onmouseover="this.style.background='#138496'"
+                        onmouseout="this.style.background='#17a2b8'"
+                    >
+                        ⬇️ Télécharger
+                    </button>
+                ` : `
+                    <span style="
+                        padding: 8px 16px;
+                        background: #e9ecef;
+                        color: #6c757d;
+                        border-radius: 6px;
+                        font-size: 0.85em;
+                        font-style: italic;
+                    ">
+                        Non disponible
+                    </span>
+                `}
+            `;
+            
+            documentsContainer.appendChild(docDiv);
         });
         
         // Bouton de téléchargement du quitus
         document.getElementById('btnTelechargerQuitusConfirm').onclick = () => {
             genererQuitusAvecDonnees(application);
         };
-        
-        // ✅ NOUVEAU : Ajouter un bouton pour aller à "Mes Dossiers"
-        const btnMesDossiers = document.createElement('button');
-        btnMesDossiers.className = 'btn btn-primary';
-        btnMesDossiers.style.cssText = 'margin-top: 20px; width: 100%;';
-        btnMesDossiers.innerHTML = '📋 Voir tous mes dossiers';
-        btnMesDossiers.onclick = () => {
-            navigateToUserPage('mesDossiers');
-        };
-        
-        // Ajouter le bouton après le bouton quitus
-        const btnContainer = document.getElementById('btnTelechargerQuitusConfirm').parentElement;
-        btnContainer.appendChild(btnMesDossiers);
         
         // Afficher la page de confirmation
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -2107,7 +2187,7 @@ function afficherConfirmationInscription(application) {
         // Réinitialiser currentApplicationData
         currentApplicationData = {};
         
-        // ✅ CORRECTION : Vider le cache après un court délai
+        // Vider le cache après un court délai
         setTimeout(() => {
             apiCache.clear('applications/my');
             console.log('🗑️ Cache dossiers vidé');
@@ -2118,6 +2198,64 @@ function afficherConfirmationInscription(application) {
         UIHelpers.showError('Erreur lors de l\'affichage de la confirmation');
     }
 }
+// Fonction pour télécharger un document depuis la page de confirmation
+async function telechargerDocumentConfirmation(applicationId, documentType) {
+    try {
+        console.log('📥 Téléchargement document:', { applicationId, documentType });
+        
+        UIHelpers.showLoading(true);
+        
+        // Appel API pour télécharger le document
+        const response = await fetch(`${API_BASE_URL}/applications/${applicationId}/documents/${documentType}`, {
+            headers: {
+                'Authorization': `Bearer ${apiClient.token}`
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`Erreur ${response.status}: ${response.statusText}`);
+        }
+
+        // Obtenir le nom du fichier depuis les headers
+        const contentDisposition = response.headers.get('Content-Disposition');
+        let filename = `${documentType}.pdf`;
+        
+        if (contentDisposition) {
+            const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+            if (filenameMatch && filenameMatch[1]) {
+                filename = filenameMatch[1].replace(/['"]/g, '');
+            }
+        }
+
+        const blob = await response.blob();
+        
+        // Créer un lien de téléchargement
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        a.style.display = 'none';
+        
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        
+        // Nettoyer l'URL après le téléchargement
+        setTimeout(() => URL.revokeObjectURL(url), 100);
+        
+        UIHelpers.showSuccess(`✅ Document "${filename}" téléchargé avec succès`);
+        
+    } catch (error) {
+        console.error('❌ Erreur téléchargement document:', error);
+        UIHelpers.showError('Erreur lors du téléchargement du document');
+    } finally {
+        UIHelpers.showLoading(false);
+    }
+}
+
+// Export global
+window.telechargerDocumentConfirmation = telechargerDocumentConfirmation;
+
 // =================== GESTION CACHE APRÈS MODIFICATIONS ===================
 
 // Fonction pour vider le cache après une modification admin
@@ -2407,43 +2545,101 @@ function genererListeDocuments(documentsJson, applicationId) {
         const documents = typeof documentsJson === 'string' ? JSON.parse(documentsJson) : documentsJson || {};
         
         const documentTypes = {
-            'photoIdentite': 'Photo d\'identité',
-            'pieceIdentite': 'Pièce d\'identité',
-            'diplomeBac': 'Diplôme de baccalauréat',
-            'releve': 'Relevé de notes',
-            'certificatNationalite': 'Certificat de nationalité'
+            'photoIdentite': { label: 'Photo d\'identité', type: 'image' },
+            'pieceIdentite': { label: 'Pièce d\'identité', type: 'pdf' },
+            'diplomeBac': { label: 'Diplôme de baccalauréat', type: 'pdf' },
+            'releve': { label: 'Relevé de notes', type: 'pdf' },
+            'certificatNationalite': { label: 'Certificat de nationalité', type: 'pdf' }
         };
         
         let html = '';
         
-        Object.entries(documentTypes).forEach(([key, label]) => {
-            const filename = documents[key];
-            const isPresent = filename && filename !== 'Non fourni' && filename !== 'Optionnel';
+        Object.entries(documentTypes).forEach(([key, config]) => {
+            const fileUrl = documents[key];
+            const isPresent = fileUrl && fileUrl !== 'Non fourni' && fileUrl !== 'Optionnel';
             
-            html += `
-                <div class="document-item ${!isPresent ? 'document-missing' : ''}">
-                    <div class="document-info">
-                        <div class="document-name">${label}</div>
-                        <div class="document-filename">${filename || 'Non fourni'}</div>
+            if (isPresent) {
+                // Afficher l'aperçu du document
+                if (config.type === 'image') {
+                    html += `
+                        <div class="document-preview-item">
+                            <h4>${config.label}</h4>
+                            <div class="document-image-container">
+                                <img src="${fileUrl}" alt="${config.label}" class="document-preview-img" onclick="agrandirImage('${fileUrl}', '${config.label}')">
+                            </div>
+                            <button class="btn btn-primary" onclick="telechargerDocument(${applicationId}, '${key}')">
+                                Télécharger
+                            </button>
+                        </div>
+                    `;
+                } else if (config.type === 'pdf') {
+                    html += `
+                        <div class="document-preview-item">
+                            <h4>${config.label}</h4>
+                            <div class="document-pdf-container">
+                                <iframe src="${fileUrl}#toolbar=0" class="document-preview-pdf"></iframe>
+                            </div>
+                            <button class="btn btn-primary" onclick="telechargerDocument(${applicationId}, '${key}')">
+                                Télécharger
+                            </button>
+                        </div>
+                    `;
+                }
+            } else {
+                html += `
+                    <div class="document-item-empty">
+                        <p>${config.label}: Non disponible</p>
                     </div>
-                    ${isPresent ? `
-                        <button class="btn-icon btn-download" onclick="telechargerDocument(${applicationId}, '${key}')" style="padding: 8px 12px; font-size: 12px;">
-                            <span>📥</span>
-                            Télécharger
-                        </button>
-                    ` : `
-                        <span style="color: #856404; font-style: italic; font-size: 12px;">Non disponible</span>
-                    `}
-                </div>
-            `;
+                `;
+            }
         });
         
-        return html || '<p style="color: #666; text-align: center; padding: 20px;">Aucun document disponible</p>';
+        return html;
     } catch (error) {
         console.error('Erreur parsing documents:', error);
-        return '<p style="color: #dc3545; text-align: center; padding: 20px;">Erreur lors du chargement des documents</p>';
+        return '<p>Erreur chargement documents</p>';
     }
 }
+function agrandirImage(url, titre) {
+    
+    const modal = document.createElement('div');
+    modal.id = 'imageModal';
+    modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.9);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10000;
+        cursor: pointer;
+    `;
+    
+    modal.innerHTML = `
+        <div style="position: relative; max-width: 90vw; max-height: 90vh;">
+            <button onclick="document.getElementById('imageModal').remove()" 
+                    style="position: absolute; top: -40px; right: 0; background: white; border: none; width: 35px; height: 35px; border-radius: 50%; cursor: pointer; font-size: 24px;">
+                ×
+            </button>
+            <img src="${url}" alt="${titre}" style="max-width: 100%; max-height: 90vh; border-radius: 8px;">
+            <p style="color: white; text-align: center; margin-top: 20px;">${titre}</p>
+        </div>
+    `;
+    
+    modal.onclick = (e) => {
+        if (e.target === modal) {
+            modal.remove();
+        }
+    };
+    
+    document.body.appendChild(modal);
+}
+
+// Export global
+window.agrandirImage = agrandirImage;
 
 // Fonction pour générer le badge de statut
 function genererBadgeStatut(statut) {
