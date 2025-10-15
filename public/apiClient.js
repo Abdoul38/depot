@@ -3119,7 +3119,7 @@ async function genererQuitusAvecDonnees(application) {
 
     // Photo
     const photoX = 22;
-    const photoY = 75;
+    const photoY = y;
     const photoWidth = 28;
     const photoHeight = 33;
     let photoAdded = false;
@@ -3133,18 +3133,11 @@ async function genererQuitusAvecDonnees(application) {
       console.log('📸 Photo identité:', documents?.photoIdentite);
 
       if (documents?.photoIdentite && documents.photoIdentite !== 'Non fourni') {
-<<<<<<< HEAD
         // ✅ CORRECTION: Utiliser l'URL complète de l'API
         const photoUrl = `https://depot-w4hn.onrender.com/uploads/${documents.photoIdentite}`;
         console.log('📸 URL photo:', photoUrl);
-=======
-        // ✅ URL Cloudinary directe (pas besoin de proxy)
-        const photoUrl = documents.photoIdentite;
->>>>>>> 224e6c75 (Install Cloudinary dependencies)
         
-        console.log('📸 Chargement photo depuis Cloudinary:', photoUrl);
-
-        await new Promise((resolve, reject) => {
+        await new Promise((resolve) => {
           const img = new Image();
           // ✅ IMPORTANT: CrossOrigin pour éviter les erreurs CORS
           img.crossOrigin = 'Anonymous';
@@ -3165,7 +3158,6 @@ async function genererQuitusAvecDonnees(application) {
               ctx.fillStyle = 'white';
               ctx.fillRect(0, 0, pixelWidth, pixelHeight);
               
-              // Calcul ratio
               const imgRatio = img.width / img.height;
               const canvasRatio = pixelWidth / pixelHeight;
               
@@ -3193,26 +3185,17 @@ async function genererQuitusAvecDonnees(application) {
               doc.rect(photoX, photoY, photoWidth, photoHeight);
               
               photoAdded = true;
-<<<<<<< HEAD
               console.log('✅ Photo ajoutée au PDF');
-=======
-              console.log('✅ Photo ajoutée depuis Cloudinary');
->>>>>>> 224e6c75 (Install Cloudinary dependencies)
               resolve();
               
             } catch (error) {
               console.error('❌ Erreur traitement photo:', error);
-<<<<<<< HEAD
               resolve();
-=======
-              reject(error);
->>>>>>> 224e6c75 (Install Cloudinary dependencies)
             }
           };
           
           img.onerror = (error) => {
             console.error('❌ Erreur chargement image:', error);
-<<<<<<< HEAD
             console.error('❌ URL tentée:', photoUrl);
             resolve();
           };
@@ -3225,31 +3208,17 @@ async function genererQuitusAvecDonnees(application) {
           
           // ✅ Charger l'image
           console.log('📥 Chargement de l\'image...');
-=======
-            reject(error);
-          };
-          
-          // ✅ Charger l'image Cloudinary
->>>>>>> 224e6c75 (Install Cloudinary dependencies)
           img.src = photoUrl;
         });
       } else {
         console.warn('⚠️ Pas de photo d\'identité disponible');
       }
     } catch (error) {
-<<<<<<< HEAD
       console.error('❌ Erreur traitement photo:', error);
     }
 
     if (!photoAdded) {
       console.log('📦 Affichage cadre par défaut (pas de photo)');
-=======
-      console.warn('⚠️ Photo non disponible:', error);
-    }
-
-    if (!photoAdded) {
-      // Placeholder si pas de photo
->>>>>>> 224e6c75 (Install Cloudinary dependencies)
       doc.setDrawColor(0, 0, 0);
       doc.setLineWidth(0.3);
       doc.rect(photoX, photoY, photoWidth, photoHeight);
@@ -3469,7 +3438,7 @@ async function genererQuitusAvecDonnees(application) {
     UIHelpers.showSuccess('Quitus téléchargé avec succès !');
 
   } catch (error) {
-    console.error("❌ Erreur génération quitus:", error);
+    console.error("Erreur génération quitus:", error);
     UIHelpers.showError('Erreur lors de la génération du quitus');
     throw error;
   }
