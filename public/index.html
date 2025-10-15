@@ -1513,6 +1513,7 @@ function createUserTopbarNav() {
 }
 
 // Navigation pour les pages utilisateur (sans sidebar)
+// Navigation pour les pages utilisateur (sans sidebar)
 function navigateToUserPage(pageId) {
     console.log('📄 Navigation utilisateur vers:', pageId);
     
@@ -1538,6 +1539,12 @@ function navigateToUserPage(pageId) {
             }
         });
         
+        // ✅ CORRECTION : Vider le cache avant le chargement
+        if (pageId === 'mesDossiers') {
+            apiCache.clear('applications/my');
+            console.log('🗑️ Cache vidé avant chargement dossiers');
+        }
+        
         // Charger les données automatiquement
         setTimeout(() => {
             switch(pageId) {
@@ -1548,6 +1555,7 @@ function navigateToUserPage(pageId) {
                     break;
                 case 'mesDossiers':
                     if (typeof chargerMesDossiers === 'function') {
+                        console.log('🔄 Rechargement forcé des dossiers...');
                         chargerMesDossiers();
                     }
                     break;
@@ -1568,95 +1576,186 @@ function navigateToUserPage(pageId) {
 // Export global
 window.navigateToUserPage = navigateToUserPage;
 window.createUserTopbarNav = createUserTopbarNav;
-       function logout() {
+function logout() {
     if (!confirm('Êtes-vous sûr de vouloir vous déconnecter ?')) return;
     
     console.log('🚪 Déconnexion en cours...');
     
-    // Nettoyer le localStorage
-    localStorage.clear();
-    
-    // Nettoyer apiClient
-    if (typeof apiClient !== 'undefined') {
-        apiClient.token = null;
-        apiClient.currentUser = null;
-    }
-    
-    // Détruire tous les graphiques
-    if (window.chartTopFilieresInstance) {
-        window.chartTopFilieresInstance.destroy();
-        window.chartTopFilieresInstance = null;
-    }
-    if (window.chartRepartitionBacInstance) {
-        window.chartRepartitionBacInstance.destroy();
-        window.chartRepartitionBacInstance = null;
-    }
-    if (window.chartEvolutionInstance) {
-        window.chartEvolutionInstance.destroy();
-        window.chartEvolutionInstance = null;
-    }
-    
-    // Retirer la classe user-mode
-    document.body.classList.remove('user-mode');
-    
-    // Masquer la navigation utilisateur
-    const userNavBar = document.getElementById('userTopbarNav');
-    if (userNavBar) userNavBar.style.display = 'none';
-    
-    // Fermer le dropdown s'il est ouvert
-    const dropdown = document.getElementById('userDropdown');
-    if (dropdown) {
-        dropdown.classList.remove('active');
-    }
-    
-    // Réinitialiser l'interface
-    const beforeLoginButtons = document.getElementById('beforeLoginButtons');
-    const afterLoginMenu = document.getElementById('afterLoginMenu');
-    
-    if (beforeLoginButtons) beforeLoginButtons.style.display = 'flex';
-    if (afterLoginMenu) afterLoginMenu.style.display = 'none';
-    
-    // Masquer la sidebar
-    const sidebar = document.getElementById('modernSidebar');
-    const mainWrapper = document.getElementById('mainWrapper');
-    
-    if (sidebar) {
-        sidebar.classList.remove('active', 'collapsed');
-    }
-    if (mainWrapper) {
-        mainWrapper.classList.remove('with-sidebar', 'collapsed');
-    }
-    
-    // Masquer tous les menus
-    const adminMenu = document.getElementById('adminMenu');
-    const userMenu = document.getElementById('userMenu');
-    if (adminMenu) adminMenu.style.display = 'none';
-    if (userMenu) userMenu.style.display = 'none';
-    
-    // Réinitialiser toutes les pages
-    document.querySelectorAll('.page').forEach(page => {
-        page.classList.remove('active');
-        if (page.id !== 'accueil' && page.id !== 'connexion' && page.id !== 'inscription') {
-            if (page.querySelector('.stats-grid, .charts-grid, table')) {
-                const tables = page.querySelectorAll('tbody');
-                tables.forEach(t => t.innerHTML = '');
-            }
+    try {
+        // 1. Nettoyer le localStorage
+        localStorage.clear();
+        
+        // 2. Nettoyer apiClient
+        if (typeof apiClient !== 'undefined') {
+            apiClient.token = null;
+            apiClient.currentUser = null;
         }
-    });
-    
-    // Réinitialiser les formulaires
-    const loginForm = document.getElementById('loginForm');
-    const registerForm = document.getElementById('registerForm');
-    if (loginForm) loginForm.reset();
-    if (registerForm) registerForm.reset();
-    
-    // Retour à la page d'accueil
-    navigateTo('accueil');
-    
-    // Message de confirmation
-    showMessage('✅ Déconnexion réussie ! À bientôt 👋', 'success');
-    
-    console.log('✅ Déconnexion terminée');
+        
+        // 3. Vider tous les caches
+        if (typeof apiCache !== 'undefined') {
+            apiCache.clear();
+        }
+        
+        // 4. Détruire tous les graphiques Chart.js
+        const charts = [
+            'chartTopFilieresInstance',
+            'chartRepartitionBacInstance',
+            'chartEvolutionInstance',
+            'chartEvolutionInscriptionsInstance',
+            'chartFiliereInscriptionsInstance',
+            'chartNiveauInscriptionsInstance',
+            'chartGenreInscriptionsInstance',
+            'chartPaiementInscriptionsInstance'
+        ];
+        
+        charts.forEach(chartName => {
+            if (window[chartName]) {
+                try {
+                    window[chartName].destroy();
+                    window[chartName] = null;
+                } catch (e) {
+                    console.warn('Erreur destruction graphique:', chartName);
+                }
+            }
+        });
+        
+        // 5. Retirer les classes et modes
+        document.body.classList.remove('user-mode');
+        document.body.classList.remove('admin-mode');
+        
+        // 6. Masquer/Réinitialiser les éléments UI
+        
+        // ✅ Masquer la navigation utilisateur dans le topbar
+        const userTopbarNav = document.getElementById('userTopbarNav');
+        if (userTopbarNav) {
+            userTopbarNav.remove();
+        }
+        
+        const userTopbarActions = document.getElementById('userTopbarActions');
+        if (userTopbarActions) {
+            userTopbarActions.remove();
+        }
+        
+        // ✅ Fermer le dropdown s'il est ouvert
+        const dropdown = document.getElementById('userDropdown');
+        if (dropdown) {
+            dropdown.classList.remove('active');
+        }
+        
+        // ✅ Réinitialiser l'interface topbar
+        const beforeLoginButtons = document.getElementById('beforeLoginButtons');
+        const afterLoginMenu = document.getElementById('afterLoginMenu');
+        
+        if (beforeLoginButtons) {
+            beforeLoginButtons.style.display = 'flex';
+        }
+        if (afterLoginMenu) {
+            afterLoginMenu.style.display = 'none';
+        }
+        
+        // 7. Masquer la sidebar
+        const sidebar = document.getElementById('modernSidebar');
+        const mainWrapper = document.getElementById('mainWrapper');
+        
+        if (sidebar) {
+            sidebar.classList.remove('active', 'collapsed');
+            sidebar.style.display = 'none'; // ✅ Masquer complètement
+        }
+        if (mainWrapper) {
+            mainWrapper.classList.remove('with-sidebar', 'collapsed');
+        }
+        
+        // 8. Masquer tous les menus
+        const adminMenu = document.getElementById('adminMenu');
+        const userMenu = document.getElementById('userMenu');
+        if (adminMenu) adminMenu.style.display = 'none';
+        if (userMenu) userMenu.style.display = 'none';
+        
+        // 9. Masquer le bouton menu mobile
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const mobileUserMenuBtn = document.getElementById('mobileUserMenuBtn');
+        if (mobileMenuBtn) mobileMenuBtn.style.display = 'none';
+        if (mobileUserMenuBtn) mobileUserMenuBtn.style.display = 'none';
+        
+        // 10. Fermer les menus mobiles
+        const mobileUserMenu = document.getElementById('mobileUserMenu');
+        const mobileMenuOverlay = document.getElementById('mobileMenuOverlay');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+        
+        if (mobileUserMenu) mobileUserMenu.classList.remove('active');
+        if (mobileMenuOverlay) mobileMenuOverlay.classList.remove('active');
+        if (sidebarOverlay) sidebarOverlay.classList.remove('active');
+        
+        // 11. ✅ IMPORTANT: Masquer TOUTES les pages (admin + user)
+        document.querySelectorAll('.page').forEach(page => {
+            page.classList.remove('active');
+        });
+        
+        // ✅ Masquer les conteneurs admin et user
+        const adminContent = document.getElementById('admin-content');
+        const userContent = document.getElementById('user-content');
+        const adminPanel = document.getElementById('adminPanel');
+        const modelsContent = document.getElementById('models-content');
+        
+        if (adminContent) adminContent.style.display = 'none';
+        if (userContent) userContent.style.display = 'none';
+        if (adminPanel) adminPanel.style.display = 'none';
+        if (modelsContent) modelsContent.style.display = 'none';
+        
+        // 12. Réinitialiser les formulaires
+        const forms = ['loginForm', 'registerForm'];
+        forms.forEach(formId => {
+            const form = document.getElementById(formId);
+            if (form) form.reset();
+        });
+        
+        // 13. Vider les tableaux de données
+        const tableaux = [
+            'tableauDossiers',
+            'tableauDossiersAdmin',
+            'tableauEtudiants',
+            'tableauRestrictions',
+            'tableauUtilisateurs',
+            'tableauFacultes',
+            'tableauFilieres',
+            'tableauTypeBacs',
+            'tableauDiplomes'
+        ];
+        
+        tableaux.forEach(tableauId => {
+            const tbody = document.getElementById(tableauId);
+            if (tbody) tbody.innerHTML = '';
+        });
+        
+        // 14. ✅ Afficher la page d'accueil
+        const pageAccueil = document.getElementById('accueil');
+        if (pageAccueil) {
+            pageAccueil.classList.add('active');
+            pageAccueil.style.display = 'block';
+        } else {
+            console.error('❌ Page accueil introuvable!');
+        }
+        
+        // 15. S'assurer que le body est scrollable
+        document.body.style.overflow = '';
+        
+        // 16. Réinitialiser le contenu area
+        const contentArea = document.querySelector('.content-area');
+        if (contentArea) {
+            contentArea.style.display = 'block';
+        }
+        
+        // Message de confirmation
+        UIHelpers.showSuccess('✅ Déconnexion réussie ! À bientôt 👋');
+        
+        console.log('✅ Déconnexion terminée avec succès');
+        
+    } catch (error) {
+        console.error('❌ Erreur lors de la déconnexion:', error);
+        
+        // En cas d'erreur, forcer la redirection vers l'accueil
+        window.location.reload();
+    }
 }
 
         // =================== INITIALISATION ===================
