@@ -1,5 +1,5 @@
 // Configuration de l'API
-const API_BASE_URL = 'https://depot-w4hn.onrender.com/api';
+const API_BASE_URL = 'http://localhost:3000/api';
 // ========== SYSTÈME DE CACHE SIMPLE ==========
 
 // Classe pour gérer les appels API - SANS LOCALSTORAGE
@@ -57,7 +57,7 @@ function viderCacheAPI(pattern) {
 }
 class ApiClient {
     constructor() {
-        this.baseURL = 'https://depot-w4hn.onrender.com/api';
+        this.baseURL = 'http://localhost:3000/api';
         this.token = localStorage.getItem('authToken');
         this.currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
         this.pendingRequests = new Map(); // Éviter les requêtes doublons
@@ -1942,6 +1942,8 @@ function afficherResume() {
     });
 }
 // Fonction de soumission de candidature
+// Cherchez la fonction submitApplication et modifiez-la comme ceci :
+
 async function submitApplication(event) {
     event.preventDefault();
     
@@ -1983,8 +1985,21 @@ async function submitApplication(event) {
         
         const response = await apiClient.submitApplication(formData);
         
-        // ✅ CHANGEMENT: Au lieu d'ouvrir un modal, afficher la page de confirmation
+        // ✅ CORRECTION : Afficher la confirmation
         afficherConfirmationInscription(response.application);
+        
+        // ✅ NOUVEAU : Vider le cache des dossiers pour forcer le rechargement
+        apiCache.clear('applications/my');
+        
+        // ✅ NOUVEAU : Pré-charger les dossiers en arrière-plan
+        setTimeout(async () => {
+            try {
+                await apiClient.getMyApplications();
+                console.log('✅ Dossiers pré-chargés en cache');
+            } catch (error) {
+                console.warn('⚠️ Erreur pré-chargement dossiers:', error);
+            }
+        }, 1000);
         
     } catch (error) {
         console.error('Erreur soumission:', error);
@@ -2000,6 +2015,7 @@ async function submitApplication(event) {
     }
 }
 
+// Fonction pour afficher la page de confirmation après soumission
 // Fonction pour afficher la page de confirmation après soumission
 function afficherConfirmationInscription(application) {
     try {
@@ -2068,6 +2084,19 @@ function afficherConfirmationInscription(application) {
             genererQuitusAvecDonnees(application);
         };
         
+        // ✅ NOUVEAU : Ajouter un bouton pour aller à "Mes Dossiers"
+        const btnMesDossiers = document.createElement('button');
+        btnMesDossiers.className = 'btn btn-primary';
+        btnMesDossiers.style.cssText = 'margin-top: 20px; width: 100%;';
+        btnMesDossiers.innerHTML = '📋 Voir tous mes dossiers';
+        btnMesDossiers.onclick = () => {
+            navigateToUserPage('mesDossiers');
+        };
+        
+        // Ajouter le bouton après le bouton quitus
+        const btnContainer = document.getElementById('btnTelechargerQuitusConfirm').parentElement;
+        btnContainer.appendChild(btnMesDossiers);
+        
         // Afficher la page de confirmation
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
         document.getElementById('confirmationInscription').classList.add('active');
@@ -2078,12 +2107,79 @@ function afficherConfirmationInscription(application) {
         // Réinitialiser currentApplicationData
         currentApplicationData = {};
         
+        // ✅ CORRECTION : Vider le cache après un court délai
+        setTimeout(() => {
+            apiCache.clear('applications/my');
+            console.log('🗑️ Cache dossiers vidé');
+        }, 500);
+        
     } catch (error) {
         console.error('Erreur affichage confirmation:', error);
         UIHelpers.showError('Erreur lors de l\'affichage de la confirmation');
     }
 }
+// =================== GESTION CACHE APRÈS MODIFICATIONS ===================
 
+// Fonction pour vider le cache après une modification admin
+function viderCacheApresModification(type) {
+    console.log('🗑️ Vidage cache après modification:', type);
+    
+    switch(type) {
+        case 'dossier':
+            apiCache.clear('admin/applications');
+            apiCache.clear('applications');
+            break;
+            
+        case 'etudiant':
+            apiCache.clear('admin/etudiants');
+            apiCache.clear('admin/inscription');
+            break;
+            
+        case 'faculte':
+            apiCache.clear('admin/facultes');
+            apiCache.clear('facultes');
+            break;
+            
+        case 'filiere':
+            apiCache.clear('admin/filieres');
+            apiCache.clear('filieres');
+            apiCache.clear('filieres-by-bac');
+            break;
+            
+        case 'typebac':
+            apiCache.clear('admin/type-bacs');
+            apiCache.clear('type-bacs');
+            break;
+            
+        case 'diplome':
+            apiCache.clear('admin/diplomes');
+            break;
+            
+        case 'restriction':
+            apiCache.clear('admin/inscription/restrictions');
+            break;
+            
+        case 'config':
+            apiCache.clear('admin/inscription/config');
+            break;
+            
+        case 'utilisateur':
+            apiCache.clear('admin/users');
+            break;
+            
+        case 'stats':
+            // Vider tous les caches de stats
+            apiCache.clear('admin/stats');
+            apiCache.clear('inscription/stats');
+            break;
+            
+        default:
+            console.warn('⚠️ Type de cache non reconnu:', type);
+    }
+}
+
+// Export global
+window.viderCacheApresModification = viderCacheApresModification;
 // Gestion des modals
 function openModal(modalId) {
     document.getElementById(modalId).style.display = 'block';
@@ -2362,10 +2458,35 @@ function genererBadgeStatut(statut) {
 }
 
 // Fonction pour fermer le modal de détails
+// ✅ FONCTION AMÉLIORÉE: Fermer modal et rafraîchir
 function fermerModalDetails() {
     const overlay = document.getElementById('detailsModalOverlay');
     if (overlay) {
         overlay.remove();
+        
+        // ✅ Vider le cache des dossiers
+        viderCacheApresModification('dossier');
+        
+        // ✅ Rafraîchir la liste après fermeture du modal
+        const currentPage = document.querySelector('.page.active');
+        
+        if (currentPage) {
+            const pageId = currentPage.id;
+            
+            setTimeout(() => {
+                if (pageId === 'gestionDossiers' || pageId === 'admin-content') {
+                    // Page admin - recharger la liste admin
+                    if (typeof chargerDossiersAdmin === 'function') {
+                        chargerDossiersAdmin();
+                    }
+                } else if (pageId === 'mesDossiers' || document.querySelector('#user-content .page.active')?.id === 'mesDossiers') {
+                    // Page utilisateur - recharger ses dossiers
+                    if (typeof chargerMesDossiers === 'function') {
+                        chargerMesDossiers();
+                    }
+                }
+            }, 300);
+        }
     }
 }
 
@@ -2525,56 +2646,59 @@ async function updateProfile(event) {
 }
 // Fonction de recherche des dossiers
 async function rechercherDossiers() {
-  try {
-    const query = document.getElementById('rechercheDossier').value.trim();
-    
-    if (!query) {
-      chargerDossiersAdmin();
-      return;
-    }
+    try {
+        const query = document.getElementById('rechercheDossier').value.trim();
+        
+        // ✅ Vider le cache avant la recherche
+        viderCacheApresModification('dossier');
+        
+        if (!query) {
+            chargerDossiersAdmin();
+            return;
+        }
 
-    
-    
-    const response = await apiClient.searchApplications(query);
-    const applications = response.applications || [];
-    
-    const tableau = document.getElementById('tableauDossiersAdmin');
-    tableau.innerHTML = '';
-    
-    if (applications.length === 0) {
-      tableau.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 40px; color: #666;">Aucun dossier trouvé</td></tr>';
-      return;
+        UIHelpers.showLoading(true);
+        
+        const response = await apiClient.searchApplications(query);
+        const applications = response.applications || [];
+        
+        const tableau = document.getElementById('tableauDossiersAdmin');
+        tableau.innerHTML = '';
+        
+        if (applications.length === 0) {
+            tableau.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 40px; color: #666;">Aucun dossier trouvé</td></tr>';
+            return;
+        }
+        
+        applications.forEach(app => {
+            const row = document.createElement('tr');
+            const statutClass = app.statut === 'approuve' ? 'status-approved' : 
+                              app.statut === 'rejete' ? 'status-rejected' : 'status-pending';
+            const statutText = app.statut === 'approuve' ? 'Approuvé' : 
+                             app.statut === 'rejete' ? 'Rejeté' : 'En attente';
+            
+            row.innerHTML = `
+                <td>${new Date(app.created_at).toLocaleDateString('fr-FR')}</td>
+                <td>${app.prenom} ${app.nom}</td>
+                <td>${app.premier_choix}</td>
+                <td><span class="status-badge ${statutClass}">${statutText}</span></td>
+                <td>
+                    ${app.numero_depot ? `<small style="color: #666;">Dépôt: ${app.numero_depot}</small><br>` : ''}
+                    <small style="color: #667eea;">Dossier: ${app.numero_dossier}</small><br>
+                    <button class="btn btn-primary" style="padding: 5px 10px; margin: 2px;" onclick="voirDossier(${app.id})">Voir</button>
+                    <button class="btn" style="padding: 5px 10px; margin: 2px; background: #28a745; color: white;" onclick="changerStatutDossier(${app.id}, 'approuve')">Approuver</button>
+                    <button class="btn" style="padding: 5px 10px; margin: 2px; background: #dc3545; color: white;" onclick="changerStatutDossier(${app.id}, 'rejete')">Rejeter</button>
+                </td>
+            `;
+            tableau.appendChild(row);
+        });
+        
+    } catch (error) {
+        console.error('Erreur recherche dossiers:', error);
+        UIHelpers.showError('Erreur lors de la recherche');
+    } finally {
+        UIHelpers.showLoading(false);
     }
-    
-    applications.forEach(app => {
-      const row = document.createElement('tr');
-      const statutClass = app.statut === 'approuve' ? 'status-approved' : 
-                        app.statut === 'rejete' ? 'status-rejected' : 'status-pending';
-      const statutText = app.statut === 'approuve' ? 'Approuvé' : 
-                       app.statut === 'rejete' ? 'Rejeté' : 'En attente';
-      
-      row.innerHTML = `
-        <td>${new Date(app.created_at).toLocaleDateString('fr-FR')}</td>
-        <td>${app.prenom} ${app.nom}</td>
-        <td>${app.premier_choix}</td>
-        <td><span class="status-badge ${statutClass}">${statutText}</span></td>
-        <td>
-          ${app.numero_depot ? `<small style="color: #666;">Dépôt: ${app.numero_depot}</small><br>` : ''}
-          <small style="color: #667eea;">Dossier: ${app.numero_dossier}</small><br>
-          <button class="btn btn-primary" style="padding: 5px 10px; margin: 2px;" onclick="voirDossier(${app.id})">Voir</button>
-          <button class="btn" style="padding: 5px 10px; margin: 2px; background: #28a745; color: white;" onclick="changerStatutDossier(${app.id}, 'approuve')">Approuver</button>
-          <button class="btn" style="padding: 5px 10px; margin: 2px; background: #dc3545; color: white;" onclick="changerStatutDossier(${app.id}, 'rejete')">Rejeter</button>
-        </td>
-      `;
-      tableau.appendChild(row);
-    });
-    
-  } catch (error) {
-    console.error('Erreur recherche dossiers:', error);
-    UIHelpers.showError('Erreur lors de la recherche');
-  } finally {
-    UIHelpers.showLoading(false);
-  }
 }
 
 // Fonction pour réinitialiser la recherche
@@ -2647,49 +2771,222 @@ async function changePassword(event) {
 }
 
 // Fonction pour charger les dossiers de l'utilisateur
+// ✅ Fonction chargerMesDossiers AMÉLIORÉE - Support mobile complet
 async function chargerMesDossiers() {
   try {
     if (!apiClient.currentUser) return;
     
+    console.log('📋 Chargement dossiers...');
+    
     const response = await apiClient.getMyApplications();
     const applications = response.applications || [];
     
-    const tableau = document.getElementById('tableauDossiers');
-    tableau.innerHTML = '';
+    console.log(`✅ ${applications.length} dossier(s) trouvé(s)`);
     
-    if (applications.length === 0) {
-      tableau.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 40px; color: #666;">Aucun dossier déposé pour le moment</td></tr>';
-      return;
-    }
+    // Charger dans le tableau (desktop)
+    chargerTableauDossiers(applications);
     
-    applications.forEach(app => {
-      const row = document.createElement('tr');
-      const statutClass = app.statut === 'approuve' ? 'status-approved' : 
-                        app.statut === 'rejete' ? 'status-rejected' : 'status-pending';
-      const statutText = app.statut === 'approuve' ? 'Approuvé' : 
-                       app.statut === 'rejete' ? 'Rejeté' : 'En attente';
-      
-      
-      
-      row.innerHTML = `
-        <td>${new Date(app.created_at).toLocaleDateString('fr-FR')}</td>
-        <td>${app.nom} ${app.prenom}</td>
-        <td>${app.numero_dossier}</td>
-        <td><span class="status-badge ${statutClass}">${statutText}</span></td>
-        <td>
-          <button class="btn btn-secondary" style="padding: 5px 10px; margin: 2px;" onclick="voirMonDossier(${app.id})">Voir détails</button>
-          <button class="btn" style="padding: 5px 10px; margin: 2px; background: #ffc107; color: white;" onclick="modifierDossier(${app.id})">✏️ Modifier</button>
-          <button class="btn btn-primary" style="padding: 5px 10px; margin: 2px;" onclick="telechargerQuitusFromApp(${app.id})">Télécharger quitus</button>
-        </td>
-      `;
-      tableau.appendChild(row);
-    });
+    // Charger dans les cartes (mobile)
+    chargerCartesDossiers(applications);
     
   } catch (error) {
-    console.error('Erreur chargement dossiers:', error);
+    console.error('❌ Erreur chargement dossiers:', error);
     UIHelpers.showError('Erreur lors du chargement des dossiers');
   }
 }
+
+// ===== CHARGEMENT TABLEAU (Desktop) =====
+function chargerTableauDossiers(applications) {
+    const tableau = document.getElementById('tableauDossiers');
+    if (!tableau) return;
+    
+    tableau.innerHTML = '';
+    
+    if (applications.length === 0) {
+        tableau.innerHTML = `
+            <tr>
+                <td colspan="5" style="text-align: center; padding: 40px;">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📂</div>
+                        <div class="empty-state-text">Aucun dossier déposé pour le moment</div>
+                        <button class="btn btn-primary" onclick="startApplicationProcess()" 
+                                style="margin-top: 20px;">
+                            ➕ Déposer un nouveau dossier
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    // Créer les lignes du tableau
+    applications.forEach(app => {
+        const row = document.createElement('tr');
+        
+        const statutClass = app.statut === 'approuve' ? 'status-approved' : 
+                          app.statut === 'rejete' ? 'status-rejected' : 'status-pending';
+        const statutText = app.statut === 'approuve' ? '✅ Approuvé' : 
+                         app.statut === 'rejete' ? '❌ Rejeté' : '⏳ En attente';
+        
+        row.innerHTML = `
+            <td>${new Date(app.created_at).toLocaleDateString('fr-FR')}</td>
+            <td><strong>${app.nom} ${app.prenom}</strong></td>
+            <td><code style="background: #f0f0f0; padding: 3px 8px; border-radius: 4px;">${app.numero_dossier}</code></td>
+            <td><span class="status-badge ${statutClass}">${statutText}</span></td>
+            <td>
+                <button class="btn btn-secondary" onclick="voirMonDossier(${app.id})" 
+                        style="padding: 8px 12px; margin: 2px;">
+                    👁️ Voir
+                </button>
+                <button class="btn" onclick="modifierDossier(${app.id})" 
+                        style="padding: 8px 12px; margin: 2px; background: #ffc107; color: white;">
+                    ✏️ Modifier
+                </button>
+                <button class="btn btn-primary" onclick="telechargerQuitusFromApp(${app.id})" 
+                        style="padding: 8px 12px; margin: 2px;">
+                    📄 Quitus
+                </button>
+            </td>
+        `;
+        tableau.appendChild(row);
+    });
+}
+
+// ===== CHARGEMENT CARTES (Mobile) =====
+function chargerCartesDossiers(applications) {
+    const container = document.getElementById('mobileCardsContainer');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    if (applications.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state" style="background: white; padding: 40px; border-radius: 12px;">
+                <div class="empty-state-icon">📂</div>
+                <div class="empty-state-text">Aucun dossier déposé</div>
+                <button class="btn btn-primary" onclick="startApplicationProcess()" 
+                        style="margin-top: 20px; width: 100%; padding: 15px;">
+                    ➕ Nouveau dossier
+                </button>
+            </div>
+        `;
+        return;
+    }
+    
+    // Créer les cartes
+    applications.forEach(app => {
+        const card = document.createElement('div');
+        card.className = 'mobile-card';
+        
+        const statutClass = app.statut === 'approuve' ? 'status-approved' : 
+                          app.statut === 'rejete' ? 'status-rejected' : 'status-pending';
+        const statutText = app.statut === 'approuve' ? '✅ Approuvé' : 
+                         app.statut === 'rejete' ? '❌ Rejeté' : '⏳ En attente';
+        
+        // Changer la couleur du border-left selon le statut
+        const borderColor = app.statut === 'approuve' ? '#28a745' : 
+                           app.statut === 'rejete' ? '#dc3545' : '#667eea';
+        card.style.borderLeftColor = borderColor;
+        
+        card.innerHTML = `
+            <div class="mobile-card-header">
+                <div>
+                    <div class="mobile-card-title">${app.nom} ${app.prenom}</div>
+                    <div class="mobile-card-date">${new Date(app.created_at).toLocaleDateString('fr-FR', {
+                        day: 'numeric',
+                        month: 'long',
+                        year: 'numeric'
+                    })}</div>
+                </div>
+                <span class="status-badge ${statutClass}">${statutText}</span>
+            </div>
+            
+            <div class="mobile-card-info">
+                <div class="mobile-card-row">
+                    <span class="mobile-card-label">N° Dossier</span>
+                    <span class="mobile-card-value">${app.numero_dossier}</span>
+                </div>
+                ${app.numero_depot ? `
+                <div class="mobile-card-row">
+                    <span class="mobile-card-label">N° Dépôt</span>
+                    <span class="mobile-card-value" style="color: #28a745;">${app.numero_depot}</span>
+                </div>
+                ` : ''}
+                <div class="mobile-card-row">
+                    <span class="mobile-card-label">Premier choix</span>
+                    <span class="mobile-card-value" style="font-size: 12px; text-align: right; font-family: inherit;">
+                        ${app.premier_choix || 'Non spécifié'}
+                    </span>
+                </div>
+            </div>
+            
+            <div class="mobile-card-actions">
+                <button class="btn btn-secondary" onclick="voirMonDossier(${app.id})">
+                    👁️ Voir les détails
+                </button>
+                <button class="btn" onclick="modifierDossier(${app.id})" 
+                        style="background: #ffc107; color: white;">
+                    ✏️ Modifier le dossier
+                </button>
+                <button class="btn btn-primary" onclick="telechargerQuitusFromApp(${app.id})">
+                    📄 Télécharger le quitus
+                </button>
+            </div>
+        `;
+        
+        container.appendChild(card);
+    });
+    
+    console.log(`✅ ${applications.length} carte(s) mobile créée(s)`);
+}
+
+// ===== FONCTION UTILITAIRE: Basculer entre vue tableau et cartes =====
+function toggleMobileView() {
+    const isMobile = window.innerWidth <= 768;
+    const tableContainer = document.getElementById('tableContainer');
+    const cardsContainer = document.getElementById('mobileCardsContainer');
+    
+    if (!tableContainer || !cardsContainer) return;
+    
+    if (isMobile) {
+        // Afficher les cartes sur mobile
+        tableContainer.style.display = 'none';
+        cardsContainer.style.display = 'block';
+        console.log('📱 Mode mobile: cartes activées');
+    } else {
+        // Afficher le tableau sur desktop
+        tableContainer.style.display = 'block';
+        cardsContainer.style.display = 'none';
+        console.log('🖥️ Mode desktop: tableau activé');
+    }
+}
+
+// ===== ÉCOUTER LES CHANGEMENTS DE TAILLE D'ÉCRAN =====
+window.addEventListener('resize', toggleMobileView);
+window.addEventListener('load', toggleMobileView);
+
+// ===== APPELER LORS DU CHARGEMENT DE LA PAGE =====
+document.addEventListener('DOMContentLoaded', function() {
+    // Appliquer la vue correcte au démarrage
+    setTimeout(toggleMobileView, 100);
+    
+    // Détecter le scroll pour masquer l'indicateur
+    const tableContainer = document.querySelector('.table-responsive');
+    if (tableContainer) {
+        tableContainer.addEventListener('scroll', function() {
+            this.classList.add('scrolled');
+        }, { once: true });
+    }
+});
+
+// ===== EXPORT GLOBAL =====
+window.chargerMesDossiers = chargerMesDossiers;
+window.chargerTableauDossiers = chargerTableauDossiers;
+window.chargerCartesDossiers = chargerCartesDossiers;
+window.toggleMobileView = toggleMobileView;
+
+console.log('✅ Module Mes Dossiers chargé (responsive)');
 
 
 async function telechargerQuitusFromApp(appId) {
@@ -3434,24 +3731,26 @@ async function changerStatutDossier(appId, nouveauStatut) {
     
     const response = await apiClient.updateApplicationStatus(appId, nouveauStatut);
     
-    // ✅ CORRECTION: Mettre à jour le DOM IMMÉDIATEMENT
+    // ✅ Vider le cache
+    viderCacheApresModification('dossier');
+    
+    // Recharger selon la page active
     const currentPage = document.querySelector('.page.active');
     
     if (currentPage) {
       const pageId = currentPage.id;
       
-      // Recharger selon la page active
-      if (pageId === 'gestionDossiers' || pageId === 'admin-content') {
-        // Page admin - recharger la liste admin
-        if (typeof chargerDossiersAdmin === 'function') {
-          await chargerDossiersAdmin();
+      setTimeout(() => {
+        if (pageId === 'gestionDossiers' || pageId === 'admin-content') {
+          if (typeof chargerDossiersAdmin === 'function') {
+            chargerDossiersAdmin();
+          }
+        } else if (pageId === 'mesDossiers' || document.querySelector('#user-content .page.active')?.id === 'mesDossiers') {
+          if (typeof chargerMesDossiers === 'function') {
+            chargerMesDossiers();
+          }
         }
-      } else if (pageId === 'mesDossiers' || document.querySelector('#user-content .page.active')?.id === 'mesDossiers') {
-        // Page utilisateur - recharger ses dossiers
-        if (typeof chargerMesDossiers === 'function') {
-          await chargerMesDossiers();
-        }
-      }
+      }, 300);
     }
     
     // Afficher un message avec le numéro de dépôt si le dossier est approuvé
@@ -3484,12 +3783,20 @@ function supprimerUtilisateur(userId) {
 // Fonctions d'import/export
 async function exportData(type) {
     try {
+        UIHelpers.showLoading(true);
         
         await apiClient.exportData(type);
-        UIHelpers.showSuccess('Export terminé avec succès !');
+        
+        UIHelpers.showSuccess('✅ Export terminé avec succès !');
+        
+        // ✅ Vider le cache des stats après export
+        if (type.includes('stats') || type.includes('statistiques')) {
+            viderCacheApresModification('stats');
+        }
+        
     } catch (error) {
         console.error('Erreur export:', error);
-        UIHelpers.showError('Erreur lors de l\'export');
+        UIHelpers.showError('Erreur lors de l\'export: ' + error.message);
     } finally {
         UIHelpers.showLoading(false);
     }
