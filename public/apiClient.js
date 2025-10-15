@@ -1,5 +1,5 @@
 // Configuration de l'API
-const API_BASE_URL = 'http://localhost:3000/api';
+const API_BASE_URL = 'https://depot-w4hn.onrender.com//api';
 // ========== SYSTÈME DE CACHE SIMPLE ==========
 
 // Classe pour gérer les appels API - SANS LOCALSTORAGE
@@ -57,7 +57,7 @@ function viderCacheAPI(pattern) {
 }
 class ApiClient {
     constructor() {
-        this.baseURL = 'http://localhost:3000/api';
+        this.baseURL = 'https://depot-w4hn.onrender.com//api';
         this.token = localStorage.getItem('authToken');
         this.currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
         this.pendingRequests = new Map(); // Éviter les requêtes doublons
