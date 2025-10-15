@@ -2065,14 +2065,12 @@ function afficherConfirmationInscription(application) {
         document.getElementById('confirmTroisiemeChoix').textContent = application.troisieme_choix;
         
         // ✅ CORRECTION: Documents avec style approprié
-        const documentsContainer = document.getElementById('confirmDocuments');
-        const documentTypes = {
-            'photoIdentite': { label: '📷 Photo d\'identité', icon: '📷' },
-            'pieceIdentite': { label: '🆔 Pièce d\'identité', icon: '🆔' },
-            'diplomeBac': { label: '🎓 Diplôme de Bac', icon: '🎓' },
-            'releve': { label: '📊 Relevé de notes', icon: '📊' },
-            'certificatNationalite': { label: '🌍 Certificat de nationalité', icon: '🌍' }
-        };
+        // Afficher les documents actuels
+// Afficher les documents actuels
+const documentsContainer = document.getElementById('documentsContainer');
+if (documentsContainer) {
+    documentsContainer.innerHTML = genererListeDocuments(application.documents, application.id, false);
+}
         
         const documents = typeof application.documents === 'string' 
             ? JSON.parse(application.documents) 
@@ -2199,51 +2197,30 @@ function afficherConfirmationInscription(application) {
     }
 }
 // Fonction pour télécharger un document depuis la page de confirmation
+// Fonction pour télécharger un document depuis la page de confirmation
 async function telechargerDocumentConfirmation(applicationId, documentType) {
     try {
         console.log('📥 Téléchargement document:', { applicationId, documentType });
         
         UIHelpers.showLoading(true);
         
-        // Appel API pour télécharger le document
-        const response = await fetch(`${API_BASE_URL}/applications/${applicationId}/documents/${documentType}`, {
-            headers: {
-                'Authorization': `Bearer ${apiClient.token}`
-            }
-        });
-
-        if (!response.ok) {
-            throw new Error(`Erreur ${response.status}: ${response.statusText}`);
+        // Récupérer l'application pour obtenir l'URL Cloudinary
+        const response = await apiClient.getApplication(applicationId);
+        const application = response.application;
+        
+        const documents = typeof application.documents === 'string' 
+            ? JSON.parse(application.documents) 
+            : application.documents || {};
+        
+        const fileUrl = documents[documentType];
+        
+        if (!fileUrl || fileUrl === 'Non fourni' || fileUrl === 'Optionnel') {
+            UIHelpers.showError('Document non disponible');
+            return;
         }
-
-        // Obtenir le nom du fichier depuis les headers
-        const contentDisposition = response.headers.get('Content-Disposition');
-        let filename = `${documentType}.pdf`;
         
-        if (contentDisposition) {
-            const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
-            if (filenameMatch && filenameMatch[1]) {
-                filename = filenameMatch[1].replace(/['"]/g, '');
-            }
-        }
-
-        const blob = await response.blob();
-        
-        // Créer un lien de téléchargement
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = filename;
-        a.style.display = 'none';
-        
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        
-        // Nettoyer l'URL après le téléchargement
-        setTimeout(() => URL.revokeObjectURL(url), 100);
-        
-        UIHelpers.showSuccess(`✅ Document "${filename}" téléchargé avec succès`);
+        // Télécharger depuis Cloudinary
+        await telechargerDocumentAdmin(fileUrl, documentType);
         
     } catch (error) {
         console.error('❌ Erreur téléchargement document:', error);
@@ -2468,15 +2445,17 @@ function creerModalDetails(application) {
                 </div>
                 
                 <!-- Documents joints -->
-                <div class="info-section">
-                    <h4>
-                        <span>📎</span>
-                        Documents joints
-                    </h4>
-                    <div id="documentsContainer">
-                        ${genererListeDocuments(application.documents, application.id)}
-                    </div>
-                </div>
+            
+            // Dans la section Documents joints du modal
+<div class="info-section">
+    <h4>
+        <span>📎</span>
+        Documents joints
+    </h4>
+    <div id="documentsContainer">
+        ${genererListeDocuments(application.documents, application.id, true)}
+    </div>
+</div>  
                 
                 <!-- Statut du dossier -->
                 <div class="status-section">
@@ -2539,69 +2518,155 @@ function creerModalDetails(application) {
     });
 }
 
+// Fonction pour télécharger un document admin (Cloudinary)
+async function telechargerDocumentAdmin(url, nomDocument) {
+    try {
+        if (!url || url === 'Non fourni' || url === 'Optionnel') {
+            UIHelpers.showError('Document non disponible');
+            return;
+        }
+        
+        console.log('📥 Téléchargement document depuis Cloudinary:', url);
+        
+        UIHelpers.showLoading(true);
+        
+        // ✅ Télécharger depuis Cloudinary
+        const response = await fetch(url);
+        
+        if (!response.ok) {
+            throw new Error(`Erreur ${response.status}: ${response.statusText}`);
+        }
+        
+        const blob = await response.blob();
+        
+        // Extraire le nom du fichier depuis l'URL Cloudinary
+        const urlParts = url.split('/');
+        const filenameWithExt = urlParts[urlParts.length - 1];
+        const filename = decodeURIComponent(filenameWithExt.split('?')[0]) || nomDocument;
+        
+        // Créer un lien de téléchargement
+        const urlBlob = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = urlBlob;
+        a.download = filename;
+        a.style.display = 'none';
+        
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        
+        setTimeout(() => URL.revokeObjectURL(urlBlob), 100);
+        
+        UIHelpers.showSuccess(`✅ Document "${filename}" téléchargé avec succès`);
+        
+    } catch (error) {
+        console.error('❌ Erreur téléchargement:', error);
+        UIHelpers.showError('Erreur lors du téléchargement du document');
+    } finally {
+        UIHelpers.showLoading(false);
+    }
+}
+
+// Export global
+window.telechargerDocumentAdmin = telechargerDocumentAdmin;
+
 // Fonction pour générer la liste des documents
-function genererListeDocuments(documentsJson, applicationId) {
+// Fonction pour générer la liste des documents avec boutons de téléchargement
+function genererListeDocuments(documentsJson, applicationId, isAdmin = false) {
     try {
         const documents = typeof documentsJson === 'string' ? JSON.parse(documentsJson) : documentsJson || {};
         
         const documentTypes = {
-            'photoIdentite': { label: 'Photo d\'identité', type: 'image' },
-            'pieceIdentite': { label: 'Pièce d\'identité', type: 'pdf' },
-            'diplomeBac': { label: 'Diplôme de baccalauréat', type: 'pdf' },
-            'releve': { label: 'Relevé de notes', type: 'pdf' },
-            'certificatNationalite': { label: 'Certificat de nationalité', type: 'pdf' }
+            'photoIdentite': { label: 'Photo d\'identité', icon: '📷' },
+            'pieceIdentite': { label: 'Pièce d\'identité', icon: '🆔' },
+            'diplomeBac': { label: 'Diplôme de baccalauréat', icon: '🎓' },
+            'releve': { label: 'Relevé de notes', icon: '📊' },
+            'certificatNationalite': { label: 'Certificat de nationalité', icon: '🌍' }
         };
         
         let html = '';
         
         Object.entries(documentTypes).forEach(([key, config]) => {
             const fileUrl = documents[key];
-            const isPresent = fileUrl && fileUrl !== 'Non fourni' && fileUrl !== 'Optionnel';
+            const isPresent = fileUrl && fileUrl !== 'Non fourni' && fileUrl !== 'Optionnel' && fileUrl !== '';
             
-            if (isPresent) {
-                // Afficher l'aperçu du document
-                if (config.type === 'image') {
-                    html += `
-                        <div class="document-preview-item">
-                            <h4>${config.label}</h4>
-                            <div class="document-image-container">
-                                <img src="${fileUrl}" alt="${config.label}" class="document-preview-img" onclick="agrandirImage('${fileUrl}', '${config.label}')">
+            html += `
+                <div class="document-item" style="
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    padding: 15px;
+                    background: ${isPresent ? '#d1ecf1' : '#f8f9fa'};
+                    border: 1px solid ${isPresent ? '#bee5eb' : '#dee2e6'};
+                    border-radius: 8px;
+                    margin-bottom: 10px;
+                    transition: all 0.3s ease;
+                    ${isPresent ? 'cursor: pointer;' : ''}
+                ">
+                    <div style="display: flex; align-items: center; gap: 12px; flex: 1;">
+                        <span style="font-size: 1.5em;">${config.icon}</span>
+                        <div style="flex: 1;">
+                            <div style="font-weight: 600; color: ${isPresent ? '#0c5460' : '#6c757d'};">
+                                ${config.label}
                             </div>
-                            <button class="btn btn-primary" onclick="telechargerDocument(${applicationId}, '${key}')">
-                                Télécharger
-                            </button>
+                            ${isPresent ? `
+                                <div style="font-size: 0.75em; color: #666; margin-top: 3px;">
+                                    ✅ Document disponible
+                                </div>
+                            ` : `
+                                <div style="font-size: 0.75em; color: #999; font-style: italic; margin-top: 3px;">
+                                    ❌ Non fourni
+                                </div>
+                            `}
                         </div>
-                    `;
-                } else if (config.type === 'pdf') {
-                    html += `
-                        <div class="document-preview-item">
-                            <h4>${config.label}</h4>
-                            <div class="document-pdf-container">
-                                <iframe src="${fileUrl}#toolbar=0" class="document-preview-pdf"></iframe>
-                            </div>
-                            <button class="btn btn-primary" onclick="telechargerDocument(${applicationId}, '${key}')">
-                                Télécharger
-                            </button>
-                        </div>
-                    `;
-                }
-            } else {
-                html += `
-                    <div class="document-item-empty">
-                        <p>${config.label}: Non disponible</p>
                     </div>
-                `;
-            }
+                    ${isPresent ? `
+                        <button 
+                            onclick="telechargerDocumentAdmin('${fileUrl.replace(/'/g, "\\'")}', '${config.label}')" 
+                            class="btn-download-doc"
+                            style="
+                                padding: 8px 16px;
+                                background: #17a2b8;
+                                color: white;
+                                border: none;
+                                border-radius: 6px;
+                                font-weight: 600;
+                                cursor: pointer;
+                                transition: all 0.3s ease;
+                                font-size: 0.9em;
+                            "
+                            onmouseover="this.style.background='#138496'"
+                            onmouseout="this.style.background='#17a2b8'"
+                        >
+                            ⬇️ Télécharger
+                        </button>
+                    ` : `
+                        <span style="
+                            padding: 8px 16px;
+                            background: #e9ecef;
+                            color: #6c757d;
+                            border-radius: 6px;
+                            font-size: 0.85em;
+                            font-style: italic;
+                        ">
+                            Non disponible
+                        </span>
+                    `}
+                </div>
+            `;
         });
         
-        return html;
+        return html || '<p style="color: #666; text-align: center; padding: 20px;">Aucun document disponible</p>';
     } catch (error) {
         console.error('Erreur parsing documents:', error);
-        return '<p>Erreur chargement documents</p>';
+        return '<p style="color: #dc3545; text-align: center; padding: 20px;">Erreur lors du chargement des documents</p>';
     }
 }
+
+// Export global
+window.genererListeDocuments = genererListeDocuments;
+// Fonction pour agrandir une image
 function agrandirImage(url, titre) {
-    
     const modal = document.createElement('div');
     modal.id = 'imageModal';
     modal.style.cssText = `
