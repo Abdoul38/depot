@@ -5,7 +5,7 @@
 const cloudinary = require('cloudinary').v2;
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
-// ✅ Configuration Cloudinary avec variables d'environnement
+// Configuration Cloudinary avec variables d'environnement
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
@@ -21,17 +21,16 @@ if (!process.env.CLOUDINARY_CLOUD_NAME ||
   console.log('✅ Cloudinary configuré:', process.env.CLOUDINARY_CLOUD_NAME);
 }
 
-// ✅ Configuration du storage pour Multer
+// Configuration du storage pour Multer
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: async (req, file) => {
-    // Déterminer le type de ressource (image ou raw pour PDF)
     const isImage = file.mimetype.startsWith('image/');
     
     return {
-      folder: 'edufile-documents', // Dossier dans Cloudinary
+      folder: 'edufile-documents',
       allowed_formats: ['jpg', 'jpeg', 'png', 'pdf'],
-      resource_type: isImage ? 'image' : 'raw', // ✅ Important pour les PDF
+      resource_type: isImage ? 'image' : 'raw',
       public_id: `${file.fieldname}-${Date.now()}-${Math.round(Math.random() * 1E9)}`,
       transformation: isImage ? [
         { 
@@ -44,14 +43,13 @@ const storage = new CloudinaryStorage({
   }
 });
 
-// ✅ Fonction utilitaire pour supprimer un fichier de Cloudinary
+// Fonction utilitaire pour supprimer un fichier de Cloudinary
 const deleteFromCloudinary = async (fileUrl) => {
   try {
     if (!fileUrl || typeof fileUrl !== 'string') {
       return false;
     }
 
-    // Extraire le public_id de l'URL Cloudinary
     const matches = fileUrl.match(/\/v\d+\/(.+)\.(jpg|jpeg|png|pdf)$/i);
     if (!matches) {
       console.warn('⚠️ Format URL Cloudinary invalide:', fileUrl);
@@ -86,4 +84,3 @@ module.exports = {
   storage,
   deleteFromCloudinary
 };
-
