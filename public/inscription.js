@@ -1,9 +1,57 @@
 // =================== GESTION DES ÉTUDIANTS ===================
+function afficherIndicateurRechargement(element) {
+    if (!element) return;
+    
+    const indicator = document.createElement('div');
+    indicator.className = 'reload-indicator';
+    indicator.innerHTML = '🔄 Rechargement...';
+    indicator.style.cssText = `
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: #667eea;
+        color: white;
+        padding: 8px 15px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        z-index: 1000;
+        animation: pulse 1s infinite;
+    `;
+    
+    // Ajouter l'animation
+    if (!document.getElementById('pulseAnimation')) {
+        const style = document.createElement('style');
+        style.id = 'pulseAnimation';
+        style.textContent = `
+            @keyframes pulse {
+                0%, 100% { opacity: 1; }
+                50% { opacity: 0.5; }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+    
+    element.style.position = 'relative';
+    element.appendChild(indicator);
+    
+    // Retirer après 2 secondes
+    setTimeout(() => {
+        if (indicator.parentNode) {
+            indicator.remove();
+        }
+    }, 2000);
+}
 
 // Charger la liste des étudiants
 async function chargerEtudiants(filters = {}) {
     try {
         console.log('📚 Chargement étudiants...');
+        
+        const tableau = document.getElementById('tableauEtudiants');
+        if (tableau) {
+            afficherIndicateurRechargement(tableau.parentElement);
+        }
         
         const response = await apiClient.getEtudiants(filters);
         const etudiants = response.etudiants || [];
@@ -450,7 +498,12 @@ function rechercherEtudiants() {
         search: document.getElementById('searchEtudiant')?.value || '',
         statut: document.getElementById('filtreStatutEtudiant')?.value || ''
     };
+    
     console.log('🔍 Recherche avec filtres:', filters);
+    
+    // ✅ Vider le cache avant la recherche
+    viderCacheApresModification('etudiant');
+    
     chargerEtudiants(filters);
 }
 
@@ -459,13 +512,20 @@ async function toggleInscriptionEtudiant(id) {
     try {
         console.log('🔄 Toggle inscription pour étudiant:', id);
         await apiClient.toggleInscriptionEtudiant(id);
+        
+        // ✅ Vider le cache
+        viderCacheApresModification('etudiant');
+        
         UIHelpers.showSuccess('Statut d\'inscription modifié');
+        
+        // ✅ Pas besoin de recharger, le toggle est visuel
     } catch (error) {
         console.error('❌ Erreur toggle:', error);
         UIHelpers.showError('Erreur lors de la modification');
         rechercherEtudiants();
     }
 }
+
 
 // Modifier un étudiant
 async function modifierEtudiant(id) {
@@ -510,6 +570,7 @@ async function sauvegarderEtudiant(event) {
     try {
         console.log('💾 Sauvegarde étudiant...');
         
+        UIHelpers.showLoading(true);
         
         const id = document.getElementById('editEtudiantId').value;
         const data = {
@@ -533,8 +594,14 @@ async function sauvegarderEtudiant(event) {
         
         await apiClient.updateEtudiant(id, data);
         
+        // ✅ Vider le cache
+        viderCacheApresModification('etudiant');
+        
         closeModal('modifierEtudiantModal');
-        rechercherEtudiants();
+        
+        // ✅ Recharger la liste
+        setTimeout(() => rechercherEtudiants(), 300);
+        
         UIHelpers.showSuccess('Étudiant modifié avec succès');
         
     } catch (error) {
@@ -552,8 +619,16 @@ async function genererMatricule(id) {
     try {
         console.log('🎓 Génération matricule pour:', id);
         
+        UIHelpers.showLoading(true);
+        
         await apiClient.genererMatricule(id);
-        rechercherEtudiants();
+        
+        // ✅ Vider le cache
+        viderCacheApresModification('etudiant');
+        
+        // ✅ Recharger la liste
+        setTimeout(() => rechercherEtudiants(), 300);
+        
         UIHelpers.showSuccess('Matricule généré avec succès');
     } catch (error) {
         console.error('❌ Erreur génération matricule:', error);
@@ -570,8 +645,16 @@ async function supprimerEtudiant(id) {
     try {
         console.log('🗑️ Suppression étudiant:', id);
         
+        UIHelpers.showLoading(true);
+        
         await apiClient.supprimerEtudiant(id);
-        rechercherEtudiants();
+        
+        // ✅ Vider le cache
+        viderCacheApresModification('etudiant');
+        
+        // ✅ Recharger la liste
+        setTimeout(() => rechercherEtudiants(), 300);
+        
         UIHelpers.showSuccess('Étudiant supprimé');
     } catch (error) {
         console.error('❌ Erreur suppression:', error);
@@ -620,6 +703,7 @@ async function sauvegarderConfigInscription(event) {
     try {
         console.log('💾 Sauvegarde configuration...');
         
+        UIHelpers.showLoading(true);
         
         const config = {
             actif: document.getElementById('configActif').checked,
@@ -630,6 +714,10 @@ async function sauvegarderConfigInscription(event) {
         };
         
         await apiClient.updateConfigInscription(config);
+        
+        // ✅ Vider le cache
+        viderCacheApresModification('config');
+        
         UIHelpers.showSuccess('Configuration enregistrée');
         
     } catch (error) {
@@ -783,6 +871,7 @@ async function sauvegarderRestriction(event) {
     try {
         console.log('💾 Sauvegarde restriction...');
         
+        UIHelpers.showLoading(true);
         
         const type = document.getElementById('restrictionType').value;
         const restriction = {
@@ -811,8 +900,14 @@ async function sauvegarderRestriction(event) {
         
         await apiClient.creerRestriction(restriction);
         
+        // ✅ Vider le cache
+        viderCacheApresModification('restriction');
+        
         closeModal('ajoutRestrictionModal');
-        chargerRestrictions();
+        
+        // ✅ Recharger la liste
+        setTimeout(() => chargerRestrictions(), 300);
+        
         UIHelpers.showSuccess('Restriction créée');
         
     } catch (error) {
@@ -828,6 +923,10 @@ async function toggleRestriction(id) {
     try {
         console.log('🔄 Toggle restriction:', id);
         await apiClient.toggleRestriction(id);
+        
+        // ✅ Vider le cache
+        viderCacheApresModification('restriction');
+        
         UIHelpers.showSuccess('Restriction modifiée');
     } catch (error) {
         console.error('❌ Erreur toggle restriction:', error);
@@ -841,9 +940,16 @@ async function supprimerRestriction(id) {
     if (!confirm('Supprimer cette restriction ?')) return;
     
     try {
+        UIHelpers.showLoading(true);
         
         await apiClient.supprimerRestriction(id);
-        chargerRestrictions();
+        
+        // ✅ Vider le cache
+        viderCacheApresModification('restriction');
+        
+        // ✅ Recharger la liste
+        setTimeout(() => chargerRestrictions(), 300);
+        
         UIHelpers.showSuccess('Restriction supprimée');
     } catch (error) {
         console.error('Erreur suppression:', error);
@@ -855,11 +961,13 @@ async function supprimerRestriction(id) {
 
 // =================== IMPORT ÉTUDIANTS ===================
 
+// ========== IMPORT AVEC RAFRAÎCHISSEMENT ==========
+
 async function importerFichierEtudiants(fichier) {
     if (!fichier) return;
     
     try {
-        
+        UIHelpers.showLoading(true);
         
         const response = await apiClient.importerEtudiants(fichier);
         
@@ -868,7 +976,7 @@ async function importerFichierEtudiants(fichier) {
         
         let html = `
             <div style="background: #d4edda; padding: 15px; border-radius: 8px; margin-bottom: 10px;">
-                <strong>2 !</strong><br>
+                <strong>✅ Succès !</strong><br>
                 ${response.imported} étudiants importés sur ${response.total}<br>
                 ${response.inscrits} inscriptions créées
             </div>
@@ -877,7 +985,7 @@ async function importerFichierEtudiants(fichier) {
         if (response.erreurs && response.erreurs.length > 0) {
             html += `
                 <div style="background: #fff3cd; padding: 15px; border-radius: 8px;">
-                    <strong>Erreurs (${response.erreurs.length}):</strong>
+                    <strong>⚠️ Erreurs (${response.erreurs.length}):</strong>
                     <ul style="margin: 10px 0; padding-left: 20px;">
                         ${response.erreurs.slice(0, 5).map(e => `<li>Ligne ${e.ligne || 'N/A'}: ${e.erreur}</li>`).join('')}
                         ${response.erreurs.length > 5 ? `<li>... et ${response.erreurs.length - 5} autres</li>` : ''}
@@ -891,14 +999,20 @@ async function importerFichierEtudiants(fichier) {
         // Réinitialiser l'input
         document.getElementById('importEtudiantsFile').value = '';
         
-        // Recharger la liste si on est sur la page étudiants
+        // ✅ Vider le cache
+        viderCacheApresModification('etudiant');
+        viderCacheApresModification('stats');
+        
+        // ✅ Recharger la liste si on est sur la page étudiants
         if (document.getElementById('gestionEtudiants').classList.contains('active')) {
             setTimeout(() => rechercherEtudiants(), 1000);
         }
         
+        UIHelpers.showSuccess(`✅ Import terminé: ${response.imported} étudiants ajoutés`);
+        
     } catch (error) {
         console.error('Erreur import:', error);
-        UIHelpers.showError('Erreur lors de l\'import');
+        UIHelpers.showError('Erreur lors de l\'import: ' + error.message);
     } finally {
         UIHelpers.showLoading(false);
     }
@@ -964,16 +1078,40 @@ async function ouvrirModalInscriptionAdmin(etudiantId) {
   }
 }
 
-// Fonction simplifiée de validation
-// Remplacer la fonction validerInscriptionAdmin
-// Fonction de validation avec impression automatique du reçu
-// Fonction de validation avec impression automatique du reçu
+
+async function supprimerRestriction(id) {
+    if (!confirm('Supprimer cette restriction ?')) return;
+    
+    try {
+        UIHelpers.showLoading(true);
+        
+        await apiClient.supprimerRestriction(id);
+        
+        // ✅ Vider le cache
+        viderCacheApresModification('restriction');
+        
+        // ✅ Recharger la liste
+        setTimeout(() => chargerRestrictions(), 300);
+        
+        UIHelpers.showSuccess('Restriction supprimée');
+    } catch (error) {
+        console.error('Erreur suppression:', error);
+        UIHelpers.showError('Erreur lors de la suppression');
+    } finally {
+        UIHelpers.showLoading(false);
+    }
+}
+
+// ========== INSCRIPTION ADMIN ==========
+
+// Modifier validerInscriptionAdmin
 async function validerInscriptionAdmin(event) {
   event.preventDefault();
   
   try {
     console.log('💾 Validation inscription admin...');
     
+    UIHelpers.showLoading(true);
     
     const data = {
       etudiant_id: parseInt(document.getElementById('inscriptionEtudiantId').value),
@@ -981,7 +1119,7 @@ async function validerInscriptionAdmin(event) {
       mode_paiement: document.getElementById('inscriptionModePaiement').value || null,
       montant: document.getElementById('inscriptionMontant').value || null,
       statut_paiement: document.getElementById('inscriptionStatutPaiement').value,
-      statut_inscription: 'validee' // Validée directement par l'admin
+      statut_inscription: 'validee'
     };
     
     console.log('Données inscription:', data);
@@ -991,12 +1129,16 @@ async function validerInscriptionAdmin(event) {
       body: JSON.stringify(data)
     });
     
+    // ✅ Vider le cache
+    viderCacheApresModification('etudiant');
+    viderCacheApresModification('stats');
+    
     UIHelpers.showSuccess('Inscription créée avec succès');
     
     closeModal('inscriptionAdminModal');
     document.getElementById('inscriptionAdminForm').reset();
     
-    // ✅ NOUVELLE FONCTIONNALITÉ: Proposer l'impression du reçu
+    // Proposer l'impression du reçu
     const imprimerRecu = confirm(
       '✅ Inscription validée avec succès!\n\n' +
       '📄 Voulez-vous générer et imprimer le reçu d\'inscription maintenant ?'
@@ -1005,18 +1147,16 @@ async function validerInscriptionAdmin(event) {
     if (imprimerRecu && response.inscription) {
       console.log('📄 Génération du reçu...');
       
-      // Récupérer les détails complets de l'inscription
       const detailsResponse = await apiClient.getInscriptionDetails(response.inscription.id);
       
       if (detailsResponse.success) {
-        // Générer le reçu PDF
         await genererRecuInscription(detailsResponse.inscription);
         UIHelpers.showSuccess('Reçu téléchargé avec succès!');
       }
     }
     
-    // Recharger la liste des étudiants
-    rechercherEtudiants();
+    // ✅ Recharger la liste des étudiants
+    setTimeout(() => rechercherEtudiants(), 300);
     
   } catch (error) {
     console.error('Erreur création inscription:', error);
@@ -1076,7 +1216,6 @@ async function toggleInscriptionsGlobal() {
         const response = await apiClient.getStatutGlobalInscriptions();
         const actuelActif = response.config.actif;
         
-        // Message de confirmation
         const action = actuelActif ? 'BLOQUER' : 'DÉBLOQUER';
         const message = actuelActif 
             ? '⚠️ Êtes-vous sûr de vouloir BLOQUER les inscriptions pour TOUS les étudiants ?\n\nCela empêchera toute nouvelle inscription jusqu\'à réactivation.'
@@ -1086,29 +1225,32 @@ async function toggleInscriptionsGlobal() {
             return;
         }
         
-        
+        UIHelpers.showLoading(true);
         
         const raison = document.getElementById('messageGlobalRaison')?.value || null;
         
         const toggleResponse = await apiClient.toggleInscriptionsGlobal(!actuelActif, raison);
         
         if (toggleResponse.success) {
+            // ✅ Vider le cache
+            viderCacheApresModification('etudiant');
+            viderCacheApresModification('config');
+            
             UIHelpers.showSuccess(toggleResponse.message);
             
-            // Afficher les statistiques
             const stats = toggleResponse.statistiques;
             UIHelpers.showMessage(
                 `📊 Mise à jour effectuée :\n✅ ${stats.etudiants_autorises} autorisés\n🚫 ${stats.etudiants_bloques} bloqués`,
                 'info'
             );
             
-            // Recharger le statut
-            await chargerStatutGlobalInscriptions();
-            
-            // Recharger la liste des étudiants si on est sur cette page
-            if (typeof rechercherEtudiants === 'function') {
-                rechercherEtudiants();
-            }
+            // ✅ Recharger
+            setTimeout(async () => {
+                await chargerStatutGlobalInscriptions();
+                if (typeof rechercherEtudiants === 'function') {
+                    rechercherEtudiants();
+                }
+            }, 300);
         }
         
     } catch (error) {
@@ -1118,7 +1260,6 @@ async function toggleInscriptionsGlobal() {
         UIHelpers.showLoading(false);
     }
 }
-
 // 3. Mettre à jour seulement le message
 async function mettreAJourMessageGlobal() {
     try {
