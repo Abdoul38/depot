@@ -798,6 +798,7 @@ async function chargerRestrictions() {
 }
 
 // Préparer le formulaire de restriction
+// Préparer le formulaire de restriction
 async function prepareRestrictionForm() {
     try {
         console.log('📋 Préparation formulaire restriction...');
@@ -815,6 +816,8 @@ async function prepareRestrictionForm() {
                 option.textContent = `${e.prenom} ${e.nom} - ${e.numero_dossier}`;
                 selectEtudiant.appendChild(option);
             });
+            
+            console.log(`✅ ${etudiantsResponse.etudiants?.length || 0} étudiants chargés`);
         }
         
         // Charger les filières
@@ -830,14 +833,32 @@ async function prepareRestrictionForm() {
                 option.textContent = f.libelle;
                 selectFiliere.appendChild(option);
             });
+            
+            console.log(`✅ ${filieresResponse.filieres?.length || 0} filières chargées`);
         }
         
         console.log('✅ Formulaire restriction préparé');
         
     } catch (error) {
         console.error('❌ Erreur préparation formulaire:', error);
+        
+        // Afficher un message d'erreur dans les selects
+        const selectEtudiant = document.getElementById('restrictionEtudiant');
+        const selectFiliere = document.getElementById('restrictionFiliere');
+        
+        if (selectEtudiant) {
+            selectEtudiant.innerHTML = '<option value="">❌ Erreur chargement étudiants</option>';
+        }
+        if (selectFiliere) {
+            selectFiliere.innerHTML = '<option value="">❌ Erreur chargement filières</option>';
+        }
+        
+        throw error;
     }
 }
+// Export global
+window.ouvrirModalRestriction = ouvrirModalRestriction;
+window.prepareRestrictionForm = prepareRestrictionForm;
 
 // Mettre à jour les champs selon le type
 function updateRestrictionFields() {
@@ -1715,6 +1736,35 @@ async function creerGraphiquePaiementInscriptions(data) {
             }
         }
     });
+}
+// Fonction pour ouvrir le modal de restriction avec préchargement
+async function ouvrirModalRestriction() {
+    try {
+        console.log('📋 Ouverture modal restriction...');
+        
+        // Ouvrir le modal
+        openModal('ajoutRestrictionModal');
+        
+        // Afficher un loader dans le modal
+        const selectEtudiant = document.getElementById('restrictionEtudiant');
+        const selectFiliere = document.getElementById('restrictionFiliere');
+        
+        if (selectEtudiant) {
+            selectEtudiant.innerHTML = '<option value="">⏳ Chargement des étudiants...</option>';
+        }
+        if (selectFiliere) {
+            selectFiliere.innerHTML = '<option value="">⏳ Chargement des filières...</option>';
+        }
+        
+        // Charger les données
+        await prepareRestrictionForm();
+        
+        console.log('✅ Modal restriction prêt');
+        
+    } catch (error) {
+        console.error('❌ Erreur ouverture modal restriction:', error);
+        UIHelpers.showError('Erreur lors du chargement des données');
+    }
 }
 
 // Afficher les dernières inscriptions
