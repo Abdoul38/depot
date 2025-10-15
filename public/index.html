@@ -1793,6 +1793,84 @@ function logout() {
             console.log('✅ Application prête');
         });
 
+        // ========== EXPORTS AVEC MESSAGE ==========
+
+async function exportData(type) {
+    try {
+        UIHelpers.showLoading(true);
+        
+        await apiClient.exportData(type);
+        
+        UIHelpers.showSuccess('✅ Export terminé avec succès !');
+        
+        // ✅ Vider le cache des stats après export
+        if (type.includes('stats') || type.includes('statistiques')) {
+            viderCacheApresModification('stats');
+        }
+        
+    } catch (error) {
+        console.error('Erreur export:', error);
+        UIHelpers.showError('Erreur lors de l\'export: ' + error.message);
+    } finally {
+        UIHelpers.showLoading(false);
+    }
+}
+
+// Export sections spécifiques
+async function exporterParFaculte(faculte = null) {
+    try {
+        console.log('📊 Export par faculté...', faculte);
+        
+        UIHelpers.showLoading(true);
+        
+        await apiClient.exporterParFaculte(faculte);
+        
+        UIHelpers.showSuccess('✅ Export téléchargé avec succès');
+        
+    } catch (error) {
+        console.error('❌ Erreur export faculté:', error);
+        UIHelpers.showError('Erreur lors de l\'export: ' + error.message);
+    } finally {
+        UIHelpers.showLoading(false);
+    }
+}
+
+async function exporterParGenre(genre = null) {
+    try {
+        console.log('👥 Export par genre...', genre);
+        
+        UIHelpers.showLoading(true);
+        
+        await apiClient.exporterParGenre(genre);
+        
+        UIHelpers.showSuccess('✅ Export téléchargé avec succès');
+        
+    } catch (error) {
+        console.error('❌ Erreur export genre:', error);
+        UIHelpers.showError('Erreur lors de l\'export: ' + error.message);
+    } finally {
+        UIHelpers.showLoading(false);
+    }
+}
+
+async function exporterParStatut(statut = 'en-attente') {
+    try {
+        console.log('📊 Export par statut...', statut);
+        
+        UIHelpers.showLoading(true);
+        
+        await apiClient.exporterParStatut(statut);
+        
+        UIHelpers.showSuccess('✅ Export téléchargé avec succès');
+        
+    } catch (error) {
+        console.error('❌ Erreur export statut:', error);
+        UIHelpers.showError('Erreur lors de l\'export: ' + error.message);
+    } finally {
+        UIHelpers.showLoading(false);
+    }
+}
+
         // Fonction utilitaire pour charger HTML
         async function includeHTML(file, containerId) {
             try {
