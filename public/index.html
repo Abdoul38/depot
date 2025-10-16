@@ -1270,293 +1270,345 @@ async function creerGraphiqueEvolution(evolution) {
         }
 
         // =================== AUTHENTIFICATION ===================
-        async function login(event) {
-            event.preventDefault();
-            
-            try {
-                showLoader(true);
-                
-                const credentials = {
-                    identifiant: document.getElementById('loginIdentifiant').value.trim(),
-                    motDePasse: document.getElementById('loginMotDePasse').value
-                };
-                
-                console.log('🔐 Tentative de connexion...');
-                
-                const response = await apiClient.login(credentials);
-                
-                if (!response.token || !response.user) {
-                    throw new Error('Réponse invalide du serveur');
-                }
-                
-                console.log('✅ Connexion réussie:', response.user.nom);
-                
-                // Mettre à jour l'interface
-                updateUIAfterLogin(response.user);
-                
-                showMessage('✅ Connexion réussie ! Bienvenue ' + response.user.nom, 'success');
-                
-            } catch (error) {
-                console.error('❌ Erreur connexion:', error);
-                showMessage('❌ ' + (error.message || 'Identifiants incorrects'), 'error');
-            } finally {
-                showLoader(false);
-            }
+        // ✅ FONCTION LOGIN CORRIGÉE
+async function login(event) {
+    event.preventDefault();
+    
+    try {
+        showLoader(true);
+        
+        const credentials = {
+            identifiant: document.getElementById('loginIdentifiant').value.trim(),
+            motDePasse: document.getElementById('loginMotDePasse').value
+        };
+        
+        console.log('🔐 Tentative de connexion...');
+        
+        // Appel API
+        const response = await apiClient.login(credentials);
+        
+        if (!response.token || !response.user) {
+            throw new Error('Réponse invalide du serveur');
         }
-
-        async function register(event) {
-            event.preventDefault();
-            
-            try {
-                showLoader(true);
-                
-                const motDePasse = document.getElementById('regMotDePasse').value;
-                const confirmMotDePasse = document.getElementById('regConfirmMotDePasse').value;
-                
-                if (motDePasse !== confirmMotDePasse) {
-                    throw new Error('Les mots de passe ne correspondent pas');
-                }
-                
-                const userData = {
-                    nom: document.getElementById('regNom').value.trim(),
-                    prenom: document.getElementById('regPrenom').value.trim(),
-                    email: document.getElementById('regEmail').value.trim(),
-                    telephone: document.getElementById('regTelephone').value.trim(),
-                    dateNaissance: document.getElementById('regDateNaissance').value || null,
-                    motDePasse: motDePasse
-                };
-                
-                console.log('📝 Création de compte...');
-                
-                const response = await apiClient.register(userData);
-                
-                if (response.success) {
-                    showMessage('✅ Compte créé avec succès ! Vous pouvez maintenant vous connecter', 'success');
-                    
-                    // Réinitialiser le formulaire
-                    document.getElementById('registerForm').reset();
-                    
-                    // Rediriger vers connexion après 2 secondes
-                    setTimeout(() => navigateTo('connexion'), 2000);
-                } else {
-                    throw new Error(response.error || 'Erreur lors de la création du compte');
-                }
-                
-            } catch (error) {
-                console.error('❌ Erreur inscription:', error);
-                showMessage('❌ ' + (error.message || 'Erreur lors de la création du compte'), 'error');
-            } finally {
-                showLoader(false);
-            }
+        
+        console.log('✅ Connexion réussie:', response.user.nom);
+        
+        // ✅ ÉTAPE 1 : Sauvegarder les données
+        localStorage.setItem('authToken', response.token);
+        localStorage.setItem('currentUser', JSON.stringify(response.user));
+        
+        // ✅ ÉTAPE 2 : Configurer apiClient
+        if (typeof apiClient !== 'undefined') {
+            apiClient.token = response.token;
+            apiClient.currentUser = response.user;
+            console.log('✅ ApiClient configuré');
         }
+        
+        // ✅ ÉTAPE 3 : Réinitialiser le formulaire AVANT de masquer
+        document.getElementById('loginForm').reset();
+        
+        // ✅ ÉTAPE 4 : Masquer la page connexion
+        const connexionPage = document.getElementById('connexion');
+        if (connexionPage) {
+            connexionPage.classList.remove('active');
+            connexionPage.style.display = 'none';
+        }
+        
+        // ✅ ÉTAPE 5 : Masquer accueil
+        const accueilPage = document.getElementById('accueil');
+        if (accueilPage) {
+            accueilPage.classList.remove('active');
+            accueilPage.style.display = 'none';
+        }
+        
+        // ✅ ÉTAPE 6 : Cacher TOUS les conteneurs avant affichage
+        document.getElementById('admin-content').style.display = 'none';
+        document.getElementById('user-content').style.display = 'none';
+        document.getElementById('adminPanel').style.display = 'none';
+        
+        // ✅ ÉTAPE 7 : Appeler updateUIAfterLogin (ça va afficher le bon contenu)
+        updateUIAfterLogin(response.user);
+        
+        showLoader(false);
+        UIHelpers.showSuccess('✅ Connexion réussie ! Bienvenue ' + response.user.nom);
+        
+        console.log('✅ Redirection effectuée');
+        
+    } catch (error) {
+        console.error('❌ Erreur connexion:', error);
+        showLoader(false);
+        UIHelpers.showError('❌ ' + (error.message || 'Identifiants incorrects'));
+    }
+}
 
-   
+// ✅ FONCTION REGISTER CORRIGÉE
+async function register(event) {
+    event.preventDefault();
+    
+    try {
+        showLoader(true);
+        
+        const motDePasse = document.getElementById('regMotDePasse').value;
+        const confirmMotDePasse = document.getElementById('regConfirmMotDePasse').value;
+        
+        if (motDePasse !== confirmMotDePasse) {
+            throw new Error('Les mots de passe ne correspondent pas');
+        }
+        
+        const userData = {
+            nom: document.getElementById('regNom').value.trim(),
+            prenom: document.getElementById('regPrenom').value.trim(),
+            email: document.getElementById('regEmail').value.trim(),
+            telephone: document.getElementById('regTelephone').value.trim(),
+            dateNaissance: document.getElementById('regDateNaissance').value || null,
+            motDePasse: motDePasse
+        };
+        
+        console.log('👤 Création de compte...');
+        
+        const response = await apiClient.register(userData);
+        
+        if (response.success) {
+            showLoader(false);
+            UIHelpers.showSuccess('✅ Compte créé avec succès ! Redirection vers connexion...');
+            
+            document.getElementById('registerForm').reset();
+            
+            setTimeout(() => {
+                const inscriptionPage = document.getElementById('inscription');
+                if (inscriptionPage) {
+                    inscriptionPage.classList.remove('active');
+                }
+                navigateTo('connexion');
+            }, 2000);
+        } else {
+            throw new Error(response.error || 'Erreur lors de la création du compte');
+        }
+        
+    } catch (error) {
+        console.error('❌ Erreur inscription:', error);
+        showLoader(false);
+        UIHelpers.showError('❌ ' + (error.message || 'Erreur lors de la création du compte'));
+    }
+}
+
+// ✅ FONCTION UPDATEUIAFTERLOGIN COMPLÈTEMENT REFONDUE
 function updateUIAfterLogin(user) {
+    console.log('🔄 Mise à jour interface après connexion');
+    console.log('👤 Utilisateur:', user.nom, '| Rôle:', user.role);
+    
     const isAdmin = user.role === 'admin';
-    const sidebar = document.getElementById('modernSidebar');
-    const mainWrapper = document.getElementById('mainWrapper');
+    
+    // ========== ÉTAPE 1 : Nettoyer les anciens états ==========
+    document.querySelectorAll('.page').forEach(page => {
+        page.classList.remove('active');
+        page.style.display = 'none';
+    });
+    
+    // ========== ÉTAPE 2 : Configuration commune ==========
+    document.getElementById('beforeLoginButtons').style.display = 'none';
+    document.getElementById('afterLoginMenu').style.display = 'block';
+    
+    // Remplir les infos utilisateur
+    const userAvatar = document.getElementById('userAvatar');
+    const userName = document.getElementById('userName');
+    const userRole = document.getElementById('userRole');
+    
+    if (userAvatar) userAvatar.textContent = user.nom.charAt(0).toUpperCase();
+    if (userName) userName.textContent = user.nom;
+    if (userRole) userRole.textContent = isAdmin ? 'Administrateur' : 'Étudiant';
     
     if (isAdmin) {
         // ========== MODE ADMIN ==========
-        document.getElementById('beforeLoginButtons').style.display = 'none';
-        document.getElementById('afterLoginMenu').style.display = 'block';
-        document.getElementById('userAvatar').textContent = user.nom.charAt(0).toUpperCase();
-        document.getElementById('userName').textContent = user.nom;
-        document.getElementById('userRole').textContent = 'Administrateur';
+        console.log('🔐 Configuration ADMIN');
         
-        document.body.classList.remove('user-mode');
-        sidebar.classList.add('active');
-        mainWrapper.classList.add('with-sidebar');
-        document.getElementById('adminMenu').style.display = 'block';
-        document.getElementById('userMenu').style.display = 'none';
-        document.getElementById('sidebarUserRole').textContent = 'Administrateur';
-        
-        const mobileUserBtn = document.getElementById('mobileUserMenuBtn');
-        if (mobileUserBtn) mobileUserBtn.style.display = 'none';
-        closeMobileUserMenu();
-        
+        // Masquer user-content
         const userContent = document.getElementById('user-content');
         if (userContent) userContent.style.display = 'none';
         
-        const dashboardAdmin = document.getElementById('dashboard');
-        if (dashboardAdmin) {
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            dashboardAdmin.classList.add('active');
+        // Afficher admin
+        document.body.classList.remove('user-mode');
+        document.body.classList.add('admin-mode');
+        
+        const sidebar = document.getElementById('modernSidebar');
+        const mainWrapper = document.getElementById('mainWrapper');
+        
+        if (sidebar) {
+            sidebar.classList.add('active');
+            sidebar.style.display = 'block';
+        }
+        if (mainWrapper) mainWrapper.classList.add('with-sidebar');
+        
+        // Configurer menu admin
+        const adminMenu = document.getElementById('adminMenu');
+        const userMenu = document.getElementById('userMenu');
+        
+        if (adminMenu) adminMenu.style.display = 'block';
+        if (userMenu) userMenu.style.display = 'none';
+        
+        // Afficher admin-content et adminPanel
+        const adminContent = document.getElementById('admin-content');
+        const adminPanel = document.getElementById('adminPanel');
+        
+        if (adminContent) {
+            adminContent.style.display = 'block';
+        }
+        if (adminPanel) {
+            adminPanel.style.display = 'block';
+            adminPanel.classList.add('active');
         }
         
-        setTimeout(() => chargerDashboard(), 100);
+        // Bouton menu mobile
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        if (mobileMenuBtn) mobileMenuBtn.style.display = 'flex';
+        
+        // Masquer userTopbarActions s'il existe
+        const userTopbarActions = document.getElementById('userTopbarActions');
+        if (userTopbarActions) userTopbarActions.remove();
+        
+        // Charger le dashboard admin
+        setTimeout(() => {
+            console.log('📊 Chargement dashboard admin...');
+            const dashboard = document.getElementById('dashboard');
+            if (dashboard) {
+                dashboard.style.display = 'block';
+                dashboard.classList.add('active');
+                chargerDashboard();
+            }
+        }, 100);
         
     } else {
         // ========== MODE UTILISATEUR ==========
-        document.body.classList.add('user-mode');
-        sidebar.classList.remove('active');
-        mainWrapper.classList.remove('with-sidebar');
-        document.getElementById('adminMenu').style.display = 'none';
-        document.getElementById('userMenu').style.display = 'none';
+        console.log('👥 Configuration UTILISATEUR');
         
-        // ✅ MASQUER IMMÉDIATEMENT LE DASHBOARD ADMIN
-        const dashboardAdmin = document.getElementById('dashboard');
-        if (dashboardAdmin) {
-            dashboardAdmin.classList.remove('active');
-            dashboardAdmin.style.display = 'none';
+        // Masquer admin
+        const adminContent = document.getElementById('admin-content');
+        const adminPanel = document.getElementById('adminPanel');
+        
+        if (adminContent) adminContent.style.display = 'none';
+        if (adminPanel) adminPanel.style.display = 'none';
+        
+        // Afficher user-content
+        const userContent = document.getElementById('user-content');
+        if (userContent) {
+            userContent.style.display = 'block';
         }
         
-        // Créer la navigation utilisateur simplifiée (2 boutons)
+        // Configuration UI
+        document.body.classList.add('user-mode');
+        document.body.classList.remove('admin-mode');
+        
+        const sidebar = document.getElementById('modernSidebar');
+        const mainWrapper = document.getElementById('mainWrapper');
+        
+        if (sidebar) {
+            sidebar.classList.remove('active');
+            sidebar.style.display = 'none';
+        }
+        if (mainWrapper) mainWrapper.classList.remove('with-sidebar');
+        
+        const adminMenu = document.getElementById('adminMenu');
+        const userMenu = document.getElementById('userMenu');
+        
+        if (adminMenu) adminMenu.style.display = 'none';
+        if (userMenu) userMenu.style.display = 'none';
+        
+        // Créer navigation simplifiée
         createUserTopbarNav();
         
-        const mobileUserBtn = document.getElementById('mobileUserMenuBtn');
-        if (mobileUserBtn) mobileUserBtn.style.display = 'none';
+        // Bouton menu mobile
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        if (mobileMenuBtn) mobileMenuBtn.style.display = 'none';
         
-        // ✅ Masquer toutes les pages non-user immédiatement
-        document.querySelectorAll('#accueil, #connexion, #inscription, #adminPanel, #admin-content, #models-content').forEach(page => {
-            if (page) {
-                page.style.display = 'none';
-                page.classList.remove('active');
-            }
-        });
-        
-        const userContent = document.getElementById('user-content');
-        if (userContent && userContent.innerHTML.trim() !== '') {
-            userContent.style.display = 'block';
+        // Charger le dashboard utilisateur
+        setTimeout(() => {
+            console.log('📋 Chargement dashboard utilisateur...');
             
-            const dashboardUser = userContent.querySelector('#dashboard');
-            if (dashboardUser) {
-                userContent.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-                dashboardUser.classList.add('active');
+            const userContent = document.getElementById('user-content');
+            if (userContent && userContent.innerHTML.trim() !== '') {
+                const dashboardUser = userContent.querySelector('#dashboard');
                 
-                // Personnaliser le message de bienvenue
-                setTimeout(() => {
-                    const welcomeTitle = document.getElementById('userWelcomeTitle');
+                if (dashboardUser) {
+                    dashboardUser.style.display = 'block';
+                    dashboardUser.classList.add('active');
+                    
+                    // Personnaliser le message
+                    const welcomeTitle = userContent.querySelector('#userWelcomeTitle');
                     if (welcomeTitle) {
                         welcomeTitle.textContent = `🎓 Bienvenue ${user.prenom || user.nom}`;
                     }
-                }, 200);
-                
-                console.log('✅ Dashboard utilisateur affiché');
-                
-                setTimeout(() => {
+                    
+                    // Charger les dossiers
                     if (typeof chargerMesDossiers === 'function') {
-                        chargerMesDossiers();
-                        console.log('📋 Chargement automatique des dossiers...');
+                        setTimeout(() => chargerMesDossiers(), 500);
                     }
-                }, 500);
-            } else {
-                console.error('❌ Dashboard utilisateur non trouvé');
-            }
-        } else {
-            console.log('⏳ Attente du chargement du contenu utilisateur...');
-            setTimeout(() => {
-                const userContent = document.getElementById('user-content');
-                if (userContent) {
-                    userContent.style.display = 'block';
-                    const dashboardUser = userContent.querySelector('#dashboard');
-                    if (dashboardUser) {
-                        userContent.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-                        dashboardUser.classList.add('active');
-                        
-                        setTimeout(() => {
-                            const welcomeTitle = document.getElementById('userWelcomeTitle');
-                            if (welcomeTitle) {
-                                welcomeTitle.textContent = `🎓 Bienvenue ${user.prenom || user.nom}`;
-                            }
-                        }, 200);
-                        
-                        console.log('✅ Dashboard utilisateur affiché (après délai)');
-                        
-                        setTimeout(() => {
-                            if (typeof chargerMesDossiers === 'function') {
-                                chargerMesDossiers();
-                                console.log('📋 Chargement automatique des dossiers...');
-                            }
-                        }, 500);
-                    } else {
-                        console.error('❌ Dashboard utilisateur toujours non trouvé');
-                        showMessage('❌ Erreur de chargement de l\'interface', 'error');
-                    }
+                } else {
+                    console.error('❌ Dashboard utilisateur non trouvé');
                 }
-            }, 500);
-        }
-    }
-}
-// Créer la navigation utilisateur dans le topbar
-function createUserTopbarNav() {
-    // Vérifier si existe déjà
-    let existingNav = document.getElementById('userTopbarActions');
-    if (existingNav) {
-        existingNav.style.display = 'flex';
-        return;
+            } else {
+                console.error('❌ user-content vide');
+            }
+        }, 100);
     }
     
-    // Créer la navigation simple (2 boutons seulement)
+    console.log('✅ Interface mise à jour');
+}
+
+// ✅ FONCTION CREATEUSERTOPBARNAV SIMPLE
+function createUserTopbarNav() {
+    let existingNav = document.getElementById('userTopbarActions');
+    if (existingNav) existingNav.remove();
+    
+    const topbarActions = document.querySelector('.topbar-actions');
+    if (!topbarActions) return;
+    
     const nav = document.createElement('div');
     nav.id = 'userTopbarActions';
-    nav.className = 'user-topbar-actions';
+    nav.style.cssText = `
+        display: flex;
+        gap: 15px;
+        align-items: center;
+    `;
+    
     nav.innerHTML = `
-        <button class="btn btn-secondary" onclick="navigateToUserPage('dashboard')">
-            🏠 Tableau de bord
+        <button class="btn btn-secondary" onclick="navigateToUserPage('dashboard')" style="padding: 10px 20px; font-size: 14px;">
+            Tableau de bord
         </button>
-        <button class="btn btn-primary" onclick="logout()">
-            🚪 Déconnexion
+        <button class="btn btn-primary" onclick="logout()" style="padding: 10px 20px; font-size: 14px;">
+            Déconnexion
         </button>
     `;
     
-    // Ajouter à la barre du haut
-    const topbarActions = document.querySelector('.topbar-actions');
-    
-    // Masquer les anciens boutons
-    const beforeLogin = document.getElementById('beforeLoginButtons');
-    const afterLogin = document.getElementById('afterLoginMenu');
-    if (beforeLogin) beforeLogin.style.display = 'none';
-    if (afterLogin) afterLogin.style.display = 'none';
-    
-    // Ajouter la nouvelle navigation
     topbarActions.appendChild(nav);
 }
 
-// Navigation pour les pages utilisateur (sans sidebar)
-// Navigation pour les pages utilisateur (sans sidebar)
+// ✅ FONCTION navigateToUserPage CORRIGÉE
 function navigateToUserPage(pageId) {
-    console.log('📄 Navigation utilisateur vers:', pageId);
+    console.log('Accès à:', pageId);
     
     const userContent = document.getElementById('user-content');
-    if (!userContent) {
-        console.error('❌ user-content introuvable');
+    if (!userContent || userContent.style.display === 'none') {
+        console.error('user-content non disponible');
         return;
     }
     
-    // Masquer toutes les pages dans user-content
-    userContent.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    // Masquer toutes les pages
+    userContent.querySelectorAll('.page').forEach(p => {
+        p.classList.remove('active');
+        p.style.display = 'none';
+    });
     
     // Afficher la page demandée
     const page = userContent.querySelector('#' + pageId);
     if (page) {
         page.classList.add('active');
+        page.style.display = 'block';
         
-        // Mettre à jour le menu actif dans le topbar
-        document.querySelectorAll('.user-nav-item').forEach(item => {
-            item.classList.remove('active');
-            if (item.getAttribute('data-page') === pageId) {
-                item.classList.add('active');
-            }
-        });
-        
-        // ✅ CORRECTION : Vider le cache avant le chargement
-        if (pageId === 'mesDossiers') {
-            apiCache.clear('applications/my');
-            console.log('🗑️ Cache vidé avant chargement dossiers');
-        }
-        
-        // Charger les données automatiquement
+        // Charger les données
         setTimeout(() => {
             switch(pageId) {
-                case 'dashboard':
-                    if (typeof chargerMesDossiers === 'function') {
-                        chargerMesDossiers();
-                    }
-                    break;
                 case 'mesDossiers':
                     if (typeof chargerMesDossiers === 'function') {
-                        console.log('🔄 Rechargement forcé des dossiers...');
                         chargerMesDossiers();
                     }
                     break;
@@ -1567,10 +1619,6 @@ function navigateToUserPage(pageId) {
                     break;
             }
         }, 100);
-        
-        console.log('✅ Page utilisateur affichée:', pageId);
-    } else {
-        console.error('❌ Page introuvable:', pageId);
     }
 }
 
@@ -1753,39 +1801,91 @@ function logout() {
 }
 
         // =================== INITIALISATION ===================
-        document.addEventListener('DOMContentLoaded', async () => {
-            console.log('🚀 Initialisation application...');
+       document.addEventListener('DOMContentLoaded', async () => {
+    console.log('🚀 Initialisation application...');
+    
+    // ✅ ÉTAPE 1 : Masquer TOUS les conteneurs admin IMMÉDIATEMENT
+    const adminContent = document.getElementById('admin-content');
+    const adminPanel = document.getElementById('adminPanel');
+    const userContent = document.getElementById('user-content');
+    
+    if (adminContent) adminContent.style.display = 'none';
+    if (adminPanel) adminPanel.style.display = 'none';
+    
+    // ✅ ÉTAPE 2 : Vérifier le token ET le rôle AVANT de charger
+    const token = localStorage.getItem('authToken');
+    const userStr = localStorage.getItem('currentUser');
+    
+    // Si pas de token du tout, afficher accueil
+    if (!token || !userStr) {
+        console.log('❌ Pas de session - affichage accueil');
+        navigateTo('accueil');
+        
+        // Charger les pages externes sans les afficher
+        await Promise.all([
+            includeHTML('user.html', 'user-content'),
+            includeHTML('admin.html', 'admin-content'),
+            includeHTML('models.html', 'models-content')
+        ]);
+        return;
+    }
+    
+    // ✅ ÉTAPE 3 : Vérifier le rôle AVANT de charger les conteneurs
+    try {
+        const user = JSON.parse(userStr);
+        console.log('👤 Utilisateur trouvé:', user.role);
+        
+        // ✅ PROTECTION PRINCIPALE : Vérifier le rôle
+        const isAdmin = user.role === 'admin';
+        
+        if (isAdmin) {
+            console.log('🔐 Admin détecté - chargement admin content');
+            // Admin - charger admin-content
+            await includeHTML('admin.html', 'admin-content');
             
-            // Charger les pages externes
-            await Promise.all([
-                includeHTML('user.html', 'user-content'),
-                includeHTML('admin.html', 'admin-content'),
-                includeHTML('models.html', 'models-content')
-            ]);
+            // Masquer user-content
+            if (userContent) userContent.style.display = 'none';
             
-            // Vérifier session
-            const token = localStorage.getItem('authToken');
-            const userStr = localStorage.getItem('currentUser');
+        } else {
+            console.log('👥 Utilisateur détecté - chargement user content');
+            // User - charger user-content
+            await includeHTML('user.html', 'user-content');
             
-            if (token && userStr) {
-                try {
-                    const user = JSON.parse(userStr);
-                    if (typeof apiClient !== 'undefined') {
-                        apiClient.token = token;
-                        apiClient.currentUser = user;
-                    }
-                    updateUIAfterLogin(user);
-                    console.log('✅ Session restaurée');
-                } catch (error) {
-                    console.error('❌ Erreur session:', error);
-                    logout();
-                }
-            } else {
-                navigateTo('accueil');
-            }
-            
-            console.log('✅ Application prête');
-        });
+            // Masquer admin
+            if (adminContent) adminContent.style.display = 'none';
+            if (adminPanel) adminPanel.style.display = 'none';
+        }
+        
+        // Charger models.html dans les deux cas
+        await includeHTML('models.html', 'models-content');
+        
+        // ✅ ÉTAPE 4 : Configurer apiClient et afficher l'interface
+        if (typeof apiClient !== 'undefined') {
+            apiClient.token = token;
+            apiClient.currentUser = user;
+        }
+        
+        // ✅ ÉTAPE 5 : Appeler updateUIAfterLogin qui gère l'affichage
+        updateUIAfterLogin(user);
+        
+        console.log('✅ Session restaurée - interface correcte affichée');
+        
+    } catch (error) {
+        console.error('❌ Erreur session:', error);
+        
+        // En cas d'erreur, déconnecter l'utilisateur
+        localStorage.clear();
+        navigateTo('accueil');
+        
+        // Charger les pages externes
+        await Promise.all([
+            includeHTML('user.html', 'user-content'),
+            includeHTML('admin.html', 'admin-content'),
+            includeHTML('models.html', 'models-content')
+        ]);
+    }
+});
+
 
         // ========== EXPORTS AVEC MESSAGE ==========
 
