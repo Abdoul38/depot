@@ -8,7 +8,7 @@ const fs = require('fs');
 const ExcelJS = require('exceljs');
 const { Pool } = require('pg');
 require('dotenv').config();
-
+const { cleanupTempFiles } = require('./utils/cleanupTemp');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -162,6 +162,7 @@ app.get('/api/type-bacs', async (req, res) => {
         res.status(500).json({ error: 'Erreur serveur' });
     }
 });
+
 
 app.get('/api/filieres-by-bac/:typeBac', async (req, res) => {
     try {
