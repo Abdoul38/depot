@@ -664,14 +664,6 @@ document.addEventListener('click', (e) => {
                 // Charger les données automatiquement
                 setTimeout(() => chargerDonneesPage(pageId), 100);
             }
-            if (pageId === 'statistiques') {
-        setTimeout(() => {
-            console.log('🔄 Recharge stats après navigation');
-            if (typeof chargerTableauBordStats === 'function') {
-                chargerTableauBordStats();
-            }
-        }, 200);
-    }
 }
         
 async function telechargerDocument(applicationId, documentType) {
