@@ -1,10 +1,11 @@
+// routes/etudiants.routes.js - VERSION CORRIGÉE
 const express = require('express');
 const router = express.Router();
 const etudiantsController = require('../controllers/etudiants.controller');
 const exportController = require('../controllers/export.controller');
 
 const { authenticateToken, requireAdmin } = require('../middleware/auth');
-const { upload } = require('../middleware/upload');
+const { upload, uploadExcel } = require('../middleware/upload'); // ✅ Importer uploadExcel
 
 // Toutes les routes nécessitent authentification admin
 router.use(authenticateToken);
@@ -12,12 +13,9 @@ router.use(requireAdmin);
 
 // =================== ROUTES SPÉCIFIQUES (AVANT LES ROUTES AVEC :id) ===================
 
-// Import/Export - DOIVENT ÊTRE EN PREMIER
-// =================== ROUTES SPÉCIFIQUES (AVANT LES ROUTES AVEC :id) ===================
-
 // Import/Export
 router.get('/modele-excel', etudiantsController.telechargerModele);
-router.post('/import', upload.single('fichier'), etudiantsController.importerEtudiants);
+router.post('/import', uploadExcel.single('fichier'), etudiantsController.importerEtudiants); // ✅ uploadExcel
 
 // Exports
 router.get('/users', exportController.exportUsers);
