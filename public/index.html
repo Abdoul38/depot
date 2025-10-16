@@ -885,60 +885,7 @@ async function telechargerQuitusDepuisDetails(applicationId) {
         showLoader(false);
     }
 }
-let appInitialized = false;
 
-async function initializeApp() {
-    if (appInitialized) return;
-    appInitialized = true;
-    
-    console.log('🚀 Initialisation application...');
-    
-    try {
-        // Charger les pages HTML en parallèle
-        await Promise.all([
-            includeHTML('user.html', 'user-content'),
-            includeHTML('admin.html', 'admin-content'),
-            includeHTML('models.html', 'models-content')
-        ]);
-        
-        // Vérifier la connexion
-        const token = localStorage.getItem('token');
-        const role = localStorage.getItem('userRole');
-        
-        if (token) {
-            document.getElementById('loginBtn').style.display = 'none';
-            document.getElementById('registerBtn').style.display = 'none';
-            document.getElementById('logoutBtn').style.display = 'block';
-            
-            if (role === 'admin') {
-                showPage('adminPanel');
-            }
-        } else {
-            document.getElementById('loginBtn').style.display = 'block';
-            document.getElementById('registerBtn').style.display = 'block';
-            document.getElementById('logoutBtn').style.display = 'none';
-            showPage('accueil');
-        }
-        
-        // Initialiser Chart.js après un court délai
-        if (typeof Chart !== 'undefined') {
-            Chart.defaults.font.family = 'Arial, sans-serif';
-            Chart.defaults.color = '#666';
-        }
-        
-        console.log('✅ Application initialisée');
-        
-    } catch (error) {
-        console.error('❌ Erreur initialisation:', error);
-    }
-}
-
-// UN SEUL événement DOMContentLoaded
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initializeApp);
-} else {
-    initializeApp();
-}
         function animateCounter(elementId, targetValue) {
     const element = document.getElementById(elementId);
     if (!element) {
@@ -1348,9 +1295,7 @@ async function creerGraphiqueEvolution(evolution) {
             }
         }
 
-      // Fonction updateUIAfterLogin modifiée - REMPLACE la fonction existante dans index.html
-// Fonction updateUIAfterLogin modifiée - REMPLACE la fonction existante dans index.html
-// Fonction updateUIAfterLogin modifiée - REMPLACE la fonction existante dans index.html
+   
 function updateUIAfterLogin(user) {
     const isAdmin = user.role === 'admin';
     const sidebar = document.getElementById('modernSidebar');
@@ -1753,39 +1698,56 @@ function logout() {
 }
 
         // =================== INITIALISATION ===================
-        document.addEventListener('DOMContentLoaded', async () => {
-            console.log('🚀 Initialisation application...');
+        // =================== INITIALISATION ===================
+document.addEventListener('DOMContentLoaded', async () => {
+    console.log('🚀 Initialisation application...');
+    
+    // ✅ CORRECTION 1: Vérifier session AVANT de charger les pages
+    const token = localStorage.getItem('authToken');
+    const userStr = localStorage.getItem('currentUser');
+    
+    // Si connecté, charger les pages externes
+    if (token && userStr) {
+        try {
+            const user = JSON.parse(userStr);
             
-            // Charger les pages externes
-            await Promise.all([
-                includeHTML('user.html', 'user-content'),
-                includeHTML('admin.html', 'admin-content'),
-                includeHTML('models.html', 'models-content')
-            ]);
-            
-            // Vérifier session
-            const token = localStorage.getItem('authToken');
-            const userStr = localStorage.getItem('currentUser');
-            
-            if (token && userStr) {
-                try {
-                    const user = JSON.parse(userStr);
-                    if (typeof apiClient !== 'undefined') {
-                        apiClient.token = token;
-                        apiClient.currentUser = user;
-                    }
-                    updateUIAfterLogin(user);
-                    console.log('✅ Session restaurée');
-                } catch (error) {
-                    console.error('❌ Erreur session:', error);
-                    logout();
-                }
-            } else {
-                navigateTo('accueil');
+            // ✅ Restaurer apiClient IMMÉDIATEMENT
+            if (typeof apiClient !== 'undefined') {
+                apiClient.token = token;
+                apiClient.currentUser = user;
             }
             
-            console.log('✅ Application prête');
-        });
+            console.log('🔐 Session détectée:', user.role);
+            
+            // Charger les pages selon le rôle
+            if (user.role === 'admin') {
+                await Promise.all([
+                    includeHTML('admin.html', 'admin-content'),
+                    includeHTML('models.html', 'models-content')
+                ]);
+            } else {
+                await includeHTML('user.html', 'user-content');
+            }
+            
+            // ✅ Mettre à jour l'UI APRÈS le chargement
+            updateUIAfterLogin(user);
+            console.log('✅ Session restaurée avec succès');
+            
+        } catch (error) {
+            console.error('❌ Erreur restauration session:', error);
+            // Ne pas appeler logout() qui force une déconnexion
+            // Juste nettoyer et rediriger
+            localStorage.clear();
+            navigateTo('accueil');
+        }
+    } else {
+        // Pas de session, afficher page d'accueil
+        console.log('ℹ️ Pas de session active');
+        navigateTo('accueil');
+    }
+    
+    console.log('✅ Application prête');
+});
 
         // ========== EXPORTS AVEC MESSAGE ==========
 
