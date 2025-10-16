@@ -7,8 +7,8 @@
     <title>Université Djibo Hamani</title>
     <link rel="stylesheet" href="Style.css">
     <link rel="stylesheet" href="Style1.css">
-<!-- Dans votre index.html, ajoutez dans <head> -->
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script>
 // CORRECTION PRINCIPALE - Ajouter ces fonctions au début de votre script
 
@@ -1359,6 +1359,7 @@ async function creerGraphiqueEvolution(evolution) {
         }
 
       // Fonction updateUIAfterLogin modifiée - REMPLACE la fonction existante dans index.html
+// Fonction updateUIAfterLogin modifiée - REMPLACE la fonction existante dans index.html
 function updateUIAfterLogin(user) {
     const isAdmin = user.role === 'admin';
     const sidebar = document.getElementById('modernSidebar');
@@ -1402,18 +1403,26 @@ function updateUIAfterLogin(user) {
         document.getElementById('adminMenu').style.display = 'none';
         document.getElementById('userMenu').style.display = 'none';
         
+        // ✅ MASQUER IMMÉDIATEMENT LE DASHBOARD ADMIN
+        const dashboardAdmin = document.getElementById('dashboard');
+        if (dashboardAdmin) {
+            dashboardAdmin.classList.remove('active');
+            dashboardAdmin.style.display = 'none';
+        }
+        
         // Créer la navigation utilisateur simplifiée (2 boutons)
         createUserTopbarNav();
         
         const mobileUserBtn = document.getElementById('mobileUserMenuBtn');
         if (mobileUserBtn) mobileUserBtn.style.display = 'none';
         
+        // ✅ Masquer toutes les pages non-user immédiatement
         document.querySelectorAll('#accueil, #connexion, #inscription, #adminPanel, #admin-content, #models-content').forEach(page => {
-            if (page) page.style.display = 'none';
+            if (page) {
+                page.style.display = 'none';
+                page.classList.remove('active');
+            }
         });
-        
-        const dashboardAdmin = document.getElementById('dashboard');
-        if (dashboardAdmin) dashboardAdmin.classList.remove('active');
         
         const userContent = document.getElementById('user-content');
         if (userContent && userContent.innerHTML.trim() !== '') {
