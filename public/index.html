@@ -887,6 +887,7 @@ async function telechargerQuitusDepuisDetails(applicationId) {
 }
 let appInitialized = false;
 
+
 async function initializeApp() {
     if (appInitialized) return;
     appInitialized = true;
@@ -894,44 +895,58 @@ async function initializeApp() {
     console.log('🚀 Initialisation application...');
     
     try {
-        // Charger les pages HTML en parallèle
+        showLoader(true);
+        
+        // 1. Charger les pages HTML en parallèle
         await Promise.all([
             includeHTML('user.html', 'user-content'),
             includeHTML('admin.html', 'admin-content'),
             includeHTML('models.html', 'models-content')
         ]);
         
-        // Vérifier la connexion
-        const token = localStorage.getItem('token');
-        const role = localStorage.getItem('userRole');
+        console.log('✅ Tous les contenus HTML chargés');
         
-        if (token) {
-            document.getElementById('loginBtn').style.display = 'none';
-            document.getElementById('registerBtn').style.display = 'none';
-            document.getElementById('logoutBtn').style.display = 'block';
-            
-            if (role === 'admin') {
-                showPage('adminPanel');
-            } else {
-                showPage('dashboard');
+        // 2. Attendre un peu pour que le DOM soit prêt
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        // 3. Vérifier la session
+        const token = localStorage.getItem('authToken');
+        const userStr = localStorage.getItem('currentUser');
+        
+        if (token && userStr) {
+            try {
+                const user = JSON.parse(userStr);
+                
+                // Restaurer dans apiClient
+                if (typeof apiClient !== 'undefined') {
+                    apiClient.token = token;
+                    apiClient.currentUser = user;
+                }
+                
+                console.log('✅ Session restaurée pour:', user.nom);
+                
+                // Mettre à jour l'UI selon le rôle
+                updateUIAfterLogin(user);
+                
+                console.log('✅ Interface mise à jour');
+                
+            } catch (error) {
+                console.error('❌ Erreur restauration session:', error);
+                localStorage.clear();
+                navigateTo('accueil');
             }
         } else {
-            document.getElementById('loginBtn').style.display = 'block';
-            document.getElementById('registerBtn').style.display = 'block';
-            document.getElementById('logoutBtn').style.display = 'none';
-            showPage('accueil');
+            console.log('ℹ️ Pas de session - affichage page d\'accueil');
+            navigateTo('accueil');
         }
         
-        // Initialiser Chart.js après un court délai
-        if (typeof Chart !== 'undefined') {
-            Chart.defaults.font.family = 'Arial, sans-serif';
-            Chart.defaults.color = '#666';
-        }
-        
-        console.log('✅ Application initialisée');
+        console.log('✅ Application prête');
         
     } catch (error) {
         console.error('❌ Erreur initialisation:', error);
+        navigateTo('accueil');
+    } finally {
+        showLoader(false);
     }
 }
 
@@ -939,6 +954,7 @@ async function initializeApp() {
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initializeApp);
 } else {
+    // Si le DOM est déjà chargé
     initializeApp();
 }
         function animateCounter(elementId, targetValue) {
@@ -1350,8 +1366,14 @@ async function creerGraphiqueEvolution(evolution) {
             }
         }
 
-   
 function updateUIAfterLogin(user) {
+    // ✅ VÉRIFICATION ANTI-DOUBLE EXÉCUTION
+    if (document.body.classList.contains('ui-updated')) {
+        console.log('⚠️ UI déjà mise à jour - annulation');
+        return;
+    }
+    document.body.classList.add('ui-updated');
+    
     const isAdmin = user.role === 'admin';
     const sidebar = document.getElementById('modernSidebar');
     const mainWrapper = document.getElementById('mainWrapper');
@@ -1581,6 +1603,8 @@ function logout() {
     if (!confirm('Êtes-vous sûr de vouloir vous déconnecter ?')) return;
     
     console.log('🚪 Déconnexion en cours...');
+
+    document.body.classList.remove('ui-updated');
     
     try {
         // 1. Nettoyer le localStorage
