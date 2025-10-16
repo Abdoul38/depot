@@ -2010,15 +2010,23 @@ async function submitApplication(event) {
             }
         });
         
+        console.log('📤 Envoi du dossier...');
         const response = await apiClient.submitApplication(formData);
         
-        // ✅ CORRECTION : Afficher la confirmation
+        console.log('✅ Réponse reçue:', response);
+        
+        // ✅ Vérifier que nous avons les données nécessaires
+        if (!response || !response.application) {
+            throw new Error('Réponse invalide du serveur');
+        }
+        
+        // ✅ Afficher la confirmation
         afficherConfirmationInscription(response.application);
         
-        // ✅ NOUVEAU : Vider le cache des dossiers pour forcer le rechargement
+        // ✅ Vider le cache
         apiCache.clear('applications/my');
         
-        // ✅ NOUVEAU : Pré-charger les dossiers en arrière-plan
+        // ✅ Pré-charger les dossiers en arrière-plan
         setTimeout(async () => {
             try {
                 await apiClient.getMyApplications();
@@ -2029,7 +2037,8 @@ async function submitApplication(event) {
         }, 1000);
         
     } catch (error) {
-        console.error('Erreur soumission:', error);
+        console.error('❌ Erreur soumission:', error);
+        console.error('Stack:', error.stack);
         
         if (error.message.includes('401') || error.message.includes('Token')) {
             UIHelpers.showError('Session expirée. Veuillez vous reconnecter.');
@@ -2044,140 +2053,114 @@ async function submitApplication(event) {
 
 // Fonction pour afficher la page de confirmation après soumission
 // Fonction pour afficher la page de confirmation après soumission
+// Remplacer la fonction afficherConfirmationInscription existante par celle-ci :
+
 function afficherConfirmationInscription(application) {
     try {
+        console.log('📋 Affichage confirmation pour:', application);
+        
+        // ✅ NORMALISER LES DONNÉES - Gérer les différents formats
+        const app = {
+            id: application.id,
+            nom: application.nom,
+            prenom: application.prenom,
+            email: application.email,
+            telephone: application.telephone,
+            date_naissance: application.date_naissance || application.dateNaissance,
+            numero_dossier: application.numero_dossier || application.numeroDossier || 'En attente',
+            numero_depot: application.numero_depot || application.numeroDepot || null,
+            premier_choix: application.premier_choix || application.premierChoix,
+            deuxieme_choix: application.deuxieme_choix || application.deuxiemeChoix,
+            troisieme_choix: application.troisieme_choix || application.troisiemeChoix,
+            documents: application.documents,
+            created_at: application.created_at || application.createdAt || new Date().toISOString()
+        };
+        
+        // Vérifier que nous avons les données essentielles
+        if (!app.nom || !app.prenom) {
+            throw new Error('Données incomplètes pour l\'affichage');
+        }
+        
         // Remplir les informations
-        document.getElementById('confirmNomPrenom').textContent = 
-            `${application.prenom} ${application.nom}`;
+        const nomPrenomEl = document.getElementById('confirmNomPrenom');
+        if (nomPrenomEl) {
+            nomPrenomEl.textContent = `${app.prenom} ${app.nom}`;
+        }
         
-        document.getElementById('confirmNumeroDossier').textContent = 
-            application.numero_dossier || 'En attente';
+        const numeroDossierEl = document.getElementById('confirmNumeroDossier');
+        if (numeroDossierEl) {
+            numeroDossierEl.textContent = app.numero_dossier;
+        }
         
-        document.getElementById('confirmEmail').textContent = application.email;
-        document.getElementById('confirmTelephone').textContent = application.telephone;
+        const emailEl = document.getElementById('confirmEmail');
+        if (emailEl) {
+            emailEl.textContent = app.email || '-';
+        }
         
-        document.getElementById('confirmDateNaissance').textContent = 
-            new Date(application.date_naissance).toLocaleDateString('fr-FR');
+        const telephoneEl = document.getElementById('confirmTelephone');
+        if (telephoneEl) {
+            telephoneEl.textContent = app.telephone || '-';
+        }
+        
+        const dateNaissanceEl = document.getElementById('confirmDateNaissance');
+        if (dateNaissanceEl && app.date_naissance) {
+            dateNaissanceEl.textContent = new Date(app.date_naissance).toLocaleDateString('fr-FR');
+        }
         
         // Choix
-        document.getElementById('confirmPremierChoix').textContent = application.premier_choix;
-        document.getElementById('confirmDeuxiemeChoix').textContent = application.deuxieme_choix;
-        document.getElementById('confirmTroisiemeChoix').textContent = application.troisieme_choix;
+        const premierChoixEl = document.getElementById('confirmPremierChoix');
+        if (premierChoixEl) {
+            premierChoixEl.textContent = app.premier_choix || 'Non spécifié';
+        }
         
-        // ✅ CORRECTION: Documents avec style approprié
-        // Afficher les documents actuels
-// Afficher les documents actuels
-const documentsContainer = document.getElementById('documentsContainer');
-if (documentsContainer) {
-    documentsContainer.innerHTML = genererListeDocuments(application.documents, application.id, false);
-}
+        const deuxiemeChoixEl = document.getElementById('confirmDeuxiemeChoix');
+        if (deuxiemeChoixEl) {
+            deuxiemeChoixEl.textContent = app.deuxieme_choix || 'Non spécifié';
+        }
         
-        const documents = typeof application.documents === 'string' 
-            ? JSON.parse(application.documents) 
-            : application.documents || {};
+        const troisiemeChoixEl = document.getElementById('confirmTroisiemeChoix');
+        if (troisiemeChoixEl) {
+            troisiemeChoixEl.textContent = app.troisieme_choix || 'Non spécifié';
+        }
         
-        console.log('📎 Documents reçus:', documents);
-        
-        documentsContainer.innerHTML = '';
-        
-        Object.entries(documentTypes).forEach(([type, config]) => {
-            const docData = documents[type];
-            
-            // Vérifier si le document existe (URL Cloudinary ou nom de fichier)
-            const isPresent = docData && 
-                             docData !== 'Non fourni' && 
-                             docData !== 'Optionnel' &&
-                             docData !== '';
-            
-            const docDiv = document.createElement('div');
-            docDiv.className = 'document-item';
-            docDiv.style.cssText = `
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                padding: 15px;
-                background: ${isPresent ? '#d1ecf1' : '#f8f9fa'};
-                border: 1px solid ${isPresent ? '#bee5eb' : '#dee2e6'};
-                border-radius: 8px;
-                margin-bottom: 10px;
-                transition: all 0.3s ease;
-            `;
-            
-            if (isPresent) {
-                docDiv.style.cursor = 'pointer';
-                docDiv.onmouseenter = () => {
-                    docDiv.style.background = '#bee5eb';
-                    docDiv.style.transform = 'translateX(5px)';
-                };
-                docDiv.onmouseleave = () => {
-                    docDiv.style.background = '#d1ecf1';
-                    docDiv.style.transform = 'translateX(0)';
-                };
-            }
-            
-            docDiv.innerHTML = `
-                <div style="display: flex; align-items: center; gap: 12px; flex: 1;">
-                    <span style="font-size: 1.5em;">${config.icon}</span>
-                    <div style="flex: 1;">
-                        <div style="font-weight: 600; color: ${isPresent ? '#0c5460' : '#6c757d'};">
-                            ${config.label}
-                        </div>
-                        ${isPresent ? `
-                            <div style="font-size: 0.75em; color: #666; margin-top: 3px;">
-                                ✅ Document disponible
-                            </div>
-                        ` : `
-                            <div style="font-size: 0.75em; color: #999; font-style: italic; margin-top: 3px;">
-                                ❌ Non fourni
-                            </div>
-                        `}
+        // ✅ DOCUMENTS avec gestion d'erreur robuste
+        const documentsContainer = document.getElementById('confirmDocuments');
+        if (documentsContainer) {
+            try {
+                const documentsHtml = genererListeDocuments(app.documents, app.id, false);
+                documentsContainer.innerHTML = documentsHtml;
+            } catch (error) {
+                console.error('❌ Erreur génération documents:', error);
+                documentsContainer.innerHTML = `
+                    <div style="padding: 15px; background: #fff3cd; border-radius: 8px; color: #856404;">
+                        <strong>⚠️ Documents en cours de chargement</strong>
+                        <p style="margin: 5px 0 0 0; font-size: 0.9em;">
+                            Les documents seront disponibles dans quelques instants. 
+                            Vous pouvez les télécharger depuis "Mes Dossiers".
+                        </p>
                     </div>
-                </div>
-                ${isPresent ? `
-                    <button 
-                        onclick="telechargerDocumentConfirmation('${application.id}', '${type}')" 
-                        class="btn-download-doc"
-                        style="
-                            padding: 8px 16px;
-                            background: #17a2b8;
-                            color: white;
-                            border: none;
-                            border-radius: 6px;
-                            font-weight: 600;
-                            cursor: pointer;
-                            transition: all 0.3s ease;
-                            font-size: 0.9em;
-                        "
-                        onmouseover="this.style.background='#138496'"
-                        onmouseout="this.style.background='#17a2b8'"
-                    >
-                        ⬇️ Télécharger
-                    </button>
-                ` : `
-                    <span style="
-                        padding: 8px 16px;
-                        background: #e9ecef;
-                        color: #6c757d;
-                        border-radius: 6px;
-                        font-size: 0.85em;
-                        font-style: italic;
-                    ">
-                        Non disponible
-                    </span>
-                `}
-            `;
-            
-            documentsContainer.appendChild(docDiv);
-        });
+                `;
+            }
+        }
         
         // Bouton de téléchargement du quitus
-        document.getElementById('btnTelechargerQuitusConfirm').onclick = () => {
-            genererQuitusAvecDonnees(application);
-        };
+        const btnQuitus = document.getElementById('btnTelechargerQuitusConfirm');
+        if (btnQuitus) {
+            btnQuitus.onclick = () => {
+                genererQuitusAvecDonnees(app);
+            };
+        }
         
         // Afficher la page de confirmation
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-        document.getElementById('confirmationInscription').classList.add('active');
+        const confirmationPage = document.getElementById('confirmationInscription');
+        if (confirmationPage) {
+            confirmationPage.classList.add('active');
+        } else {
+            console.error('❌ Page confirmation non trouvée');
+            showPage('mesDossiers');
+            return;
+        }
         
         // Message de succès
         UIHelpers.showSuccess('✅ Dossier soumis avec succès! Veuillez télécharger votre quitus.');
@@ -2191,9 +2174,26 @@ if (documentsContainer) {
             console.log('🗑️ Cache dossiers vidé');
         }, 500);
         
+        console.log('✅ Confirmation affichée avec succès');
+        
     } catch (error) {
-        console.error('Erreur affichage confirmation:', error);
-        UIHelpers.showError('Erreur lors de l\'affichage de la confirmation');
+        console.error('❌ Erreur affichage confirmation:', error);
+        console.error('Stack:', error.stack);
+        
+        // ✅ FALLBACK - Rediriger vers Mes Dossiers avec message
+        UIHelpers.showSuccess('Dossier soumis avec succès!');
+        UIHelpers.showMessage(
+            'Votre dossier a été enregistré. Vous pouvez le consulter dans "Mes Dossiers".',
+            'info'
+        );
+        
+        // Attendre un peu avant de rediriger
+        setTimeout(() => {
+            showPage('mesDossiers');
+            if (typeof chargerMesDossiers === 'function') {
+                chargerMesDossiers();
+            }
+        }, 1500);
     }
 }
 // Fonction pour télécharger un document depuis la page de confirmation
@@ -2446,16 +2446,16 @@ function creerModalDetails(application) {
                 
                 <!-- Documents joints -->
             
-            // Dans la section Documents joints du modal
-<div class="info-section">
-    <h4>
-        <span>📎</span>
-        Documents joints
-    </h4>
-    <div id="documentsContainer">
-        ${genererListeDocuments(application.documents, application.id, true)}
-    </div>
-</div>  
+            
+                <div class="info-section">
+                    <h4>
+                        <span>📎</span>
+                        Documents joints
+                    </h4>
+                    <div id="documentsContainer">
+                        ${genererListeDocuments(application.documents, application.id, true)}
+                    </div>
+                </div>  
                 
                 <!-- Statut du dossier -->
                 <div class="status-section">
@@ -2830,37 +2830,110 @@ async function voirMonDossier(appId) {
     await voirDossier(appId); // Utilise la même fonction que l'admin
 }
 // Fonction pour générer la liste des documents avec boutons de téléchargement
-function genererListeDocuments(documentsJson, applicationId) {
+// Fonction pour générer la liste des documents avec boutons de téléchargement
+// ✅ FONCTION OPTIMISÉE: Générer la liste des documents avec noms conviviaux
+function genererListeDocuments(documentsJson, applicationId, isAdmin = false) {
     try {
         const documents = typeof documentsJson === 'string' ? JSON.parse(documentsJson) : documentsJson || {};
         
         const documentTypes = {
-            'photoIdentite': 'Photo d\'identité',
-            'pieceIdentite': 'Pièce d\'identité',
-            'diplomeBac': 'Diplôme de baccalauréat',
-            'releve': 'Relevé de notes',
-            'certificatNationalite': 'Certificat de nationalité'
+            'photoIdentite': { label: 'Photo d\'identité', icon: '📷' },
+            'pieceIdentite': { label: 'Pièce d\'identité', icon: '🆔' },
+            'diplomeBac': { label: 'Diplôme de baccalauréat', icon: '🎓' },
+            'releve': { label: 'Relevé de notes', icon: '📊' },
+            'certificatNationalite': { label: 'Certificat de nationalité', icon: '🌍' }
         };
         
         let html = '';
         
-        Object.entries(documentTypes).forEach(([key, label]) => {
-            const filename = documents[key];
-            const isPresent = filename && filename !== 'Non fourni' && filename !== 'Optionnel';
+        Object.entries(documentTypes).forEach(([key, config]) => {
+            const fileUrl = documents[key];
+            const isPresent = fileUrl && fileUrl !== 'Non fourni' && fileUrl !== 'Optionnel' && fileUrl !== '';
+            
+            // ✅ Extraire le nom du fichier depuis l'URL Cloudinary
+            let fileName = config.label;
+            if (isPresent && typeof fileUrl === 'string') {
+                try {
+                    const urlParts = fileUrl.split('/');
+                    const fileWithExt = urlParts[urlParts.length - 1];
+                    const decodedName = decodeURIComponent(fileWithExt.split('?')[0]);
+                    
+                    // Extraire le nom après le dernier tiret (format: photoIdentite-timestamp-originalname)
+                    const nameParts = decodedName.split('-');
+                    if (nameParts.length >= 3) {
+                        fileName = nameParts.slice(2).join('-');
+                    } else {
+                        fileName = decodedName;
+                    }
+                } catch (e) {
+                    console.warn('Erreur extraction nom fichier:', e);
+                    fileName = config.label;
+                }
+            }
             
             html += `
-                <div class="document-item ${!isPresent ? 'document-missing' : ''}">
-                    <div class="document-info">
-                        <div class="document-name">${label}</div>
-                        <div class="document-filename">${filename || 'Non fourni'}</div>
+                <div class="document-item" style="
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    padding: 15px;
+                    background: ${isPresent ? '#d1ecf1' : '#f8f9fa'};
+                    border: 1px solid ${isPresent ? '#bee5eb' : '#dee2e6'};
+                    border-radius: 8px;
+                    margin-bottom: 10px;
+                    transition: all 0.3s ease;
+                    ${isPresent ? 'cursor: pointer;' : ''}
+                ">
+                    <div style="display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0;">
+                        <span style="font-size: 1.5em; flex-shrink: 0;">${config.icon}</span>
+                        <div style="flex: 1; min-width: 0;">
+                            <div style="font-weight: 600; color: ${isPresent ? '#0c5460' : '#6c757d'};">
+                                ${config.label}
+                            </div>
+                            ${isPresent ? `
+                                <div style="font-size: 0.75em; color: #666; margin-top: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${fileName}">
+                                    📄 ${fileName}
+                                </div>
+                            ` : `
+                                <div style="font-size: 0.75em; color: #999; font-style: italic; margin-top: 3px;">
+                                    ❌ Non fourni
+                                </div>
+                            `}
+                        </div>
                     </div>
                     ${isPresent ? `
-                        <button class="btn-icon btn-download" onclick="telechargerDocument(${applicationId}, '${key}')" style="padding: 8px 12px; font-size: 12px;">
-                            <span>📥</span>
-                            Télécharger
+                        <button 
+                            onclick="telechargerDocumentModal('${fileUrl.replace(/'/g, "\\'")}', '${fileName.replace(/'/g, "\\'")}', '${config.label.replace(/'/g, "\\'")}')" 
+                            class="btn-download-doc"
+                            style="
+                                padding: 8px 16px;
+                                background: #17a2b8;
+                                color: white;
+                                border: none;
+                                border-radius: 6px;
+                                font-weight: 600;
+                                cursor: pointer;
+                                transition: all 0.3s ease;
+                                font-size: 0.9em;
+                                flex-shrink: 0;
+                            "
+                            onmouseover="this.style.background='#138496'"
+                            onmouseout="this.style.background='#17a2b8'"
+                        >
+                            ⬇️ Télécharger
                         </button>
                     ` : `
-                        <span style="color: #856404; font-style: italic; font-size: 12px;">Non disponible</span>
+                        <span style="
+                            padding: 8px 16px;
+                            background: #e9ecef;
+                            color: #6c757d;
+                            border-radius: 6px;
+                            font-size: 0.85em;
+                            font-style: italic;
+                            flex-shrink: 0;
+                        ">
+                            Non disponible
+                        </span>
                     `}
                 </div>
             `;
@@ -2872,6 +2945,176 @@ function genererListeDocuments(documentsJson, applicationId) {
         return '<p style="color: #dc3545; text-align: center; padding: 20px;">Erreur lors du chargement des documents</p>';
     }
 }
+
+// ✅ Version améliorée avec gestion Cloudinary native
+// ✅ Version améliorée avec gestion Cloudinary native
+async function telechargerDocumentModal(url, nomFichier, typeDocument) {
+    try {
+        if (!url || url === 'Non fourni' || url === 'Optionnel') {
+            UIHelpers.showError('Document non disponible');
+            return;
+        }
+        
+        console.log('📥 Téléchargement document:', { url, nomFichier, typeDocument });
+        
+        UIHelpers.showLoading(true);
+        
+        // ✅ CRUCIAL : Ajouter les paramètres Cloudinary pour le téléchargement correct
+        let cloudinaryUrl = url;
+        
+        // Si c'est une URL Cloudinary, ajouter les paramètres nécessaires
+        if (url.includes('res.cloudinary.com')) {
+            // Déterminer le type de fichier
+            const isPdf = url.toLowerCase().endsWith('.pdf') || nomFichier.toLowerCase().endsWith('.pdf');
+            const isImage = url.includes('image/upload') || nomFichier.match(/\.(jpg|jpeg|png|gif|webp)$/i);
+            
+            // Construction de l'URL optimisée
+            if (isPdf) {
+                // Pour les PDFs : forcer le type MIME et l'attachment
+                cloudinaryUrl = url.includes('?') 
+                    ? url + '&fl_attachment' 
+                    : url + '?fl_attachment';
+            } else if (isImage) {
+                // Pour les images : juste l'URL standard fonctionne
+                cloudinaryUrl = url;
+            }
+        }
+        
+        console.log('🔗 URL finale:', cloudinaryUrl);
+        
+        // ✅ Télécharger avec mode 'no-store' pour forcer le frais téléchargement
+        const response = await fetch(cloudinaryUrl, {
+            method: 'GET',
+            mode: 'cors',
+            cache: 'no-store',
+            headers: {
+                'Accept': '*/*'
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error(`Erreur ${response.status}: ${response.statusText}`);
+        }
+        
+        // ✅ Récupérer le blob directement
+        const blob = await response.blob();
+        
+        console.log('📦 Blob reçu:', {
+            size: blob.size,
+            type: blob.type
+        });
+        
+        // Déterminer le nom de fichier final
+        let filename = nomFichier || typeDocument;
+        
+        // Essayer d'extraire un meilleur nom depuis l'URL
+        try {
+            const urlObj = new URL(url);
+            const pathname = urlObj.pathname;
+            const parts = pathname.split('/');
+            const lastPart = parts[parts.length - 1];
+            
+            if (lastPart && !lastPart.includes('upload')) {
+                filename = decodeURIComponent(lastPart.split('?')[0]);
+            }
+        } catch (e) {
+            console.warn('Impossible d\'extraire le nom depuis l\'URL');
+        }
+        
+        // ✅ S'assurer que l'extension est correcte
+        let extension = getExtensionFromFilename(filename);
+        const contentType = blob.type;
+        
+        if (!extension) {
+            if (contentType.includes('pdf')) {
+                extension = '.pdf';
+            } else if (contentType.includes('image')) {
+                extension = getExtensionFromMimeType(contentType) || '.jpg';
+            }
+            
+            if (extension) {
+                filename = filename + extension;
+            }
+        }
+        
+        // ✅ Pour les PDFs, s'assurer du bon type MIME
+        let finalBlob = blob;
+        if ((filename.toLowerCase().endsWith('.pdf') || contentType.includes('pdf')) 
+            && !blob.type.includes('pdf')) {
+            finalBlob = new Blob([blob], { type: 'application/pdf' });
+            console.log('✅ Blob converti en application/pdf');
+        }
+        
+        console.log('✅ Nom final:', filename);
+        console.log('✅ Type final:', finalBlob.type);
+        
+        // ✅ Créer le lien de téléchargement
+        const urlBlob = URL.createObjectURL(finalBlob);
+        const a = document.createElement('a');
+        a.href = urlBlob;
+        a.download = filename;
+        a.style.display = 'none';
+        
+        document.body.appendChild(a);
+        
+        // ✅ Déclencher le téléchargement
+        await new Promise(resolve => {
+            setTimeout(() => {
+                a.click();
+                resolve();
+            }, 100);
+        });
+        
+        // ✅ Nettoyer les ressources
+        setTimeout(() => {
+            if (document.body.contains(a)) {
+                document.body.removeChild(a);
+            }
+            URL.revokeObjectURL(urlBlob);
+        }, 500);
+        
+        UIHelpers.showSuccess(`✅ "${filename}" téléchargé avec succès`);
+        
+    } catch (error) {
+        console.error('❌ Erreur complète:', error);
+        UIHelpers.showError(`Erreur: ${error.message}`);
+    } finally {
+        UIHelpers.showLoading(false);
+    }
+}
+
+// ✅ Helper pour extraire extension du MIME
+function getExtensionFromMimeType(mimeType) {
+    if (!mimeType) return '';
+    
+    const cleanMimeType = mimeType.split(';')[0].trim().toLowerCase();
+    
+    const mimeMap = {
+        'application/pdf': '.pdf',
+        'image/jpeg': '.jpg',
+        'image/png': '.png',
+        'image/gif': '.gif',
+        'image/webp': '.webp',
+        'image/bmp': '.bmp',
+        'application/msword': '.doc',
+        'application/vnd.ms-excel': '.xls',
+        'text/plain': '.txt'
+    };
+    
+    return mimeMap[cleanMimeType] || '';
+}
+
+// ✅ Helper pour extraire extension du nom
+function getExtensionFromFilename(filename) {
+    if (!filename) return '';
+    
+    const lastDot = filename.lastIndexOf('.');
+    return lastDot !== -1 ? filename.substring(lastDot).toLowerCase() : '';
+}
+// Export global
+window.telechargerDocumentModal = telechargerDocumentModal;
+window.getExtensionFromMimeType = getExtensionFromMimeType;
+window.getExtensionFromFilename = getExtensionFromFilename;
 
 // Fonction pour mettre à jour le profil
 async function updateProfile(event) {
