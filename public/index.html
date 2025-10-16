@@ -1360,6 +1360,7 @@ async function creerGraphiqueEvolution(evolution) {
 
       // Fonction updateUIAfterLogin modifiée - REMPLACE la fonction existante dans index.html
 // Fonction updateUIAfterLogin modifiée - REMPLACE la fonction existante dans index.html
+// Fonction updateUIAfterLogin modifiée - REMPLACE la fonction existante dans index.html
 function updateUIAfterLogin(user) {
     const isAdmin = user.role === 'admin';
     const sidebar = document.getElementById('modernSidebar');
@@ -1634,8 +1635,6 @@ function logout() {
         document.body.classList.remove('admin-mode');
         
         // 6. Masquer/Réinitialiser les éléments UI
-        
-        // ✅ Masquer la navigation utilisateur dans le topbar
         const userTopbarNav = document.getElementById('userTopbarNav');
         if (userTopbarNav) {
             userTopbarNav.remove();
@@ -1646,18 +1645,18 @@ function logout() {
             userTopbarActions.remove();
         }
         
-        // ✅ Fermer le dropdown s'il est ouvert
+        // Fermer le dropdown s'il est ouvert
         const dropdown = document.getElementById('userDropdown');
         if (dropdown) {
             dropdown.classList.remove('active');
         }
         
-        // ✅ Réinitialiser l'interface topbar
+        // ✅ CORRECTION PRINCIPALE : Réafficher les boutons de connexion
         const beforeLoginButtons = document.getElementById('beforeLoginButtons');
         const afterLoginMenu = document.getElementById('afterLoginMenu');
         
         if (beforeLoginButtons) {
-            beforeLoginButtons.style.display = 'flex';
+            beforeLoginButtons.style.display = 'flex'; // ✅ Afficher
         }
         if (afterLoginMenu) {
             afterLoginMenu.style.display = 'none';
@@ -1669,7 +1668,7 @@ function logout() {
         
         if (sidebar) {
             sidebar.classList.remove('active', 'collapsed');
-            sidebar.style.display = 'none'; // ✅ Masquer complètement
+            sidebar.style.display = 'none';
         }
         if (mainWrapper) {
             mainWrapper.classList.remove('with-sidebar', 'collapsed');
@@ -1681,7 +1680,7 @@ function logout() {
         if (adminMenu) adminMenu.style.display = 'none';
         if (userMenu) userMenu.style.display = 'none';
         
-        // 9. Masquer le bouton menu mobile
+        // 9. Masquer les boutons menu mobile
         const mobileMenuBtn = document.getElementById('mobileMenuBtn');
         const mobileUserMenuBtn = document.getElementById('mobileUserMenuBtn');
         if (mobileMenuBtn) mobileMenuBtn.style.display = 'none';
@@ -1696,12 +1695,12 @@ function logout() {
         if (mobileMenuOverlay) mobileMenuOverlay.classList.remove('active');
         if (sidebarOverlay) sidebarOverlay.classList.remove('active');
         
-        // 11. ✅ IMPORTANT: Masquer TOUTES les pages (admin + user)
+        // 11. Masquer TOUTES les pages
         document.querySelectorAll('.page').forEach(page => {
             page.classList.remove('active');
         });
         
-        // ✅ Masquer les conteneurs admin et user
+        // Masquer les conteneurs
         const adminContent = document.getElementById('admin-content');
         const userContent = document.getElementById('user-content');
         const adminPanel = document.getElementById('adminPanel');
@@ -1719,7 +1718,7 @@ function logout() {
             if (form) form.reset();
         });
         
-        // 13. Vider les tableaux de données
+        // 13. Vider les tableaux
         const tableaux = [
             'tableauDossiers',
             'tableauDossiersAdmin',
@@ -1737,33 +1736,28 @@ function logout() {
             if (tbody) tbody.innerHTML = '';
         });
         
-        // 14. ✅ Afficher la page d'accueil
+        // ✅ CORRECTION : Afficher la page d'accueil ET le contenu area
         const pageAccueil = document.getElementById('accueil');
         if (pageAccueil) {
             pageAccueil.classList.add('active');
             pageAccueil.style.display = 'block';
-        } else {
-            console.error('❌ Page accueil introuvable!');
         }
         
-        // 15. S'assurer que le body est scrollable
-        document.body.style.overflow = '';
-        
-        // 16. Réinitialiser le contenu area
         const contentArea = document.querySelector('.content-area');
         if (contentArea) {
             contentArea.style.display = 'block';
         }
         
-        // Message de confirmation
+        // Réinitialiser le scroll et overflow
+        document.body.style.overflow = '';
+        document.documentElement.scrollTop = 0;
+        
         UIHelpers.showSuccess('✅ Déconnexion réussie ! À bientôt 👋');
         
         console.log('✅ Déconnexion terminée avec succès');
         
     } catch (error) {
         console.error('❌ Erreur lors de la déconnexion:', error);
-        
-        // En cas d'erreur, forcer la redirection vers l'accueil
         window.location.reload();
     }
 }
