@@ -4,146 +4,125 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inscription en Ligne - Université Djibo Hamani</title>
-    <link rel="stylesheet" href="Style.css">
     <style>
-        .inscription-container {
-            max-width: 900px;
-            margin: 40px auto;
-            padding: 30px;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 10px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .header {
             background: white;
-            border-radius: 15px;
+            border-radius: 12px;
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .logo-image {
+            width: 45px;
+            height: 45px;
+            object-fit: contain;
+        }
+
+        .logo-text {
+            font-weight: 700;
+            font-size: 16px;
+            color: #667eea;
+            line-height: 1.3;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-secondary {
+            background: #f8f9fa;
+            color: #667eea;
+        }
+
+        .btn-secondary:hover {
+            background: #e9ecef;
+            transform: translateY(-2px);
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+        }
+
+        /* Main Content */
+        .inscription-container {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.1);
         }
 
         .page-header {
             text-align: center;
-            margin-bottom: 40px;
+            margin-bottom: 30px;
             padding-bottom: 20px;
             border-bottom: 3px solid #667eea;
         }
 
-        .search-section {
-            background: #f8f9fa;
-            padding: 30px;
-            border-radius: 10px;
-            margin-bottom: 30px;
+        .page-header h1 {
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 8px;
         }
 
-        .search-tabs {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-
-        .search-tab {
-            flex: 1;
-            padding: 12px;
-            background: white;
-            border: 2px solid #e1e5e9;
-            border-radius: 8px;
-            cursor: pointer;
-            text-align: center;
-            transition: all 0.3s;
-        }
-
-        .search-tab.active {
-            background: #667eea;
-            color: white;
-            border-color: #667eea;
-        }
-
-        .search-form {
-            display: none;
-        }
-
-        .search-form.active {
-            display: block;
-        }
-
-        .info-card {
-            background: #e8f4ff;
-            padding: 20px;
-            border-radius: 10px;
-            border-left: 4px solid #667eea;
-            margin-bottom: 20px;
-        }
-
-        .payment-methods {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 15px;
-            margin-top: 20px;
-        }
-
-        .payment-method {
-            padding: 15px;
-            border: 2px solid #e1e5e9;
-            border-radius: 10px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .payment-method:hover {
-            border-color: #667eea;
-            background: #f8f9fa;
-        }
-
-        .payment-method.selected {
-            border-color: #28a745;
-            background: #d4edda;
-        }
-
-        .inscription-form {
-            display: none;
-            animation: fadeIn 0.5s;
-        }
-
-        .inscription-form.active {
-            display: block;
-        }
-      #recuSection {
-    animation: slideDown 0.5s ease;
-}
-
-@keyframes slideDown {
-    from {
-        opacity: 0;
-        transform: translateY(-20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-#recuSection button {
-    transition: all 0.3s ease;
-}
-
-#recuSection button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-}
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .etudiant-info {
-            background: #fff3cd;
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            border-left: 4px solid #ffc107;
+        .page-header p {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 12px;
         }
 
         .status-badge-inscription {
             display: inline-block;
-            padding: 8px 16px;
+            padding: 8px 20px;
             border-radius: 20px;
             font-weight: 600;
-            font-size: 14px;
+            font-size: 13px;
         }
 
         .status-open {
@@ -156,18 +135,208 @@
             color: #721c24;
         }
 
-        .amount-display {
+        /* Info Card */
+        .info-card {
+            background: linear-gradient(135deg, #e8f4ff 0%, #f0f8ff 100%);
+            padding: 20px;
+            border-radius: 12px;
+            border-left: 4px solid #667eea;
+            margin-bottom: 20px;
+        }
+
+        .info-card h3 {
+            color: #667eea;
+            font-size: 16px;
+            margin-bottom: 12px;
+        }
+
+        .info-card ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .info-card li {
+            padding: 8px 0;
+            color: #555;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .info-card strong {
+            color: #333;
+        }
+
+        /* Search Section */
+        .search-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+        }
+
+        .search-section h3 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #333;
+            font-size: 18px;
+        }
+
+        .search-tabs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .search-tab {
+            padding: 15px;
+            background: white;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .search-tab:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+        }
+
+        .search-tab.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .search-tab strong {
+            display: block;
+            font-size: 15px;
+            margin-bottom: 5px;
+        }
+
+        .search-tab p {
+            font-size: 11px;
+            margin: 0;
+            opacity: 0.9;
+        }
+
+        .search-form {
+            display: none;
+            animation: fadeIn 0.4s;
+        }
+
+        .search-form.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Form Elements */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 15px;
+            transition: all 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-group small {
+            display: block;
+            margin-top: 5px;
+            color: #666;
+            font-size: 12px;
+        }
+
+        /* Payment Methods */
+        .payment-methods {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .payment-method {
+            padding: 18px 10px;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: white;
+        }
+
+        .payment-method:hover {
+            border-color: #667eea;
+            transform: translateY(-3px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        }
+
+        .payment-method.selected {
+            border-color: #28a745;
+            background: #d4edda;
+        }
+
+        .payment-method div {
             font-size: 32px;
+            margin-bottom: 8px;
+        }
+
+        .payment-method strong {
+            font-size: 13px;
+            color: #333;
+        }
+
+        /* Amount Display */
+        .amount-display {
+            font-size: 36px;
             font-weight: bold;
             color: #667eea;
             text-align: center;
             margin: 20px 0;
+            text-shadow: 2px 2px 4px rgba(102, 126, 234, 0.1);
         }
 
+        /* Error Message */
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            border-left: 4px solid #dc3545;
+            font-size: 14px;
+        }
+
+        /* Confirmation Page */
         .confirmation-page {
             display: none;
             text-align: center;
-            padding: 40px;
+            padding: 30px 20px;
         }
 
         .confirmation-page.active {
@@ -176,25 +345,45 @@
         }
 
         .confirmation-icon {
-            font-size: 80px;
+            font-size: 64px;
             margin-bottom: 20px;
         }
 
         .confirmation-card {
             background: white;
             border-radius: 15px;
-            padding: 30px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-            max-width: 600px;
-            margin: 0 auto;
+            padding: 30px 20px;
         }
 
-        .payment-instructions {
-            background: #f8f9fa;
+        #recuSection {
+            margin-top: 25px;
             padding: 20px;
-            border-radius: 10px;
-            margin-top: 20px;
-            text-align: left;
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+            border-radius: 12px;
+            animation: slideDown 0.5s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        #recuSection h4 {
+            color: #155724;
+            margin-bottom: 12px;
+            font-size: 18px;
+        }
+
+        #recuSection p {
+            color: #155724;
+            margin-bottom: 15px;
+            line-height: 1.6;
         }
 
         .loader {
@@ -212,19 +401,146 @@
             100% { transform: rotate(360deg); }
         }
 
-        .error-message {
-            background: #f8d7da;
-            color: #721c24;
-            padding: 15px;
-            border-radius: 8px;
-            margin-top: 15px;
-            border-left: 4px solid #dc3545;
+        .etudiant-info {
+            background: linear-gradient(135deg, #fff3cd 0%, #ffeeba 100%);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border-left: 4px solid #ffc107;
         }
 
+        .etudiant-info h4 {
+            color: #856404;
+            margin-bottom: 12px;
+            font-size: 16px;
+        }
+
+        .etudiant-info p {
+            margin: 8px 0;
+            color: #555;
+            font-size: 14px;
+        }
+
+        /* Responsive Design */
         @media (max-width: 768px) {
+            body {
+                padding: 5px;
+            }
+
+            .header {
+                padding: 12px 15px;
+            }
+
+            .logo-text {
+                font-size: 13px;
+            }
+
+            .logo-image {
+                width: 35px;
+                height: 35px;
+            }
+
+            .btn {
+                padding: 8px 15px;
+                font-size: 13px;
+            }
+
+            .inscription-container {
+                padding: 15px;
+                border-radius: 12px;
+            }
+
+            .page-header h1 {
+                font-size: 20px;
+            }
+
+            .info-card {
+                padding: 15px;
+            }
+
+            .info-card li {
+                font-size: 13px;
+            }
+
+            .search-section {
+                padding: 15px;
+            }
+
+            .search-tabs {
+                gap: 8px;
+            }
+
+            .search-tab {
+                padding: 12px 8px;
+            }
+
+            .search-tab strong {
+                font-size: 13px;
+            }
+
+            .search-tab p {
+                font-size: 10px;
+            }
+
             .payment-methods {
                 grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
             }
+
+            .payment-method {
+                padding: 15px 8px;
+            }
+
+            .payment-method div {
+                font-size: 28px;
+            }
+
+            .payment-method strong {
+                font-size: 12px;
+            }
+
+            .amount-display {
+                font-size: 28px;
+            }
+
+            .confirmation-card {
+                padding: 20px 15px;
+            }
+
+            #recuSection {
+                padding: 15px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .logo-text {
+                font-size: 11px;
+            }
+
+            .page-header h1 {
+                font-size: 18px;
+            }
+
+            .search-tabs {
+                grid-template-columns: 1fr;
+            }
+
+            .payment-methods {
+                grid-template-columns: 1fr;
+            }
+
+            .amount-display {
+                font-size: 24px;
+            }
+        }
+
+        .inscription-form {
+            display: none;
+        }
+
+        .inscription-form.active {
+            display: block;
+            animation: fadeIn 0.5s;
         }
     </style>
 </head>
