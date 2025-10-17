@@ -473,7 +473,7 @@
 
         /* =================== WELCOME PAGE =================== */
         .welcome-page {
-            max-width: 1200px;
+            max-width: 1700px;
             margin: 0 auto;
             padding: 40px 20px;
             width: 100%;
@@ -482,7 +482,7 @@
         .welcome-header {
             text-align: center;
             padding: 60px 20px;
-            background: var(--bg-gradient);
+            
             border-radius: var(--border-radius-lg);
             color: white;
             margin-bottom: 48px;
