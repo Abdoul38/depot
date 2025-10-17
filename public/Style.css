@@ -485,6 +485,7 @@ html {
     border-bottom: none;
 }
 
+
 .info-section h4 {
     color: #333;
     margin-bottom: 15px;
@@ -1524,3 +1525,194 @@ input:checked + .slider:before {
     50% { opacity: 1; }
 }
 
+/* ===== CAROUSEL SECTION ===== */
+.welcome-section {
+    position: relative;
+    min-height: 600px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.carousel-images {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.carousel-slide {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-position: center;
+    opacity: 0;
+    transition: opacity 0.8s ease-in-out;
+}
+
+.carousel-slide.active {
+    opacity: 1;
+}
+
+.carousel-overlay {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.3));
+    top: 0;
+    left: 0;
+}
+
+.welcome-container {
+    max-width: 800px;
+    color: white;
+    z-index: 2;
+    text-align: center;
+    padding: 40px 20px;
+}
+
+.welcome-container h1 {
+    font-size: 3.5rem;
+    font-weight: bold;
+    margin-bottom: 20px;
+    text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.5);
+}
+
+.welcome-container p {
+    font-size: 1.3rem;
+    margin-bottom: 30px;
+    text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.5);
+}
+
+/* Contrôles du carousel */
+.carousel-controls {
+    position: absolute;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 15px;
+    z-index: 10;
+}
+
+.carousel-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.5);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.carousel-dot.active {
+    background: white;
+    width: 30px;
+    border-radius: 6px;
+}
+
+.carousel-arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255, 255, 255, 0.3);
+    border: none;
+    color: white;
+    font-size: 30px;
+    padding: 15px 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    z-index: 10;
+    border-radius: 5px;
+}
+
+.carousel-arrow:hover {
+    background: rgba(255, 255, 255, 0.6);
+}
+
+.carousel-arrow.prev {
+    left: 20px;
+}
+
+.carousel-arrow.next {
+    right: 20px;
+}
+
+@media (max-width: 768px) {
+    .welcome-section {
+        min-height: 400px;
+    }
+
+    .welcome-container h1 {
+        font-size: 2rem;
+    }
+
+    .carousel-arrow {
+        padding: 10px 15px;
+        font-size: 20px;
+    }
+}
+/* ===== ANIMATION PULSE POUR WELCOME CONTAINER ===== */
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+}
+
+/* Welcome Container avec Pulse */
+.welcome-container {
+    max-width: 800px;
+    color: white;
+    z-index: 2;
+    text-align: center;
+    padding: 40px 20px;
+}
+
+.welcome-container.animation-pulse {
+    animation: fadeInUp 1s ease-out;
+}
+
+.welcome-container.animation-pulse h1 {
+    animation: pulse 2s ease-in-out infinite;
+    font-size: 3.5rem;
+    font-weight: bold;
+    margin-bottom: 20px;
+    text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.5);
+    line-height: 1.2;
+}
+
+.welcome-container.animation-pulse p {
+    animation: fadeInUp 1s ease-out 0.3s both;
+    font-size: 1.3rem;
+    margin-bottom: 30px;
+    text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.5);
+    opacity: 0.95;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .welcome-container.animation-pulse h1 {
+        font-size: 2rem;
+    }
+
+    .welcome-container.animation-pulse p {
+        font-size: 1rem;
+    }
+}
