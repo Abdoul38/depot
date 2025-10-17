@@ -642,25 +642,37 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 
             <!-- Page Connexion -->
-            <div id="connexion" class="page">
-                <div style="max-width: 500px; margin: 50px auto; background: white; padding: 40px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.1);">
-                    <h2 style="text-align: center; color: var(--primary-color); margin-bottom: 30px;">🔐 Connexion</h2>
-                    <form id="loginForm" onsubmit="login(event)">
-                        <div class="form-group" style="margin-bottom: 20px;">
-                            <label for="loginIdentifiant" style="display: block; margin-bottom: 8px; font-weight: 600;">Email ou Téléphone</label>
-                            <input type="text" id="loginIdentifiant" required style="width: 100%; padding: 12px; border: 2px solid #e1e5e9; border-radius: 8px; font-size: 14px;">
-                        </div>
-                        <div class="form-group" style="margin-bottom: 25px;">
-                            <label for="loginMotDePasse" style="display: block; margin-bottom: 8px; font-weight: 600;">Mot de passe</label>
-                            <input type="password" id="loginMotDePasse" required style="width: 100%; padding: 12px; border: 2px solid #e1e5e9; border-radius: 8px; font-size: 14px;">
-                        </div>
-                        <button type="submit" class="btn btn-primary" style="width: 100%; padding: 15px; font-size: 16px;">Se connecter</button>
-                    </form>
-                    <p style="text-align: center; margin-top: 20px; color: #666;">
-                        Pas encore de compte ? <a href="#" onclick="navigateTo('inscription'); return false;" style="color: var(--primary-color); font-weight: 600;">Créer un compte</a>
-                    </p>
-                </div>
+            <!-- Page Connexion -->
+<div id="connexion" class="page">
+    <div style="max-width: 500px; margin: 50px auto; background: white; padding: 40px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.1);">
+        <h2 style="text-align: center; color: var(--primary-color); margin-bottom: 30px;">🔐 Connexion</h2>
+        <form id="loginForm" onsubmit="login(event)">
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label for="loginIdentifiant" style="display: block; margin-bottom: 8px; font-weight: 600;">
+                    📧 Email ou 📱 Téléphone
+                </label>
+                <input 
+                    type="text" 
+                    id="loginIdentifiant" 
+                    required 
+                    placeholder="exemple@email.com ou +227 XX XX XX XX"
+                    style="width: 100%; padding: 12px; border: 2px solid #e1e5e9; border-radius: 8px; font-size: 14px;"
+                >
+                <small style="color: #666; font-size: 12px; margin-top: 5px; display: block;">
+                    💡 Vous pouvez utiliser votre email ou numéro de téléphone
+                </small>
             </div>
+            <div class="form-group" style="margin-bottom: 25px;">
+                <label for="loginMotDePasse" style="display: block; margin-bottom: 8px; font-weight: 600;">Mot de passe</label>
+                <input type="password" id="loginMotDePasse" required style="width: 100%; padding: 12px; border: 2px solid #e1e5e9; border-radius: 8px; font-size: 14px;">
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%; padding: 15px; font-size: 16px;">Se connecter</button>
+        </form>
+        <p style="text-align: center; margin-top: 20px; color: #666;">
+            Pas encore de compte ? <a href="#" onclick="navigateTo('inscription'); return false;" style="color: var(--primary-color); font-weight: 600;">Créer un compte</a>
+        </p>
+    </div>
+</div>
 
             <!-- Page Inscription -->
             <div id="inscription" class="page">
@@ -1580,18 +1592,33 @@ async function creerGraphiqueEvolution(evolution) {
         }
 
         // =================== AUTHENTIFICATION ===================
-        async function login(event) {
+       async function login(event) {
     event.preventDefault();
     
     try {
         showLoader(true);
         
+        const identifiantInput = document.getElementById('loginIdentifiant').value.trim();
+        const motDePasse = document.getElementById('loginMotDePasse').value;
+        
+        // Détecter automatiquement le type d'identifiant
+        const identifiant = detecterTypeIdentifiant(identifiantInput);
+        
+        console.log('🔍 Type détecté:', identifiant.type);
+        console.log('📝 Valeur:', identifiant.value);
+        
+        // Validation supplémentaire pour le téléphone
+        if (identifiant.type === 'telephone' && !validerFormatTelephone(identifiant.value)) {
+            throw new Error('⚠️ Format de téléphone invalide. Utilisez : +227XXXXXXXX ou 0XXXXXXXX');
+        }
+        
+        // Préparer les credentials
         const credentials = {
-            identifiant: document.getElementById('loginIdentifiant').value.trim(),
-            motDePasse: document.getElementById('loginMotDePasse').value
+            identifiant: identifiant.value,
+            motDePasse: motDePasse
         };
         
-        console.log('🔐 Tentative de connexion...');
+        console.log('🔐 Tentative de connexion avec:', identifiant.type);
         
         const response = await apiClient.login(credentials);
         
@@ -1609,7 +1636,6 @@ async function creerGraphiqueEvolution(evolution) {
         if (typeof apiClient !== 'undefined') {
             apiClient.token = response.token;
             apiClient.currentUser = response.user;
-            console.log('✅ ApiClient configuré');
         }
         
         // Réinitialiser le formulaire
@@ -1622,22 +1648,12 @@ async function creerGraphiqueEvolution(evolution) {
             connexionPage.style.display = 'none';
         }
         
-        // Masquer accueil
-        const accueilPage = document.getElementById('accueil');
-        if (accueilPage) {
-            accueilPage.classList.remove('active');
-            accueilPage.style.display = 'none';
-        }
-        
-        // Masquer le loader des opérations
         showLoader(false);
         
-        // Appeler updateUIAfterLogin
+        // Mettre à jour l'interface
         updateUIAfterLogin(response.user);
         
-        UIHelpers.showSuccess('✅ Connexion réussie ! Bienvenue ' + response.user.nom);
-        
-        console.log('✅ Redirection effectuée');
+        UIHelpers.showSuccess(`✅ Bienvenue ${response.user.nom} ! Connexion réussie via ${identifiant.type === 'email' ? '📧 email' : '📱 téléphone'}`);
         
     } catch (error) {
         console.error('❌ Erreur connexion:', error);
