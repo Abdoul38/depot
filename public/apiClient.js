@@ -1326,7 +1326,59 @@ class UIHelpers {
         return `<span class="status-badge ${config.class}">${config.text}</span>`;
     }
 }
+// =================== FONCTIONS UTILITAIRES DE VALIDATION ===================
 
+// Fonction pour détecter si c'est un email ou un téléphone
+function detecterTypeIdentifiant(identifiant) {
+    // Nettoyer l'identifiant
+    const cleaned = identifiant.trim();
+    
+    // Vérifier si c'est un email (contient @ et un point)
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (emailRegex.test(cleaned)) {
+        return {
+            type: 'email',
+            value: cleaned.toLowerCase()
+        };
+    }
+    
+    // Vérifier si c'est un téléphone (contient des chiffres)
+    const phoneRegex = /[\d\s\+\-\(\)]+/;
+    if (phoneRegex.test(cleaned)) {
+        // Nettoyer le numéro (garder seulement les chiffres et le +)
+        const cleanedPhone = cleaned.replace(/[\s\-\(\)]/g, '');
+        return {
+            type: 'telephone',
+            value: cleanedPhone
+        };
+    }
+    
+    // Par défaut, considérer comme email
+    return {
+        type: 'email',
+        value: cleaned
+    };
+}
+
+// Valider le format du téléphone
+function validerFormatTelephone(telephone) {
+    // Accepter plusieurs formats :
+    // +227XXXXXXXX
+    // 227XXXXXXXX
+    // 0XXXXXXXX
+    const patterns = [
+        /^\+227\d{8}$/,      // +227 + 8 chiffres
+        /^227\d{8}$/,        // 227 + 8 chiffres
+        /^0\d{8}$/,          // 0 + 8 chiffres
+        /^\d{8}$/            // 8 chiffres
+    ];
+    
+    return patterns.some(pattern => pattern.test(telephone));
+}
+
+// Export global
+window.detecterTypeIdentifiant = detecterTypeIdentifiant;
+window.validerFormatTelephone = validerFormatTelephone;
 // =================== FONCTION DE TEST DU LOADER ===================
 function testerLoader() {
     console.log('🧪 === TEST DU LOADER ===');
@@ -2517,56 +2569,6 @@ function creerModalDetails(application) {
         }
     });
 }
-function detecterTypeIdentifiant(identifiant) {
-    // Nettoyer l'identifiant
-    const cleaned = identifiant.trim();
-    
-    // Vérifier si c'est un email (contient @ et un point)
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (emailRegex.test(cleaned)) {
-        return {
-            type: 'email',
-            value: cleaned.toLowerCase()
-        };
-    }
-    
-    // Vérifier si c'est un téléphone (contient des chiffres)
-    const phoneRegex = /[\d\s\+\-\(\)]+/;
-    if (phoneRegex.test(cleaned)) {
-        // Nettoyer le numéro (garder seulement les chiffres et le +)
-        const cleanedPhone = cleaned.replace(/[\s\-\(\)]/g, '');
-        return {
-            type: 'telephone',
-            value: cleanedPhone
-        };
-    }
-    
-    // Par défaut, considérer comme email
-    return {
-        type: 'email',
-        value: cleaned
-    };
-}
-
-// Valider le format du téléphone
-function validerFormatTelephone(telephone) {
-    // Accepter plusieurs formats :
-    // +227XXXXXXXX
-    // 227XXXXXXXX
-    // 0XXXXXXXX
-    const patterns = [
-        /^\+227\d{8}$/,      // +227 + 8 chiffres
-        /^227\d{8}$/,        // 227 + 8 chiffres
-        /^0\d{8}$/,          // 0 + 8 chiffres
-        /^\d{8}$/            // 8 chiffres
-    ];
-    
-    return patterns.some(pattern => pattern.test(telephone));
-}
-
-// Export global
-window.detecterTypeIdentifiant = detecterTypeIdentifiant;
-window.validerFormatTelephone = validerFormatTelephone;
 
 // Fonction pour télécharger un document admin (Cloudinary)
 async function telechargerDocumentAdmin(url, nomDocument) {
@@ -3393,10 +3395,7 @@ function chargerTableauDossiers(applications) {
                         style="padding: 8px 12px; margin: 2px;">
                     👁️ Voir
                 </button>
-                <button class="btn" onclick="modifierDossier(${app.id})" 
-                        style="padding: 8px 12px; margin: 2px; background: #ffc107; color: white;">
-                    ✏️ Modifier
-                </button>
+               
                 <button class="btn btn-primary" onclick="telechargerQuitusFromApp(${app.id})" 
                         style="padding: 8px 12px; margin: 2px;">
                     📄 Quitus
@@ -3473,15 +3472,23 @@ function chargerCartesDossiers(applications) {
                         ${app.premier_choix || 'Non spécifié'}
                     </span>
                 </div>
+                <div class="mobile-card-row">
+                    <span class="mobile-card-label">Deuxième choix</span>
+                    <span class="mobile-card-value" style="font-size: 12px; text-align: right; font-family: inherit;">
+                        ${app.deuxieme_choix || 'Non spécifié'}
+                    </span>
+                </div>
+                <div class="mobile-card-row">
+                    <span class="mobile-card-label">Troisième choix</span>
+                    <span class="mobile-card-value" style="font-size: 12px; text-align: right; font-family: inherit;">
+                        ${app.troisieme_choix || 'Non spécifié'}
+                    </span>
+                </div>
             </div>
             
             <div class="mobile-card-actions">
                 <button class="btn btn-secondary" onclick="voirMonDossier(${app.id})">
                     👁️ Voir les détails
-                </button>
-                <button class="btn" onclick="modifierDossier(${app.id})" 
-                        style="background: #ffc107; color: white;">
-                    ✏️ Modifier le dossier
                 </button>
                 <button class="btn btn-primary" onclick="telechargerQuitusFromApp(${app.id})">
                     📄 Télécharger le quitus
