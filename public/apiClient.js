@@ -2406,6 +2406,17 @@ function creerModalDetails(application) {
             </div>
             
             <div class="modal-body">
+                <!-- ✅ NOUVELLE SECTION: Photo d'identité -->
+                <div class="info-section photo-section">
+                    <h4>
+                        <span>📷</span>
+                        Photo d'identité
+                    </h4>
+                    <div id="photoIdentiteContainer" class="photo-container">
+                        <!-- La photo sera chargée dynamiquement -->
+                    </div>
+                </div>
+
                 <!-- Informations personnelles -->
                 <div class="info-section">
                     <h4>
@@ -2497,8 +2508,6 @@ function creerModalDetails(application) {
                 </div>
                 
                 <!-- Documents joints -->
-            
-            
                 <div class="info-section">
                     <h4>
                         <span>📎</span>
@@ -2562,6 +2571,9 @@ function creerModalDetails(application) {
     overlay.innerHTML = modalContent;
     document.body.appendChild(overlay);
     
+    // ✅ CHARGER LA PHOTO D'IDENTITÉ
+    chargerPhotoIdentiteModal(application);
+    
     // Fermer le modal en cliquant sur l'overlay
     overlay.addEventListener('click', (e) => {
         if (e.target === overlay) {
@@ -2569,6 +2581,129 @@ function creerModalDetails(application) {
         }
     });
 }
+
+// ✅ NOUVELLE FONCTION: Charger la photo d'identité dans le modal
+async function chargerPhotoIdentiteModal(application) {
+    try {
+        const photoContainer = document.getElementById('photoIdentiteContainer');
+        
+        if (!photoContainer) {
+            console.warn('⚠️ Conteneur photo non trouvé');
+            return;
+        }
+        
+        // Parser les documents
+        const documents = typeof application.documents === 'string' 
+            ? JSON.parse(application.documents) 
+            : application.documents || {};
+        
+        const photoUrl = documents.photoIdentite;
+        
+        if (!photoUrl || photoUrl === 'Non fourni' || photoUrl === 'Optionnel') {
+            photoContainer.innerHTML = `
+                <div class="photo-placeholder">
+                    <div class="photo-placeholder-icon">📷</div>
+                    <div class="photo-placeholder-text">Photo non disponible</div>
+                </div>
+            `;
+            return;
+        }
+        
+        // Afficher un loader pendant le chargement
+        photoContainer.innerHTML = `
+            <div class="photo-loader">
+                <div class="spinner-small"></div>
+                <p>Chargement de la photo...</p>
+            </div>
+        `;
+        
+        // Charger l'image
+        const img = new Image();
+        img.crossOrigin = 'Anonymous';
+        
+        img.onload = function() {
+            photoContainer.innerHTML = `
+                <div class="photo-wrapper">
+                    <img src="${photoUrl}" alt="Photo d'identité de ${application.prenom} ${application.nom}" class="photo-identite">
+                    <button class="btn-zoom" onclick="agrandirPhotoModal('${photoUrl.replace(/'/g, "\\'")}', '${application.prenom} ${application.nom}')" title="Agrandir la photo">
+                        🔍 Agrandir
+                    </button>
+                </div>
+            `;
+            console.log('✅ Photo chargée avec succès');
+        };
+        
+        img.onerror = function() {
+            console.error('❌ Erreur chargement photo');
+            photoContainer.innerHTML = `
+                <div class="photo-error">
+                    <div class="photo-error-icon">⚠️</div>
+                    <div class="photo-error-text">Erreur de chargement de la photo</div>
+                    <button class="btn-retry" onclick="chargerPhotoIdentiteModal(${JSON.stringify(application).replace(/'/g, "\\'")})">
+                        Réessayer
+                    </button>
+                </div>
+            `;
+        };
+        
+        img.src = photoUrl;
+        
+    } catch (error) {
+        console.error('❌ Erreur chargement photo:', error);
+        const photoContainer = document.getElementById('photoIdentiteContainer');
+        if (photoContainer) {
+            photoContainer.innerHTML = `
+                <div class="photo-error">
+                    <div class="photo-error-icon">⚠️</div>
+                    <div class="photo-error-text">Erreur lors du chargement</div>
+                </div>
+            `;
+        }
+    }
+}
+
+// ✅ FONCTION POUR AGRANDIR LA PHOTO
+function agrandirPhotoModal(url, nom) {
+    const modal = document.createElement('div');
+    modal.id = 'photoZoomModal';
+    modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.95);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 100000;
+        cursor: zoom-out;
+        animation: fadeIn 0.3s ease;
+    `;
+    
+    modal.innerHTML = `
+        <div style="position: relative; max-width: 90vw; max-height: 90vh; text-align: center;">
+            <button onclick="document.getElementById('photoZoomModal').remove()" 
+                    style="position: absolute; top: -50px; right: 0; background: white; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; font-size: 24px; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
+                ×
+            </button>
+            <img src="${url}" alt="Photo d'identité - ${nom}" style="max-width: 100%; max-height: 85vh; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.5);">
+            <p style="color: white; margin-top: 20px; font-size: 18px; font-weight: 500;">${nom}</p>
+        </div>
+    `;
+    
+    modal.onclick = (e) => {
+        if (e.target === modal) {
+            modal.remove();
+        }
+    };
+    
+    document.body.appendChild(modal);
+}
+
+// Export global
+window.chargerPhotoIdentiteModal = chargerPhotoIdentiteModal;
+window.agrandirPhotoModal = agrandirPhotoModal;
 
 // Fonction pour télécharger un document admin (Cloudinary)
 async function telechargerDocumentAdmin(url, nomDocument) {
