@@ -1,4 +1,103 @@
 <!-- Panel Admin -->
+<style>
+/* Style pour le tableau des filières réduit */
+#filieres-tab .table {
+    font-size: 12px;
+}
+
+#filieres-tab table th,
+#filieres-tab table td {
+    padding: 8px 6px;
+}
+
+#filieres-tab table th {
+    font-size: 11px;
+    font-weight: 600;
+}
+
+/* Optimisation des colonnes */
+#filieres-tab table {
+    table-layout: auto;
+}
+
+#filieres-tab .btn {
+    font-size: 11px;
+    padding: 4px 8px;
+    margin: 2px;
+}
+
+/* Colonnes avec largeur minimale mais flexible */
+#filieres-tab table td:nth-child(1),
+#filieres-tab table th:nth-child(1) {
+    min-width: 90px;
+}
+
+#filieres-tab table td:nth-child(2),
+#filieres-tab table th:nth-child(2) {
+    min-width: 110px;
+}
+
+#filieres-tab table td:nth-child(3),
+#filieres-tab table th:nth-child(3) {
+    min-width: 80px;
+}
+
+#filieres-tab table td:nth-child(4),
+#filieres-tab table th:nth-child(4) {
+    min-width: 70px;
+}
+
+#filieres-tab table td:nth-child(5),
+#filieres-tab table th:nth-child(5) {
+    min-width: 100px;
+    word-break: break-word;
+}
+
+#filieres-tab table td:nth-child(6),
+#filieres-tab table th:nth-child(6) {
+    min-width: 80px;
+}
+
+#filieres-tab table td:nth-child(7),
+#filieres-tab table th:nth-child(7) {
+    min-width: 70px;
+}
+
+#filieres-tab table td:nth-child(8),
+#filieres-tab table th:nth-child(8) {
+    min-width: 120px;
+}
+
+/* Rendre le tableau scrollable horizontalement si nécessaire */
+#filieres-tab {
+    overflow-x: auto;
+}
+
+.stat-badge {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 10px;
+    font-weight: 500;
+}
+
+.status-badge {
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 10px;
+    font-weight: 500;
+}
+
+.status-approved {
+    background: #d4edda;
+    color: #155724;
+}
+
+.status-rejected {
+    background: #f8d7da;
+    color: #721c24;
+}
+</style>
             <div id="adminPanel" class="page">
                 <h2 style="margin-bottom: 30px;">Panel Administrateur</h2>
                 
@@ -488,11 +587,12 @@
     </div>
 
     <div id="filieres-tab" class="tab-content">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <h3>Gestion des filières</h3>
-            <button class="btn btn-primary" onclick="ouvrirModalFiliere()" id="btnAjoutFiliere">+ Ajouter une filière</button>
-        </div>
-        <table class="table">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h3>Gestion des filières</h3>
+        <button class="btn btn-primary" onclick="ouvrirModalFiliere()" id="btnAjoutFiliere">+ Ajouter une filière</button>
+    </div>
+    <div style="overflow-x: auto;">
+        <table class="table" style="font-size: 12px;">
             <thead>
                 <tr>
                     <th>Nom</th>
