@@ -2517,6 +2517,56 @@ function creerModalDetails(application) {
         }
     });
 }
+function detecterTypeIdentifiant(identifiant) {
+    // Nettoyer l'identifiant
+    const cleaned = identifiant.trim();
+    
+    // Vérifier si c'est un email (contient @ et un point)
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (emailRegex.test(cleaned)) {
+        return {
+            type: 'email',
+            value: cleaned.toLowerCase()
+        };
+    }
+    
+    // Vérifier si c'est un téléphone (contient des chiffres)
+    const phoneRegex = /[\d\s\+\-\(\)]+/;
+    if (phoneRegex.test(cleaned)) {
+        // Nettoyer le numéro (garder seulement les chiffres et le +)
+        const cleanedPhone = cleaned.replace(/[\s\-\(\)]/g, '');
+        return {
+            type: 'telephone',
+            value: cleanedPhone
+        };
+    }
+    
+    // Par défaut, considérer comme email
+    return {
+        type: 'email',
+        value: cleaned
+    };
+}
+
+// Valider le format du téléphone
+function validerFormatTelephone(telephone) {
+    // Accepter plusieurs formats :
+    // +227XXXXXXXX
+    // 227XXXXXXXX
+    // 0XXXXXXXX
+    const patterns = [
+        /^\+227\d{8}$/,      // +227 + 8 chiffres
+        /^227\d{8}$/,        // 227 + 8 chiffres
+        /^0\d{8}$/,          // 0 + 8 chiffres
+        /^\d{8}$/            // 8 chiffres
+    ];
+    
+    return patterns.some(pattern => pattern.test(telephone));
+}
+
+// Export global
+window.detecterTypeIdentifiant = detecterTypeIdentifiant;
+window.validerFormatTelephone = validerFormatTelephone;
 
 // Fonction pour télécharger un document admin (Cloudinary)
 async function telechargerDocumentAdmin(url, nomDocument) {
