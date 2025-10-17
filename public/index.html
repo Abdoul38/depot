@@ -297,39 +297,65 @@ window.addEventListener('DOMContentLoaded', function() {
         <!-- Content Area -->
         <div class="content-area">
             <!-- Page d'accueil (avant connexion) -->
-            <div id="accueil" class="page active">
-                <div class="welcome-page">
-                    <div class="welcome-header">
-                        <h1>🎓 Bienvenue à l'Université Djibo Hamani</h1>
-                        <p>Plateforme moderne de gestion des inscriptions et dossiers étudiants</p>
-                    </div>
+            <!-- Page d'accueil (avant connexion) -->
+<div id="accueil" class="page active">
+    <div class="welcome-section">
+        <!-- Images du Carousel -->
+        <div class="carousel-images">
+            <div class="carousel-slide active" style="background-image: url('/uploads/img1.jpg')"></div>
+            <div class="carousel-slide" style="background-image: url('/uploads/img2.jpg')"></div>
+            <div class="carousel-slide" style="background-image: url('/uploads/img3.jpg')"></div>
+            <div class="carousel-slide" style="background-image: url('/uploads/img4.jpg')"></div>
+            
+            
+            <!-- Overlay -->
+            <div class="carousel-overlay"></div>
+        </div>
 
-                    <div class="features-grid">
-                        <div class="feature-card">
-                            <div class="feature-icon">📋</div>
-                            <h3>Processus Simplifié</h3>
-                            <p>Déposez votre dossier en quelques étapes simples avec un suivi en temps réel</p>
-                        </div>
+        <!-- Contenu texte -->
+       <div class="welcome-container animation-pulse" id="welcomeContainer">
+            <h1>🎓 Bienvenue à l'Université Djibo Hamani</h1>
+            <p>Plateforme moderne de gestion des inscriptions et dossiers étudiants</p>
+        </div>
 
-                        <div class="feature-card">
-                            <div class="feature-icon">🔒</div>
-                            <h3>Sécurisé</h3>
-                            <p>Vos données sont protégées par des systèmes de sécurité avancés</p>
-                        </div>
+        <!-- Flèches de navigation -->
+        <button class="carousel-arrow prev" onclick="previousSlide()">❮</button>
+        <button class="carousel-arrow next" onclick="nextSlide()">❯</button>
 
-                        <div class="feature-card">
-                            <div class="feature-icon">⚡</div>
-                            <h3>Rapide</h3>
-                            <p>Traitement rapide et notifications automatiques de l'état de votre dossier</p>
-                        </div>
-                    </div>
+        <!-- Points de navigation -->
+        <div class="carousel-controls">
+            <span class="carousel-dot active" onclick="goToSlide(0)"></span>
+            <span class="carousel-dot" onclick="goToSlide(1)"></span>
+            <span class="carousel-dot" onclick="goToSlide(2)"></span>
+            <span class="carousel-dot" onclick="goToSlide(3)"></span>
+        </div>
+    </div>
+    </div><br><br><br><br>
+    <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">📋</div>
+                    <h3>Processus Simplifié</h3>
+                    <p>Déposez votre dossier en quelques étapes simples avec un suivi en temps réel</p>
+                </div>
 
-                    <div class="action-buttons">
-                        <button class="btn btn-primary" onclick="navigateTo('inscription')">Créer un Compte</button>
-                        <button class="btn btn-secondary" onclick="navigateTo('connexion')">Se Connecter</button>
-                    </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔒</div>
+                    <h3>Sécurisé</h3>
+                    <p>Vos données sont protégées par des systèmes de sécurité avancés</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3>Rapide</h3>
+                    <p>Traitement rapide et notifications automatiques de l'état de votre dossier</p>
                 </div>
             </div>
+
+            <div class="action-buttons">
+                <button class="btn btn-primary" onclick="navigateTo('inscription')">Créer un Compte</button>
+                <button class="btn btn-secondary" onclick="navigateTo('connexion')">Se Connecter</button>
+            </div>
+</div>
 
             <!-- Page Connexion -->
             <div id="connexion" class="page">
@@ -2480,5 +2506,84 @@ function ouvrirModalAjoutEtudiant() {
         </div>
     </div>
 </div>
+<script>
+    let currentSlide = 0;
+    let autoPlayInterval;
+
+    const slides = document.querySelectorAll('.carousel-slide');
+    const dots = document.querySelectorAll('.carousel-dot');
+
+    function showSlide(index) {
+        if (index >= slides.length) {
+            currentSlide = 0;
+        } else if (index < 0) {
+            currentSlide = slides.length - 1;
+        } else {
+            currentSlide = index;
+        }
+
+        slides.forEach(slide => slide.classList.remove('active'));
+        dots.forEach(dot => dot.classList.remove('active'));
+
+        slides[currentSlide].classList.add('active');
+        dots[currentSlide].classList.add('active');
+    }
+
+    function nextSlide() {
+        showSlide(currentSlide + 1);
+        resetAutoPlay();
+    }
+
+    function previousSlide() {
+        showSlide(currentSlide - 1);
+        resetAutoPlay();
+    }
+
+    function goToSlide(index) {
+        showSlide(index);
+        resetAutoPlay();
+    }
+
+    function autoPlay() {
+        autoPlayInterval = setInterval(() => {
+            showSlide(currentSlide + 1);
+        }, 5000); // Change toutes les 5 secondes
+    }
+
+    function resetAutoPlay() {
+        clearInterval(autoPlayInterval);
+        autoPlay();
+    }
+
+    // Démarrer le carousel
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', autoPlay);
+    } else {
+        autoPlay();
+    }
+</script>
+<script>
+    const animationClasses = ['animation-fade', 'animation-slide', 'animation-pulse', 'animation-bounce', 'animation-glow'];
+    const container = document.getElementById('welcomeContainer');
+
+    function setAnimation(type) {
+        // Retirer toutes les classes d'animation
+        animationClasses.forEach(cls => container.classList.remove(cls));
+        
+        // Ajouter la nouvelle classe
+        container.classList.add(`animation-${type}`);
+        
+        // Réinitialiser l'animation
+        container.style.animation = 'none';
+        setTimeout(() => {
+            container.style.animation = '';
+        }, 10);
+    }
+
+    // Définir l'animation par défaut au chargement
+    window.addEventListener('DOMContentLoaded', () => {
+        container.classList.add('animation-fade');
+    });
+</script>
 </body>
 </html>
