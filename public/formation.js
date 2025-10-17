@@ -130,7 +130,6 @@ async function chargerFilieres() {
                 <td>${filiere.faculte_libelle}</td>
                 <td>${filiere.capacite_max || 'Illimitée'}</td>
                 <td>${filiere.types_bac_autorises ? filiere.types_bac_autorises.join(', ') : 'Aucun'}</td>
-                <td><span class="stat-badge">${filiere.nombre_candidatures || 0} candidatures</span></td>
                 <td><span class="status-badge ${filiere.active ? 'status-approved' : 'status-rejected'}">${filiere.active ? 'Active' : 'Inactive'}</span></td>
                 <td>
                     <button class="btn btn-secondary" style="padding: 5px 10px; margin: 2px;" onclick="modifierFiliere(${filiere.id})">Modifier</button>
