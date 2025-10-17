@@ -2199,7 +2199,7 @@ function afficherConfirmationInscription(application) {
         const btnQuitus = document.getElementById('btnTelechargerQuitusConfirm');
         if (btnQuitus) {
             btnQuitus.onclick = () => {
-                genererQuitusAvecDonnees(app);
+                genererQuitusAvecDonnees(application);
             };
         }
         
