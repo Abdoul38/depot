@@ -986,6 +986,14 @@ document.addEventListener('click', (e) => {
                 // Charger les données automatiquement
                 setTimeout(() => chargerDonneesPage(pageId), 100);
             }
+            if (pageId === 'statistiques') {
+        setTimeout(() => {
+            console.log('🔄 Recharge stats après navigation');
+            if (typeof chargerTableauBordStats === 'function') {
+                chargerTableauBordStats();
+            }
+        }, 200);
+    }
 }
         
 async function telechargerDocument(applicationId, documentType) {
@@ -1592,7 +1600,7 @@ async function creerGraphiqueEvolution(evolution) {
         }
 
         // =================== AUTHENTIFICATION ===================
-       async function login(event) {
+        async function login(event) {
     event.preventDefault();
     
     try {
@@ -1708,167 +1716,126 @@ async function creerGraphiqueEvolution(evolution) {
             }
         }
 
-   
+      // Fonction updateUIAfterLogin modifiée - REMPLACE la fonction existante dans index.html
 function updateUIAfterLogin(user) {
-    console.log('🔄 Mise à jour interface après connexion');
-    
     const isAdmin = user.role === 'admin';
-    
-    // ÉTAPE 1 : Nettoyer les anciens états
-    document.querySelectorAll('.page').forEach(page => {
-        page.classList.remove('active');
-        page.style.display = 'none';
-    });
-    
-    // Masquer le loader
-    const loader = document.getElementById('pageVierge');
-    if (loader) {
-        loader.style.opacity = '0';
-        loader.style.transition = 'opacity 0.3s ease';
-        setTimeout(() => loader.remove(), 300);
-    }
-    
-    // ÉTAPE 2 : Configuration commune
-    document.getElementById('beforeLoginButtons').style.display = 'none';
-    document.getElementById('afterLoginMenu').style.display = 'block';
-    
-    // Remplir les infos utilisateur
-    const userAvatar = document.getElementById('userAvatar');
-    const userName = document.getElementById('userName');
-    const userRole = document.getElementById('userRole');
-    
-    if (userAvatar) userAvatar.textContent = user.nom.charAt(0).toUpperCase();
-    if (userName) userName.textContent = user.nom;
-    if (userRole) userRole.textContent = isAdmin ? 'Administrateur' : 'Étudiant';
+    const sidebar = document.getElementById('modernSidebar');
+    const mainWrapper = document.getElementById('mainWrapper');
     
     if (isAdmin) {
         // ========== MODE ADMIN ==========
-        console.log('🔐 Configuration ADMIN');
+        document.getElementById('beforeLoginButtons').style.display = 'none';
+        document.getElementById('afterLoginMenu').style.display = 'block';
+        document.getElementById('userAvatar').textContent = user.nom.charAt(0).toUpperCase();
+        document.getElementById('userName').textContent = user.nom;
+        document.getElementById('userRole').textContent = 'Administrateur';
         
-        // Masquer user-content
+        document.body.classList.remove('user-mode');
+        sidebar.classList.add('active');
+        mainWrapper.classList.add('with-sidebar');
+        document.getElementById('adminMenu').style.display = 'block';
+        document.getElementById('userMenu').style.display = 'none';
+        document.getElementById('sidebarUserRole').textContent = 'Administrateur';
+        
+        const mobileUserBtn = document.getElementById('mobileUserMenuBtn');
+        if (mobileUserBtn) mobileUserBtn.style.display = 'none';
+        closeMobileUserMenu();
+        
         const userContent = document.getElementById('user-content');
         if (userContent) userContent.style.display = 'none';
         
-        // Afficher admin
-        document.body.classList.remove('user-mode');
-        document.body.classList.add('admin-mode');
-        
-        const sidebar = document.getElementById('modernSidebar');
-        const mainWrapper = document.getElementById('mainWrapper');
-        
-        if (sidebar) {
-            sidebar.classList.add('active');
-            sidebar.style.display = 'block';
-        }
-        if (mainWrapper) mainWrapper.classList.add('with-sidebar');
-        
-        // Configurer menu admin
-        const adminMenu = document.getElementById('adminMenu');
-        const userMenu = document.getElementById('userMenu');
-        
-        if (adminMenu) adminMenu.style.display = 'block';
-        if (userMenu) userMenu.style.display = 'none';
-        
-        // Afficher admin-content et adminPanel
-        const adminContent = document.getElementById('admin-content');
-        const adminPanel = document.getElementById('adminPanel');
-        
-        if (adminContent) adminContent.style.display = 'block';
-        if (adminPanel) {
-            adminPanel.style.display = 'block';
-            adminPanel.classList.add('active');
+        const dashboardAdmin = document.getElementById('dashboard');
+        if (dashboardAdmin) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            dashboardAdmin.classList.add('active');
         }
         
-        // Bouton menu mobile
-        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
-        if (mobileMenuBtn) mobileMenuBtn.style.display = 'flex';
-        
-        // Charger le dashboard admin
-        setTimeout(() => {
-            console.log('📊 Chargement dashboard admin...');
-            const dashboard = document.getElementById('dashboard');
-            if (dashboard) {
-                dashboard.style.display = 'block';
-                dashboard.classList.add('active');
-                chargerDashboard();
-            }
-        }, 100);
+        setTimeout(() => chargerDashboard(), 100);
         
     } else {
         // ========== MODE UTILISATEUR ==========
-        console.log('👥 Configuration UTILISATEUR');
-        
-        // Masquer admin
-        const adminContent = document.getElementById('admin-content');
-        const adminPanel = document.getElementById('adminPanel');
-        
-        if (adminContent) adminContent.style.display = 'none';
-        if (adminPanel) adminPanel.style.display = 'none';
-        
-        // Afficher user-content
-        const userContent = document.getElementById('user-content');
-        if (userContent) {
-            userContent.style.display = 'block';
-        }
-        
-        // Configuration UI
         document.body.classList.add('user-mode');
-        document.body.classList.remove('admin-mode');
+        sidebar.classList.remove('active');
+        mainWrapper.classList.remove('with-sidebar');
+        document.getElementById('adminMenu').style.display = 'none';
+        document.getElementById('userMenu').style.display = 'none';
         
-        const sidebar = document.getElementById('modernSidebar');
-        const mainWrapper = document.getElementById('mainWrapper');
-        
-        if (sidebar) {
-            sidebar.classList.remove('active');
-            sidebar.style.display = 'none';
-        }
-        if (mainWrapper) mainWrapper.classList.remove('with-sidebar');
-        
-        const adminMenu = document.getElementById('adminMenu');
-        const userMenu = document.getElementById('userMenu');
-        
-        if (adminMenu) adminMenu.style.display = 'none';
-        if (userMenu) userMenu.style.display = 'none';
-        
-        // Créer navigation simplifiée
+        // Créer la navigation utilisateur simplifiée (2 boutons)
         createUserTopbarNav();
         
-        // Bouton menu mobile
-        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
-        if (mobileMenuBtn) mobileMenuBtn.style.display = 'none';
+        const mobileUserBtn = document.getElementById('mobileUserMenuBtn');
+        if (mobileUserBtn) mobileUserBtn.style.display = 'none';
         
-        // Charger le dashboard utilisateur
-        setTimeout(() => {
-            console.log('📋 Chargement dashboard utilisateur...');
+        document.querySelectorAll('#accueil, #connexion, #inscription, #adminPanel, #admin-content, #models-content').forEach(page => {
+            if (page) page.style.display = 'none';
+        });
+        
+        const dashboardAdmin = document.getElementById('dashboard');
+        if (dashboardAdmin) dashboardAdmin.classList.remove('active');
+        
+        const userContent = document.getElementById('user-content');
+        if (userContent && userContent.innerHTML.trim() !== '') {
+            userContent.style.display = 'block';
             
-            const userContent = document.getElementById('user-content');
-            if (userContent && userContent.innerHTML.trim() !== '') {
-                const dashboardUser = userContent.querySelector('#dashboard');
+            const dashboardUser = userContent.querySelector('#dashboard');
+            if (dashboardUser) {
+                userContent.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+                dashboardUser.classList.add('active');
                 
-                if (dashboardUser) {
-                    dashboardUser.style.display = 'block';
-                    dashboardUser.classList.add('active');
-                    
-                    // Personnaliser le message
-                    const welcomeTitle = userContent.querySelector('#userWelcomeTitle');
+                // Personnaliser le message de bienvenue
+                setTimeout(() => {
+                    const welcomeTitle = document.getElementById('userWelcomeTitle');
                     if (welcomeTitle) {
                         welcomeTitle.textContent = `🎓 Bienvenue ${user.prenom || user.nom}`;
                     }
-                    
-                    // Charger les dossiers
+                }, 200);
+                
+                console.log('✅ Dashboard utilisateur affiché');
+                
+                setTimeout(() => {
                     if (typeof chargerMesDossiers === 'function') {
-                        setTimeout(() => chargerMesDossiers(), 500);
+                        chargerMesDossiers();
+                        console.log('📋 Chargement automatique des dossiers...');
                     }
-                } else {
-                    console.error('❌ Dashboard utilisateur non trouvé');
-                }
+                }, 500);
+            } else {
+                console.error('❌ Dashboard utilisateur non trouvé');
             }
-        }, 100);
+        } else {
+            console.log('⏳ Attente du chargement du contenu utilisateur...');
+            setTimeout(() => {
+                const userContent = document.getElementById('user-content');
+                if (userContent) {
+                    userContent.style.display = 'block';
+                    const dashboardUser = userContent.querySelector('#dashboard');
+                    if (dashboardUser) {
+                        userContent.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+                        dashboardUser.classList.add('active');
+                        
+                        setTimeout(() => {
+                            const welcomeTitle = document.getElementById('userWelcomeTitle');
+                            if (welcomeTitle) {
+                                welcomeTitle.textContent = `🎓 Bienvenue ${user.prenom || user.nom}`;
+                            }
+                        }, 200);
+                        
+                        console.log('✅ Dashboard utilisateur affiché (après délai)');
+                        
+                        setTimeout(() => {
+                            if (typeof chargerMesDossiers === 'function') {
+                                chargerMesDossiers();
+                                console.log('📋 Chargement automatique des dossiers...');
+                            }
+                        }, 500);
+                    } else {
+                        console.error('❌ Dashboard utilisateur toujours non trouvé');
+                        showMessage('❌ Erreur de chargement de l\'interface', 'error');
+                    }
+                }
+            }, 500);
+        }
     }
-    
-    console.log('✅ Interface mise à jour');
 }
-
 // Créer la navigation utilisateur dans le topbar
 function createUserTopbarNav() {
     // Vérifier si existe déjà
@@ -1904,46 +1871,46 @@ function createUserTopbarNav() {
     topbarActions.appendChild(nav);
 }
 
+// Navigation pour les pages utilisateur (sans sidebar)
 function navigateToUserPage(pageId) {
     console.log('📄 Navigation utilisateur vers:', pageId);
     
     const userContent = document.getElementById('user-content');
-    
-    if (!userContent || userContent.style.display === 'none') {
-        console.error('❌ user-content non disponible');
+    if (!userContent) {
+        console.error('❌ user-content introuvable');
         return;
     }
     
     // Masquer toutes les pages dans user-content
-    userContent.querySelectorAll('.page').forEach(p => {
-        p.classList.remove('active');
-        p.style.display = 'none';
-    });
+    userContent.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     
     // Afficher la page demandée
     const page = userContent.querySelector('#' + pageId);
     if (page) {
         page.classList.add('active');
-        page.style.display = 'block';
         
-        console.log('✅ Page affichée:', pageId);
+        // Mettre à jour le menu actif dans le topbar
+        document.querySelectorAll('.user-nav-item').forEach(item => {
+            item.classList.remove('active');
+            if (item.getAttribute('data-page') === pageId) {
+                item.classList.add('active');
+            }
+        });
         
         // Charger les données automatiquement
         setTimeout(() => {
             switch(pageId) {
                 case 'dashboard':
-                    console.log('📊 Dashboard utilisateur');
-                    break;
-                    
-                case 'mesDossiers':
-                    console.log('📋 Chargement Mes Dossiers...');
-                    if (typeof chargerMesDossiersData === 'function') {
-                        chargerMesDossiersData();
+                    if (typeof chargerMesDossiers === 'function') {
+                        chargerMesDossiers();
                     }
                     break;
-                    
+                case 'mesDossiers':
+                    if (typeof chargerMesDossiers === 'function') {
+                        chargerMesDossiers();
+                    }
+                    break;
                 case 'profil':
-                    console.log('👤 Chargement Profil...');
                     if (typeof chargerProfil === 'function') {
                         chargerProfil();
                     }
@@ -1951,6 +1918,7 @@ function navigateToUserPage(pageId) {
             }
         }, 100);
         
+        console.log('✅ Page utilisateur affichée:', pageId);
     } else {
         console.error('❌ Page introuvable:', pageId);
     }
@@ -1959,7 +1927,7 @@ function navigateToUserPage(pageId) {
 // Export global
 window.navigateToUserPage = navigateToUserPage;
 window.createUserTopbarNav = createUserTopbarNav;
-function logout() {
+ function logout() {
     if (!confirm('Êtes-vous sûr de vouloir vous déconnecter ?')) return;
     
     console.log('🚪 Déconnexion en cours...');
@@ -2134,340 +2102,55 @@ function logout() {
     }
 }
 
-     document.addEventListener('DOMContentLoaded', async () => {
-    console.log('🚀 Initialisation...');
-    
-    try {
-        // ÉTAPE 1 : Afficher une page vierge
-        console.log('📄 Affichage page vierge...');
-        afficherPageVierge();
-        
-        // ÉTAPE 2 : Vérifier la session
-        console.log('🔍 Vérification session...');
-        const token = localStorage.getItem('authToken');
-        const userStr = localStorage.getItem('currentUser');
-        
-        if (!token || !userStr) {
-            console.log('❌ Pas de session');
-            await chargerPagesPubliques();
-            navigateTo('accueil');
-            return;
-        }
-        
-        // ÉTAPE 3 : Récupérer et valider l'utilisateur
-        console.log('👤 Chargement utilisateur...');
-        const user = JSON.parse(userStr);
-        
-        if (!user || !user.role) {
-            console.log('❌ Utilisateur invalide');
-            localStorage.clear();
-            await chargerPagesPubliques();
-            navigateTo('accueil');
-            return;
-        }
-        
-        console.log('✅ Utilisateur trouvé:', user.nom, '| Rôle:', user.role);
-        
-        // ÉTAPE 4 : Charger les fichiers appropriés
-        console.log('📂 Chargement contenus...');
-        await chargerContenusAppropries(user.role);
-        
-        // ÉTAPE 5 : Configurer apiClient
-        console.log('⚙️ Configuration API...');
-        if (typeof apiClient !== 'undefined') {
-            apiClient.token = token;
-            apiClient.currentUser = user;
-        }
-        
-        // ÉTAPE 6 : Mettre à jour l'interface
-        console.log('🎨 Mise à jour interface...');
-        updateUIAfterLogin(user);
-        
-        console.log('✅ Initialisation terminée');
-        
-    } catch (error) {
-        console.error('❌ Erreur initialisation:', error);
-        afficherErreur(error.message);
-        localStorage.clear();
-        location.reload();
-    }
-});
-
-// ===== FONCTION : Afficher page vierge =====
-function afficherPageVierge() {
-    // Masquer TOUS les conteneurs
-    const conteneurs = [
-        'accueil',
-        'connexion',
-        'inscription',
-        'dashboard',
-        'user-content',
-        'admin-content',
-        'models-content',
-        'adminPanel'
-    ];
-    
-    conteneurs.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) {
-            el.style.display = 'none';
-            el.classList.remove('active');
-        }
-    });
-    
-    // Afficher un loader
-    afficherLoader();
-}
-
-// ===== FONCTION : Afficher loader =====
-function afficherLoader() {
-    let loader = document.getElementById('pageVierge');
-    
-    if (!loader) {
-        loader = document.createElement('div');
-        loader.id = 'pageVierge';
-        loader.style.cssText = `
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 9999;
-            flex-direction: column;
-        `;
-        
-        loader.innerHTML = `
-            <div style="text-align: center; color: white;">
-                <div style="width: 60px; height: 60px; border: 4px solid rgba(255,255,255,0.3); border-top: 4px solid white; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px;"></div>
-                <h2 style="margin: 0; font-size: 20px; font-weight: 300; letter-spacing: 2px;">Chargement...</h2>
-            </div>
-        `;
-        
-        // Ajouter l'animation si elle n'existe pas
-        if (!document.getElementById('spinAnimationStyle')) {
-            const style = document.createElement('style');
-            style.id = 'spinAnimationStyle';
-            style.textContent = `
-                @keyframes spin {
-                    0% { transform: rotate(0deg); }
-                    100% { transform: rotate(360deg); }
+        // =================== INITIALISATION ===================
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log('🚀 Initialisation application...');
+            
+            // Charger les pages externes
+            await Promise.all([
+                includeHTML('user.html', 'user-content'),
+                includeHTML('admin.html', 'admin-content'),
+                includeHTML('models.html', 'models-content')
+            ]);
+            
+            // Vérifier session
+            const token = localStorage.getItem('authToken');
+            const userStr = localStorage.getItem('currentUser');
+            
+            if (token && userStr) {
+                try {
+                    const user = JSON.parse(userStr);
+                    if (typeof apiClient !== 'undefined') {
+                        apiClient.token = token;
+                        apiClient.currentUser = user;
+                    }
+                    updateUIAfterLogin(user);
+                    console.log('✅ Session restaurée');
+                } catch (error) {
+                    console.error('❌ Erreur session:', error);
+                    logout();
                 }
-            `;
-            document.head.appendChild(style);
-        }
-        
-        document.body.appendChild(loader);
-    }
-    
-    return loader;
-}
-
-// ===== FONCTION : Charger pages publiques =====
-async function chargerPagesPubliques() {
-    console.log('📄 Chargement pages publiques...');
-    
-    // Masquer les conteneurs
-    const userContent = document.getElementById('user-content');
-    const adminContent = document.getElementById('admin-content');
-    const modelsContent = document.getElementById('models-content');
-    
-    if (userContent) userContent.style.display = 'none';
-    if (adminContent) adminContent.style.display = 'none';
-    if (modelsContent) modelsContent.style.display = 'none';
-    
-    // Masquer le loader
-    const loader = document.getElementById('pageVierge');
-    if (loader) loader.remove();
-    
-    console.log('✅ Pages publiques prêtes');
-}
-
-// ===== FONCTION : Charger contenus appropriés =====
-async function chargerContenusAppropries(role) {
-    try {
-        const isAdmin = role === 'admin';
-        
-        // Masquer accueil et pages publiques
-        const accueil = document.getElementById('accueil');
-        if (accueil) {
-            accueil.style.display = 'none';
-            accueil.classList.remove('active');
-        }
-        
-        const connexion = document.getElementById('connexion');
-        if (connexion) connexion.style.display = 'none';
-        
-        const inscription = document.getElementById('inscription');
-        if (inscription) inscription.style.display = 'none';
-        
-        // Charger les fichiers
-        if (isAdmin) {
-            console.log('🔐 Chargement interface ADMIN...');
+            } else {
+                navigateTo('accueil');
+            }
             
-            // Masquer user
-            const userContent = document.getElementById('user-content');
-            if (userContent) userContent.style.display = 'none';
-            
-            // Charger admin
-            await includeHTML('admin.html', 'admin-content');
-            console.log('✅ Admin chargé');
-            
-        } else {
-            console.log('👥 Chargement interface UTILISATEUR...');
-            
-            // Masquer admin
-            const adminContent = document.getElementById('admin-content');
-            if (adminContent) adminContent.style.display = 'none';
-            
-            const adminPanel = document.getElementById('adminPanel');
-            if (adminPanel) adminPanel.style.display = 'none';
-            
-            // Charger user
-            await includeHTML('user.html', 'user-content');
-            console.log('✅ User chargé');
-        }
-        
-        // Charger models
-        await includeHTML('models.html', 'models-content');
-        console.log('✅ Models chargé');
-        
-    } catch (error) {
-        console.error('❌ Erreur chargement contenus:', error);
-        throw error;
-    }
-}
-
-// ===== FONCTION : Afficher erreur =====
-function afficherErreur(message) {
-    let loader = document.getElementById('pageVierge');
-    
-    if (!loader) {
-        loader = document.createElement('div');
-        loader.id = 'pageVierge';
-        document.body.appendChild(loader);
-    }
-    
-    loader.style.background = 'linear-gradient(135deg, #dc3545 0%, #c82333 100%)';
-    loader.innerHTML = `
-        <div style="text-align: center; color: white;">
-            <div style="font-size: 60px; margin-bottom: 20px;">⚠️</div>
-            <h2 style="margin: 0 0 10px 0; font-size: 24px;">Erreur d'initialisation</h2>
-            <p style="margin: 0; font-size: 16px; opacity: 0.9;">${message}</p>
-            <p style="margin-top: 20px; font-size: 14px; opacity: 0.8;">Actualisation en 3 secondes...</p>
-        </div>
-    `;
-}
-
-        // ========== EXPORTS AVEC MESSAGE ==========
-
-async function exportData(type) {
-    try {
-        UIHelpers.showLoading(true);
-        
-        await apiClient.exportData(type);
-        
-        UIHelpers.showSuccess('✅ Export terminé avec succès !');
-        
-        // ✅ Vider le cache des stats après export
-        if (type.includes('stats') || type.includes('statistiques')) {
-            viderCacheApresModification('stats');
-        }
-        
-    } catch (error) {
-        console.error('Erreur export:', error);
-        UIHelpers.showError('Erreur lors de l\'export: ' + error.message);
-    } finally {
-        UIHelpers.showLoading(false);
-    }
-}
-
-// Export sections spécifiques
-async function exporterParFaculte(faculte = null) {
-    try {
-        console.log('📊 Export par faculté...', faculte);
-        
-        UIHelpers.showLoading(true);
-        
-        await apiClient.exporterParFaculte(faculte);
-        
-        UIHelpers.showSuccess('✅ Export téléchargé avec succès');
-        
-    } catch (error) {
-        console.error('❌ Erreur export faculté:', error);
-        UIHelpers.showError('Erreur lors de l\'export: ' + error.message);
-    } finally {
-        UIHelpers.showLoading(false);
-    }
-}
-
-async function exporterParGenre(genre = null) {
-    try {
-        console.log('👥 Export par genre...', genre);
-        
-        UIHelpers.showLoading(true);
-        
-        await apiClient.exporterParGenre(genre);
-        
-        UIHelpers.showSuccess('✅ Export téléchargé avec succès');
-        
-    } catch (error) {
-        console.error('❌ Erreur export genre:', error);
-        UIHelpers.showError('Erreur lors de l\'export: ' + error.message);
-    } finally {
-        UIHelpers.showLoading(false);
-    }
-}
-
-async function exporterParStatut(statut = 'en-attente') {
-    try {
-        console.log('📊 Export par statut...', statut);
-        
-        UIHelpers.showLoading(true);
-        
-        await apiClient.exporterParStatut(statut);
-        
-        UIHelpers.showSuccess('✅ Export téléchargé avec succès');
-        
-    } catch (error) {
-        console.error('❌ Erreur export statut:', error);
-        UIHelpers.showError('Erreur lors de l\'export: ' + error.message);
-    } finally {
-        UIHelpers.showLoading(false);
-    }
-}
+            console.log('✅ Application prête');
+        });
 
         // Fonction utilitaire pour charger HTML
-      async function includeHTML(file, containerId) {
-    try {
-        const response = await fetch(file);
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        const html = await response.text();
-        const container = document.getElementById(containerId);
-        if (container) {
-            container.innerHTML = html;
+        async function includeHTML(file, containerId) {
+            try {
+                const response = await fetch(file);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const html = await response.text();
+                document.getElementById(containerId).innerHTML = html;
+                console.log(`✅ ${file} chargé`);
+                return true;
+            } catch (error) {
+                console.error(`❌ Erreur ${file}:`, error);
+                return false;
+            }
         }
-        console.log(`✅ ${file} chargé`);
-        return true;
-    } catch (error) {
-        console.error(`❌ Erreur ${file}:`, error);
-        throw error;
-    }
-}
-
-// ===== FONCTION : Masquer le loader après updateUIAfterLogin =====
-function cacherLoader() {
-    const loader = document.getElementById('pageVierge');
-    if (loader) {
-        loader.style.opacity = '0';
-        loader.style.transition = 'opacity 0.3s ease';
-        setTimeout(() => loader.remove(), 300);
-    }
-}
-
 
         // Export global
         window.navigateTo = navigateTo;
@@ -2572,42 +2255,60 @@ function cacherLoader() {
             }, 5000);
         }
        // Fermer le sidebar mobile lors de la navigation
-        function navigateTo(pageId) {
-    console.log('📄 Navigation vers:', pageId);
-    
-    // Masquer le loader s'il existe (au cas où)
-    const loader = document.getElementById('pageVierge');
-    if (loader) loader.remove();
-    
-    // Masquer toutes les pages
-    document.querySelectorAll('.page').forEach(p => {
-        p.classList.remove('active');
-        p.style.display = 'none';
-    });
-    
-    // Afficher la page demandée
-    const page = document.getElementById(pageId);
-    if (page) {
-        page.style.display = 'block';
-        page.classList.add('active');
-        
-        // Mettre à jour le menu actif
-        document.querySelectorAll('.menu-item').forEach(item => {
-            item.classList.remove('active');
-            if (item.getAttribute('onclick')?.includes(pageId)) {
-                item.classList.add('active');
+        function navigateToUser(pageId) {
+            console.log('🔄 Navigation utilisateur vers:', pageId);
+            
+            // Fermer le sidebar sur mobile
+            if (window.innerWidth <= 768) {
+                closeMobileSidebar();
             }
-        });
-        
-        // Charger les données automatiquement si nécessaire
-        setTimeout(() => chargerDonneesPage(pageId), 100);
-        
-        console.log('✅ Page affichée:', pageId);
-    } else {
-        console.error('❌ Page introuvable:', pageId);
-    }
-}
-
+            
+            const userContent = document.getElementById('user-content');
+            if (!userContent) {
+                console.error('❌ user-content introuvable');
+                return;
+            }
+            
+            // Masquer toutes les pages dans user-content
+            userContent.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            
+            // Afficher la page demandée
+            const page = userContent.querySelector('#' + pageId);
+            if (page) {
+                page.classList.add('active');
+                
+                // Mettre à jour le menu actif
+                document.querySelectorAll('#userMenu .menu-item').forEach(item => {
+                    item.classList.remove('active');
+                    if (item.getAttribute('onclick')?.includes(pageId)) {
+                        item.classList.add('active');
+                    }
+                });
+                
+                // Charger les données automatiquement
+                setTimeout(() => {
+                    switch(pageId) {
+                        case 'dashboard':
+                            // Pas besoin de recharger, déjà fait à la connexion
+                            break;
+                        case 'mesDossiers':
+                            if (typeof chargerMesDossiers === 'function') {
+                                chargerMesDossiers();
+                            }
+                            break;
+                        case 'profil':
+                            if (typeof chargerProfil === 'function') {
+                                chargerProfil();
+                            }
+                            break;
+                    }
+                }, 100);
+                
+                console.log('✅ Page utilisateur affichée:', pageId);
+            } else {
+                console.error('❌ Page introuvable:', pageId);
+            }
+        }
         // Gestion du menu mobile utilisateur
 function toggleMobileUserMenu() {
     const menu = document.getElementById('mobileUserMenu');
@@ -2659,30 +2360,17 @@ function navigateToUserPageMobile(pageId) {
     }, 100);
 }
 
-function startApplicationProcess() {
-    console.log('📝 Démarrage processus de dépôt...');
+function startApplicationProcessMobile() {
+    closeMobileUserMenu();
     
-    const userContent = document.getElementById('user-content');
-    
-    if (!userContent || userContent.style.display === 'none') {
-        console.error('❌ user-content non disponible');
-        return;
-    }
-    
-    // Masquer toutes les pages
-    userContent.querySelectorAll('.page').forEach(p => {
-        p.classList.remove('active');
-        p.style.display = 'none';
-    });
-    
-    // Afficher étape 1
-    const etape1 = userContent.querySelector('#etape1');
-    if (etape1) {
-        etape1.style.display = 'block';
-        etape1.classList.add('active');
-        console.log('✅ Étape 1 affichée');
+    if (typeof startApplicationProcess === 'function') {
+        startApplicationProcess();
     } else {
-        console.error('❌ Étape 1 non trouvée');
+        navigateToUserPage('mesDossiers');
+        setTimeout(() => {
+            const newBtn = document.getElementById('btnNouveauDepot');
+            if (newBtn) newBtn.click();
+        }, 500);
     }
 }
 
