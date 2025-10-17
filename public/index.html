@@ -7,6 +7,183 @@
     <title>Université Djibo Hamani</title>
     <link rel="stylesheet" href="Style.css">
     <link rel="stylesheet" href="Style1.css">
+<style>
+        /* Splash Screen Styles */
+        #splashScreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 99999;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+
+        #splashScreen.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .splash-content {
+            text-align: center;
+            color: white;
+            animation: fadeInScale 0.8s ease-out;
+        }
+
+        .splash-logo {
+            width: 120px;
+            height: 120px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 60px;
+            margin: 0 auto 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .splash-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin: 0 0 15px 0;
+            text-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            animation: slideInUp 0.6s ease-out 0.2s both;
+        }
+
+        .splash-subtitle {
+            font-size: 1.2rem;
+            font-weight: 300;
+            margin: 0 0 40px 0;
+            opacity: 0.95;
+            animation: slideInUp 0.6s ease-out 0.4s both;
+        }
+
+        .splash-loader {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        .splash-progress {
+            width: 250px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 2px;
+            overflow: hidden;
+            margin: 30px auto 0;
+            animation: slideInUp 0.6s ease-out 0.6s both;
+        }
+
+        .splash-progress-bar {
+            height: 100%;
+            background: white;
+            border-radius: 2px;
+            width: 0%;
+            animation: progressBar 2s ease-out forwards;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+
+        .splash-status {
+            margin-top: 20px;
+            font-size: 0.9rem;
+            opacity: 0.8;
+            animation: fadeIn 0.6s ease-out 0.8s both;
+        }
+
+        /* Animations */
+        @keyframes fadeInScale {
+            from {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+                box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            }
+            50% {
+                transform: scale(1.05);
+                box-shadow: 0 15px 50px rgba(0, 0, 0, 0.4);
+            }
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes progressBar {
+            0% {
+                width: 0%;
+            }
+            100% {
+                width: 100%;
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .splash-logo {
+                width: 100px;
+                height: 100px;
+                font-size: 50px;
+            }
+
+            .splash-title {
+                font-size: 2rem;
+            }
+
+            .splash-subtitle {
+                font-size: 1rem;
+                padding: 0 20px;
+            }
+
+            .splash-progress {
+                width: 200px;
+            }
+        }
+    </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script>
@@ -155,6 +332,48 @@ window.addEventListener('DOMContentLoaded', function() {
 </script>
 </head>
 <body>
+    <div id="splashScreen">
+        <div class="splash-content">
+            <div class="splash-logo">🎓</div>
+            <h1 class="splash-title">Université Djibo Hamani</h1>
+            <p class="splash-subtitle">Système de Gestion des Inscriptions</p>
+            <div class="splash-loader"></div>
+            <div class="splash-progress">
+                <div class="splash-progress-bar"></div>
+            </div>
+            <p class="splash-status" id="splashStatus">Chargement en cours...</p>
+        </div>
+    </div>
+
+    <script>
+        // Fonction pour mettre à jour le statut
+        function updateSplashStatus(message) {
+            const statusEl = document.getElementById('splashStatus');
+            if (statusEl) {
+                statusEl.textContent = message;
+            }
+        }
+
+        // Fonction pour masquer le splash screen
+        function hideSplashScreen() {
+            const splash = document.getElementById('splashScreen');
+            if (splash) {
+                setTimeout(() => {
+                    splash.classList.add('hidden');
+                    setTimeout(() => {
+                        splash.remove();
+                    }, 500);
+                }, 500);
+            }
+        }
+
+        // Simuler les étapes de chargement
+        setTimeout(() => updateSplashStatus('Chargement des ressources...'), 500);
+        setTimeout(() => updateSplashStatus('Vérification de la session...'), 1000);
+        setTimeout(() => updateSplashStatus('Initialisation...'), 1500);
+        setTimeout(() => updateSplashStatus('Prêt !'), 2000);
+        setTimeout(() => hideSplashScreen(), 2500);
+    </script>
     <!-- Sidebar (cachée par défaut) -->
     <div class="modern-sidebar" id="modernSidebar">
         <div class="sidebar-header">
@@ -2136,7 +2355,67 @@ window.createUserTopbarNav = createUserTopbarNav;
             
             console.log('✅ Application prête');
         });
-
+       // ===== FONCTION : Charger contenus appropriés =====
+async function chargerContenusAppropries(role) {
+    try {
+        const isAdmin = role === 'admin';
+        
+        // ✅ MASQUER IMMÉDIATEMENT LE DASHBOARD PRINCIPAL
+        const dashboardPrincipal = document.getElementById('dashboard');
+        if (dashboardPrincipal) {
+            dashboardPrincipal.style.display = 'none';
+            dashboardPrincipal.classList.remove('active');
+        }
+        
+        // Masquer accueil et pages publiques
+        const accueil = document.getElementById('accueil');
+        if (accueil) {
+            accueil.style.display = 'none';
+            accueil.classList.remove('active');
+        }
+        
+        const connexion = document.getElementById('connexion');
+        if (connexion) connexion.style.display = 'none';
+        
+        const inscription = document.getElementById('inscription');
+        if (inscription) inscription.style.display = 'none';
+        
+        // Charger les fichiers
+        if (isAdmin) {
+            console.log('🔐 Chargement interface ADMIN...');
+            
+            // Masquer user
+            const userContent = document.getElementById('user-content');
+            if (userContent) userContent.style.display = 'none';
+            
+            // Charger admin
+            await includeHTML('admin.html', 'admin-content');
+            console.log('✅ Admin chargé');
+            
+        } else {
+            console.log('👥 Chargement interface UTILISATEUR...');
+            
+            // Masquer admin
+            const adminContent = document.getElementById('admin-content');
+            if (adminContent) adminContent.style.display = 'none';
+            
+            const adminPanel = document.getElementById('adminPanel');
+            if (adminPanel) adminPanel.style.display = 'none';
+            
+            // Charger user
+            await includeHTML('user.html', 'user-content');
+            console.log('✅ User chargé');
+        }
+        
+        // Charger models
+        await includeHTML('models.html', 'models-content');
+        console.log('✅ Models chargé');
+        
+    } catch (error) {
+        console.error('❌ Erreur chargement contenus:', error);
+        throw error;
+    }
+}
         // Fonction utilitaire pour charger HTML
         async function includeHTML(file, containerId) {
             try {
