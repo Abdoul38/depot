@@ -3735,7 +3735,7 @@ async function genererQuitusAvecDonnees(application) {
     // ========== EN-TÊTE (DEUX LOGOS) ==========
     // Logo gauche (université)
     try {
-      const logoUrl = 'http://localhost:3000/uploads/logo-universite.png';
+      const logoUrl = 'https://depot-w4hn.onrender.com/uploads/logo-universite.png';
       const response = await fetch(logoUrl);
       if (response.ok) {
         const blob = await response.blob();
@@ -3752,7 +3752,7 @@ async function genererQuitusAvecDonnees(application) {
 
     // Logo droit (armoirie)
     try {
-      const logoUrl = 'http://localhost:3000/uploads/armoirie-niger.png';
+      const logoUrl = 'https://depot-w4hn.onrender.com/uploads/armoirie-niger.png';
       const response = await fetch(logoUrl);
       if (response.ok) {
         const blob = await response.blob();
