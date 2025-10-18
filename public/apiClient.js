@@ -3732,10 +3732,10 @@ async function genererQuitusAvecDonnees(application) {
       compress: true
     });
 
-    // ========== EN-TÊTE (OPTIMISÉ) ==========
-    // Logo université
+    // ========== EN-TÊTE (DEUX LOGOS) ==========
+    // Logo gauche (université)
     try {
-      const logoUrl = 'https://depot-w4hn.onrender.com/uploads/logo-universite.png';
+      const logoUrl = 'http://localhost:3000/uploads/logo-universite.png';
       const response = await fetch(logoUrl);
       if (response.ok) {
         const blob = await response.blob();
@@ -3747,10 +3747,28 @@ async function genererQuitusAvecDonnees(application) {
         doc.addImage(base64, "PNG", 15, 8, 20, 20);
       }
     } catch (err) {
-      console.warn("Logo non chargé:", err);
+      console.warn("Logo gauche non chargé:", err);
     }
 
-    // Texte en-tête
+    // Logo droit (armoirie)
+    try {
+      const logoUrl = 'http://localhost:3000/uploads/armoirie-niger.png';
+      const response = await fetch(logoUrl);
+      if (response.ok) {
+        const blob = await response.blob();
+        const base64 = await new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.readAsDataURL(blob);
+        });
+        // Position à droite: 210 - 20 (largeur A4) - 15 (marge) = 175
+        doc.addImage(base64, "PNG", 175, 8, 20, 20);
+      }
+    } catch (err) {
+      console.warn("Logo droit non chargé:", err);
+    }
+
+    // Texte en-tête (CENTRÉ)
     doc.setFont("helvetica", "bold");
     doc.setFontSize(10);
     doc.setTextColor(0, 51, 102);
@@ -4107,13 +4125,14 @@ async function genererQuitusAvecDonnees(application) {
     doc.text("Université Djibo Hamani - Service Central de la Scolarité", 105, 280, { align: "center" });
 
     // Numéro de document
-   doc.setFont("helvetica", "normal");
-doc.setFontSize(7.5);
-doc.setTextColor(150, 150, 150);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(7.5);
+    doc.setTextColor(150, 150, 150);
 
-// Utiliser le numéro de dossier (qui commence par D)
-const numeroDoc = `QUITUS-${application.numero_dossier || "EN-ATTENTE"}-${Date.now()}`;
-doc.text(`N° ${numeroDoc}`, 105, 285, { align: "center" });
+    // Utiliser le numéro de dossier (qui commence par D)
+    const numeroDoc = `QUITUS-${application.numero_dossier || "EN-ATTENTE"}-${Date.now()}`;
+    doc.text(`N° ${numeroDoc}`, 105, 285, { align: "center" });
+    
     // Sauvegarde
     const nomFichier = `Quitus_${(application.nom || "").replace(/\s+/g, "_")}_${(application.prenom || "").replace(/\s+/g, "_")}.pdf`;
     doc.save(nomFichier);
@@ -4127,7 +4146,6 @@ doc.text(`N° ${numeroDoc}`, 105, 285, { align: "center" });
     throw error;
   }
 }
-
 
 // Fonction utilitaire pour obtenir le nom du document
 function getNomDocument(type) {
