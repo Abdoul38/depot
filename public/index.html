@@ -334,7 +334,7 @@ window.addEventListener('DOMContentLoaded', function() {
 <body>
     <div id="splashScreen">
         <div class="splash-content">
-            <div class="splash-logo">🎓</div>
+            <div class="splash-logo"><img src="/uploads/logo-universite.png" alt="Logo Université" class="logo-image" onerror="this.style.display='none'"></div>
             <h1 class="splash-title">Université Djibo Hamani</h1>
             <p class="splash-subtitle">Système de Gestion des Inscriptions</p>
             <div class="splash-loader"></div>
@@ -433,6 +433,12 @@ window.addEventListener('DOMContentLoaded', function() {
                         <i>⚙️</i>
                         <span>Utilisateurs</span>
                     </a>
+                    <a class="menu-item" onclick="navigateTo('profil')">
+                            <i>👤</i> Mon Profil
+                        </a>
+                        <a class="menu-item" onclick="logout()">
+                            <i>🚪</i> Déconnexion
+                        </a>
                 </div>
             </div>
 
@@ -498,17 +504,9 @@ window.addEventListener('DOMContentLoaded', function() {
                             <h4 id="userName">Utilisateur</h4>
                             <p id="userRole">Rôle</p>
                         </div>
-                        <i>▼</i>
+                      
                     </div>
 
-                    <div class="user-dropdown" id="userDropdown">
-                        <a onclick="navigateTo('profil')">
-                            <i>👤</i> Mon Profil
-                        </a>
-                        <a onclick="logout()">
-                            <i>🚪</i> Déconnexion
-                        </a>
-                    </div>
                 </div>
             </div>
         </div>
@@ -643,6 +641,7 @@ window.addEventListener('DOMContentLoaded', function() {
     );
     z-index: 1;
 }
+
 
 /* Texte animé */
 .hero-carousel .welcome-header {
@@ -1824,11 +1823,15 @@ async function creerGraphiqueEvolution(evolution) {
         }
 
         // =================== AUTHENTIFICATION ===================
-        async function login(event) {
+       // Remplacez la fonction login existante par celle-ci
+
+async function login(event) {
     event.preventDefault();
     
     try {
-        showLoader(true);
+        // 🎯 ÉTAPE 1 : Afficher le splash screen immédiatement
+        showSplashScreen();
+        updateSplashStatus('Connexion en cours...');
         
         const identifiantInput = document.getElementById('loginIdentifiant').value.trim();
         const motDePasse = document.getElementById('loginMotDePasse').value;
@@ -1836,13 +1839,17 @@ async function creerGraphiqueEvolution(evolution) {
         // Détecter automatiquement le type d'identifiant
         const identifiant = detecterTypeIdentifiant(identifiantInput);
         
-        console.log('🔍 Type détecté:', identifiant.type);
-        console.log('📝 Valeur:', identifiant.value);
+        console.log('🔑 Type détecté:', identifiant.type);
+        console.log('🔑 Valeur:', identifiant.value);
         
         // Validation supplémentaire pour le téléphone
         if (identifiant.type === 'telephone' && !validerFormatTelephone(identifiant.value)) {
+            hideSplashScreen();
             throw new Error('⚠️ Format de téléphone invalide. Utilisez : +227XXXXXXXX ou 0XXXXXXXX');
         }
+        
+        // 🎯 ÉTAPE 2 : Mettre à jour le statut
+        updateSplashStatus('Vérification des identifiants...');
         
         // Préparer les credentials
         const credentials = {
@@ -1850,17 +1857,22 @@ async function creerGraphiqueEvolution(evolution) {
             motDePasse: motDePasse
         };
         
-        console.log('🔐 Tentative de connexion avec:', identifiant.type);
+        console.log('🔑 Tentative de connexion avec:', identifiant.type);
         
+        // 🎯 ÉTAPE 3 : Appel API
+        updateSplashStatus('Synchronisation des données...');
         const response = await apiClient.login(credentials);
         
         if (!response.token || !response.user) {
+            hideSplashScreen();
             throw new Error('Réponse invalide du serveur');
         }
         
         console.log('✅ Connexion réussie:', response.user.nom);
         
-        // Sauvegarder les données
+        // 🎯 ÉTAPE 4 : Sauvegarder les données
+        updateSplashStatus('Initialisation...');
+        
         localStorage.setItem('authToken', response.token);
         localStorage.setItem('currentUser', JSON.stringify(response.user));
         
@@ -1870,7 +1882,8 @@ async function creerGraphiqueEvolution(evolution) {
             apiClient.currentUser = response.user;
         }
         
-        // Réinitialiser le formulaire
+        // 🎯 ÉTAPE 5 : Réinitialiser le formulaire
+        updateSplashStatus('Préparation de votre tableau de bord...');
         document.getElementById('loginForm').reset();
         
         // Masquer la page connexion
@@ -1880,17 +1893,218 @@ async function creerGraphiqueEvolution(evolution) {
             connexionPage.style.display = 'none';
         }
         
-        showLoader(false);
-        
-        // Mettre à jour l'interface
+        // 🎯 ÉTAPE 6 : Mettre à jour l'interface
+        updateSplashStatus('Finition...');
         updateUIAfterLogin(response.user);
         
-        UIHelpers.showSuccess(`✅ Bienvenue ${response.user.nom} ! Connexion réussie via ${identifiant.type === 'email' ? '📧 email' : '📱 téléphone'}`);
+        // 🎯 ÉTAPE 7 : Garder le splash un peu plus longtemps pour l'expérience UX
+        setTimeout(() => {
+            hideSplashScreen();
+            UIHelpers.showSuccess(`✅ Bienvenue ${response.user.nom} ! Connexion réussie via ${identifiant.type === 'email' ? '📧 email' : '📱 téléphone'}`);
+        }, 1500);
         
     } catch (error) {
         console.error('❌ Erreur connexion:', error);
-        showLoader(false);
+        
+        // Masquer le splash en cas d'erreur
+        hideSplashScreen();
+        
         UIHelpers.showError('❌ ' + (error.message || 'Identifiants incorrects'));
+    }
+}
+
+// Fonction pour afficher le splash screen
+function showSplashScreen() {
+    let splash = document.getElementById('splashScreen');
+    
+    if (!splash) {
+        // Créer le splash screen s'il n'existe pas
+        splash = document.createElement('div');
+        splash.id = 'splashScreen';
+        splash.innerHTML = `
+            <div class="splash-content">
+                <div class="splash-logo"><img src="/uploads/logo-universite.png" alt="Logo Université" class="logo-image" onerror="this.style.display='none'"></div>
+                <h1 class="splash-title">Université Djibo Hamani</h1>
+                <p class="splash-subtitle">Système de Gestion des Inscriptions</p>
+                <div class="splash-loader"></div>
+                <div class="splash-progress">
+                    <div class="splash-progress-bar"></div>
+                </div>
+                <p class="splash-status" id="splashStatus">Chargement en cours...</p>
+            </div>
+        `;
+        document.body.appendChild(splash);
+    }
+    
+    // Ajouter les styles s'ils ne sont pas présents
+    if (!document.getElementById('splashScreenStyles')) {
+        const style = document.createElement('style');
+        style.id = 'splashScreenStyles';
+        style.textContent = `
+            #splashScreen {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                z-index: 99999;
+                transition: opacity 0.5s ease, visibility 0.5s ease;
+            }
+
+            #splashScreen.hidden {
+                opacity: 0;
+                visibility: hidden;
+            }
+
+            .splash-content {
+                text-align: center;
+                color: white;
+                animation: fadeInScale 0.8s ease-out;
+            }
+
+            .splash-logo {
+                width: 120px;
+                height: 120px;
+                background: white;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 60px;
+                margin: 0 auto 30px;
+                box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+                animation: pulse 2s ease-in-out infinite;
+            }
+
+            .splash-title {
+                font-size: 2.5rem;
+                font-weight: 800;
+                margin: 0 0 15px 0;
+                text-shadow: 0 4px 15px rgba(0,0,0,0.3);
+                animation: slideInUp 0.6s ease-out 0.2s both;
+            }
+
+            .splash-subtitle {
+                font-size: 1.2rem;
+                font-weight: 300;
+                margin: 0 0 40px 0;
+                opacity: 0.95;
+                animation: slideInUp 0.6s ease-out 0.4s both;
+            }
+
+            .splash-loader {
+                width: 60px;
+                height: 60px;
+                border: 4px solid rgba(255, 255, 255, 0.3);
+                border-top: 4px solid white;
+                border-radius: 50%;
+                animation: spin 1s linear infinite;
+                margin: 0 auto;
+            }
+
+            .splash-progress {
+                width: 250px;
+                height: 4px;
+                background: rgba(255, 255, 255, 0.3);
+                border-radius: 2px;
+                overflow: hidden;
+                margin: 30px auto 0;
+                animation: slideInUp 0.6s ease-out 0.6s both;
+            }
+
+            .splash-progress-bar {
+                height: 100%;
+                background: white;
+                border-radius: 2px;
+                width: 100%;
+                animation: progressBar 2s ease-out forwards;
+                box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+            }
+
+            .splash-status {
+                margin-top: 20px;
+                font-size: 0.9rem;
+                opacity: 0.8;
+                animation: fadeIn 0.6s ease-out 0.8s both;
+            }
+
+            @keyframes fadeInScale {
+                from {
+                    opacity: 0;
+                    transform: scale(0.8);
+                }
+                to {
+                    opacity: 1;
+                    transform: scale(1);
+                }
+            }
+
+            @keyframes slideInUp {
+                from {
+                    opacity: 0;
+                    transform: translateY(30px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+
+            @keyframes fadeIn {
+                from { opacity: 0; }
+                to { opacity: 1; }
+            }
+
+            @keyframes pulse {
+                0%, 100% {
+                    transform: scale(1);
+                    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+                }
+                50% {
+                    transform: scale(1.05);
+                    box-shadow: 0 15px 50px rgba(0, 0, 0, 0.4);
+                }
+            }
+
+            @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+
+            @keyframes progressBar {
+                0% { width: 0%; }
+                100% { width: 100%; }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+    
+    // Afficher le splash
+    splash.classList.remove('hidden');
+    splash.style.display = 'flex';
+}
+
+// Fonction pour masquer le splash screen
+function hideSplashScreen() {
+    const splash = document.getElementById('splashScreen');
+    if (splash) {
+        splash.classList.add('hidden');
+        setTimeout(() => {
+            splash.style.display = 'none';
+        }, 500);
+    }
+}
+
+// Fonction pour mettre à jour le statut du splash
+function updateSplashStatus(message) {
+    const statusEl = document.getElementById('splashStatus');
+    if (statusEl) {
+        statusEl.textContent = message;
     }
 }
 
