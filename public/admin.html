@@ -600,6 +600,7 @@
                     <th>Faculté</th>
                     <th>Capacité max</th>
                     <th>Types de bac autorisés</th>
+                    <th>Candidatures</th>
                     <th>Statut</th>
                     <th>Actions</th>
                 </tr>
@@ -609,8 +610,7 @@
             </tbody>
         </table>
     </div>
-        </div>
-
+</div>
     
 
     <div id="typeBacs-tab" class="tab-content">
@@ -659,30 +659,34 @@
     </div>
 
     <!-- Tableau de Bord Principal -->
+
     <div id="stats-tableau-bord" class="stats-tab-content active">
-        <!-- Résumé général -->
-        <div class="dashboard-grid" style="grid-template-columns: repeat(4, 1fr); margin-bottom: 30px;">
-            <div class="dashboard-card" style="background: linear-gradient(135deg, #667eea, #764ba2); color: white;">
-                <div class="card-icon" style="color: white;">📊</div>
-                <div class="card-title">Total Candidatures</div>
-                <div style="font-size: 32px; font-weight: bold;" id="statTotalCandidatures">0</div>
-            </div>
-            <div class="dashboard-card" style="background: linear-gradient(135deg, #28a745, #20c997); color: white;">
-                <div class="card-icon" style="color: white;">✅</div>
-                <div class="card-title">Approuvées</div>
-                <div style="font-size: 32px; font-weight: bold;" id="statApprouvees">0</div>
-            </div>
-            <div class="dashboard-card" style="background: linear-gradient(135deg, #17a2b8, #6f42c1); color: white;">
-                <div class="card-icon" style="color: white;">👨</div>
-                <div class="card-title">Hommes</div>
-                <div style="font-size: 32px; font-weight: bold;" id="statHommes">0</div>
-            </div>
-            <div class="dashboard-card" style="background: linear-gradient(135deg, #e83e8c, #fd7e14); color: white;">
-                <div class="card-icon" style="color: white;">👩</div>
-                <div class="card-title">Femmes</div>
-                <div style="font-size: 32px; font-weight: bold;" id="statFemmes">0</div>
-            </div>
-        </div>
+       
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 25px; margin-bottom: 30px;">
+                    <div style="background: linear-gradient(135deg, #667eea, #764ba2); padding: 25px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); color: white;">
+                        <div style="font-size: 40px; margin-bottom: 10px;">📊</div>
+                        <div style="font-size: 14px; opacity: 0.9; margin-bottom: 5px;">Total Candidatures</div>
+                        <div style="font-size: 32px; font-weight: bold;" id="statTotalCandidatures">0</div>
+                    </div>
+                    
+                    <div style="background: linear-gradient(135deg, #28a745, #20c997); padding: 25px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); color: white;">
+                        <div style="font-size: 40px; margin-bottom: 10px;">✅</div>
+                        <div style="font-size: 14px; opacity: 0.9; margin-bottom: 5px;">Approuvées</div>
+                        <div style="font-size: 32px; font-weight: bold;" id="statApprouvees">0</div>
+                    </div>
+                    
+                    <div style="background: linear-gradient(135deg, #17a2b8, #6f42c1); padding: 25px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); color: white;">
+                        <div style="font-size: 40px; margin-bottom: 10px;">👨</div>
+                        <div style="font-size: 14px; opacity: 0.9; margin-bottom: 5px;">Hommes</div>
+                        <div style="font-size: 32px; font-weight: bold;" id="statHommes">0</div>
+                    </div>
+                    
+                    <div style="background: linear-gradient(135deg, #e83e8c, #fd7e14); padding: 25px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); color: white;">
+                        <div style="font-size: 40px; margin-bottom: 10px;">👩</div>
+                        <div style="font-size: 14px; opacity: 0.9; margin-bottom: 5px;">Femmes</div>
+                        <div style="font-size: 32px; font-weight: bold;" id="statFemmes">0</div>
+                    </div>
+                </div>
 
         <!-- Graphiques principaux -->
         <div class="dashboard-grid" style="grid-template-columns: 1fr 1fr;">
