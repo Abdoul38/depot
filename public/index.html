@@ -401,6 +401,10 @@ window.addEventListener('DOMContentLoaded', function() {
                         <span>Dossiers</span>
                         <span class="menu-badge" id="badgeDossiers">0</span>
                     </a>
+                    <a class="menu-item" onclick="startApplicationProcess()">
+                        <i>📁</i>
+                        <span>Nouveau Dépôt</span>
+                    </a>
                     <a class="menu-item" onclick="navigateTo('configInscription')">
                         <i>➕</i>
                         <span>Inscriptions</span>
@@ -436,10 +440,6 @@ window.addEventListener('DOMContentLoaded', function() {
             <div id="userMenu" style="display: none;">
     <div class="menu-section">
         <div class="menu-section-title">Mon Espace</div>
-        <a class="menu-item active" onclick="navigateToUser('dashboard')">
-            <i>🏠</i>
-            <span>Tableau de bord</span>
-        </a>
         <a class="menu-item" onclick="navigateToUser('mesDossiers')">
             <i>📋</i>
             <span>Mes Dossiers</span>
@@ -1263,6 +1263,11 @@ async function telechargerQuitusDepuisDetails(applicationId) {
                         break;
                     
                     case 'gestionDossiers':
+                        if (typeof chargerDossiersAdmin === 'function') {
+                            await chargerDossiersAdmin();
+                        }
+                        break;
+                     case 'NouveauDossiers':
                         if (typeof chargerDossiersAdmin === 'function') {
                             await chargerDossiersAdmin();
                         }
