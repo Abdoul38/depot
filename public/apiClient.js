@@ -4107,12 +4107,13 @@ async function genererQuitusAvecDonnees(application) {
     doc.text("Université Djibo Hamani - Service Central de la Scolarité", 105, 280, { align: "center" });
 
     // Numéro de document
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(7.5);
-    doc.setTextColor(150, 150, 150);
-    const numeroDoc = `QUITUS-${application.numero_dossier || "EN-ATTENTE"}-${Date.now()}`;
-    doc.text(`N° ${numeroDoc}`, 105, 285, { align: "center" });
+   doc.setFont("helvetica", "normal");
+doc.setFontSize(7.5);
+doc.setTextColor(150, 150, 150);
 
+// Utiliser le numéro de dossier (qui commence par D)
+const numeroDoc = `QUITUS-${application.numero_dossier || "EN-ATTENTE"}-${Date.now()}`;
+doc.text(`N° ${numeroDoc}`, 105, 285, { align: "center" });
     // Sauvegarde
     const nomFichier = `Quitus_${(application.nom || "").replace(/\s+/g, "_")}_${(application.prenom || "").replace(/\s+/g, "_")}.pdf`;
     doc.save(nomFichier);
