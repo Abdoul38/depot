@@ -8,13 +8,13 @@ const fs = require('fs');
 const { cloudinary } = require('../config/cloudinary'); // ✅ NOUVEAU
 
 // Fonction pour générer un numéro unique
-async function generateUniqueSixDigitNumber(table, column) {
+async function generateUniqueSixDigitNumber(table, column, prefix = 'D') {
     let attempts = 0;
     const maxAttempts = 10;
     
     while (attempts < maxAttempts) {
         const number = Math.floor(100000 + Math.random() * 900000);
-        const fullNumber = 'UDH' + number;
+        const fullNumber = prefix + number;
         
         const result = await pool.query(
             `SELECT COUNT(*) FROM ${table} WHERE ${column} = $1`,
@@ -63,7 +63,7 @@ exports.submitApplication = async (req, res) => {
         }
 
         // Générer un numéro de dossier unique
-        const numeroDossier = await generateUniqueSixDigitNumber('applications', 'numero_dossier');
+        const numeroDossier = await generateUniqueSixDigitNumber('applications', 'numero_dossier', 'D');
 
         // ✅ NOUVEAU : Préparer les documents avec URLs Cloudinary
         const documents = {};
@@ -478,6 +478,11 @@ exports.getApplication = async (req, res) => {
     }
 };
 
+// ============================================
+// applications.controller.js
+// Fonction updateApplicationStatus (ligne ~460)
+// ============================================
+
 exports.updateApplicationStatus = async (req, res) => {
     try {
         const { id } = req.params;
@@ -489,7 +494,8 @@ exports.updateApplicationStatus = async (req, res) => {
 
         let numeroDepot = null;
         if (statut === 'approuve') {
-            numeroDepot = await generateUniqueSixDigitNumber('applications', 'numero_depot');
+            // ✅ CORRECTION: Ajouter 'UDH' comme préfixe
+            numeroDepot = await generateUniqueSixDigitNumber('applications', 'numero_depot', 'udh');
         }
 
         await pool.query(
@@ -508,6 +514,7 @@ exports.updateApplicationStatus = async (req, res) => {
         res.status(500).json({ error: 'Erreur serveur' });
     }
 };
+
 
 exports.searchApplications = async (req, res) => {
     try {
