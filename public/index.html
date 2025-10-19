@@ -403,9 +403,9 @@ window.addEventListener('DOMContentLoaded', function() {
                         
                     </a>
                     <a class="menu-item" onclick="startApplicationFromMenu()">
-                        <i>📝</i>
-                        <span>Nouveau Dépôt</span>
-                    </a>
+    <i>📝</i>
+    <span>Nouveau Dépôt</span>
+</a>
                    
                     <a class="menu-item" onclick="navigateTo('configInscription')">
                         <i>➕</i>
@@ -2164,171 +2164,33 @@ window.createUserTopbarNav = createUserTopbarNav;
     console.log('🚪 Déconnexion en cours...');
     
     try {
-        // 1. Nettoyer le localStorage
+        // Afficher le message de déconnexion
+        UIHelpers.showSuccess('✅ Déconnexion réussie ! Actualisation en cours...');
+        
+        // Nettoyer le localStorage
         localStorage.clear();
         
-        // 2. Nettoyer apiClient
+        // Nettoyer apiClient
         if (typeof apiClient !== 'undefined') {
             apiClient.token = null;
             apiClient.currentUser = null;
         }
         
-        // 3. Vider tous les caches
+        // Vider tous les caches
         if (typeof apiCache !== 'undefined') {
             apiCache.clear();
         }
         
-        // 4. Détruire tous les graphiques Chart.js
-        const charts = [
-            'chartTopFilieresInstance',
-            'chartRepartitionBacInstance',
-            'chartEvolutionInstance',
-            'chartEvolutionInscriptionsInstance',
-            'chartFiliereInscriptionsInstance',
-            'chartNiveauInscriptionsInstance',
-            'chartGenreInscriptionsInstance',
-            'chartPaiementInscriptionsInstance'
-        ];
+        console.log('✅ Nettoyage terminé, actualisation de la page...');
         
-        charts.forEach(chartName => {
-            if (window[chartName]) {
-                try {
-                    window[chartName].destroy();
-                    window[chartName] = null;
-                } catch (e) {
-                    console.warn('Erreur destruction graphique:', chartName);
-                }
-            }
-        });
-        
-        // 5. Retirer les classes et modes
-        document.body.classList.remove('user-mode');
-        document.body.classList.remove('admin-mode');
-        
-        // 6. Masquer/Réinitialiser les éléments UI
-        const userTopbarNav = document.getElementById('userTopbarNav');
-        if (userTopbarNav) {
-            userTopbarNav.remove();
-        }
-        
-        const userTopbarActions = document.getElementById('userTopbarActions');
-        if (userTopbarActions) {
-            userTopbarActions.remove();
-        }
-        
-        // Fermer le dropdown s'il est ouvert
-        const dropdown = document.getElementById('userDropdown');
-        if (dropdown) {
-            dropdown.classList.remove('active');
-        }
-        
-        // ✅ CORRECTION PRINCIPALE : Réafficher les boutons de connexion
-        const beforeLoginButtons = document.getElementById('beforeLoginButtons');
-        const afterLoginMenu = document.getElementById('afterLoginMenu');
-        
-        if (beforeLoginButtons) {
-            beforeLoginButtons.style.display = 'flex'; // ✅ Afficher
-        }
-        if (afterLoginMenu) {
-            afterLoginMenu.style.display = 'none';
-        }
-        
-        // 7. Masquer la sidebar
-        const sidebar = document.getElementById('modernSidebar');
-        const mainWrapper = document.getElementById('mainWrapper');
-        
-        if (sidebar) {
-            sidebar.classList.remove('active', 'collapsed');
-            sidebar.style.display = 'none';
-        }
-        if (mainWrapper) {
-            mainWrapper.classList.remove('with-sidebar', 'collapsed');
-        }
-        
-        // 8. Masquer tous les menus
-        const adminMenu = document.getElementById('adminMenu');
-        const userMenu = document.getElementById('userMenu');
-        if (adminMenu) adminMenu.style.display = 'none';
-        if (userMenu) userMenu.style.display = 'none';
-        
-        // 9. Masquer les boutons menu mobile
-        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
-        const mobileUserMenuBtn = document.getElementById('mobileUserMenuBtn');
-        if (mobileMenuBtn) mobileMenuBtn.style.display = 'none';
-        if (mobileUserMenuBtn) mobileUserMenuBtn.style.display = 'none';
-        
-        // 10. Fermer les menus mobiles
-        const mobileUserMenu = document.getElementById('mobileUserMenu');
-        const mobileMenuOverlay = document.getElementById('mobileMenuOverlay');
-        const sidebarOverlay = document.getElementById('sidebarOverlay');
-        
-        if (mobileUserMenu) mobileUserMenu.classList.remove('active');
-        if (mobileMenuOverlay) mobileMenuOverlay.classList.remove('active');
-        if (sidebarOverlay) sidebarOverlay.classList.remove('active');
-        
-        // 11. Masquer TOUTES les pages
-        document.querySelectorAll('.page').forEach(page => {
-            page.classList.remove('active');
-        });
-        
-        // Masquer les conteneurs
-        const adminContent = document.getElementById('admin-content');
-        const userContent = document.getElementById('user-content');
-        const adminPanel = document.getElementById('adminPanel');
-        const modelsContent = document.getElementById('models-content');
-        
-        if (adminContent) adminContent.style.display = 'none';
-        if (userContent) userContent.style.display = 'none';
-        if (adminPanel) adminPanel.style.display = 'none';
-        if (modelsContent) modelsContent.style.display = 'none';
-        
-        // 12. Réinitialiser les formulaires
-        const forms = ['loginForm', 'registerForm'];
-        forms.forEach(formId => {
-            const form = document.getElementById(formId);
-            if (form) form.reset();
-        });
-        
-        // 13. Vider les tableaux
-        const tableaux = [
-            'tableauDossiers',
-            'tableauDossiersAdmin',
-            'tableauEtudiants',
-            'tableauRestrictions',
-            'tableauUtilisateurs',
-            'tableauFacultes',
-            'tableauFilieres',
-            'tableauTypeBacs',
-            'tableauDiplomes'
-        ];
-        
-        tableaux.forEach(tableauId => {
-            const tbody = document.getElementById(tableauId);
-            if (tbody) tbody.innerHTML = '';
-        });
-        
-        // ✅ CORRECTION : Afficher la page d'accueil ET le contenu area
-        const pageAccueil = document.getElementById('accueil');
-        if (pageAccueil) {
-            pageAccueil.classList.add('active');
-            pageAccueil.style.display = 'block';
-        }
-        
-        const contentArea = document.querySelector('.content-area');
-        if (contentArea) {
-            contentArea.style.display = 'block';
-        }
-        
-        // Réinitialiser le scroll et overflow
-        document.body.style.overflow = '';
-        document.documentElement.scrollTop = 0;
-        
-        UIHelpers.showSuccess('✅ Déconnexion réussie ! À bientôt 👋');
-        
-        console.log('✅ Déconnexion terminée avec succès');
+        // ⭐ ACTUALISATION AUTOMATIQUE DE LA PAGE
+        setTimeout(() => {
+            window.location.reload();
+        }, 800); // Petit délai pour que l'utilisateur voit le message
         
     } catch (error) {
         console.error('❌ Erreur lors de la déconnexion:', error);
+        // En cas d'erreur, forcer quand même l'actualisation
         window.location.reload();
     }
 }
