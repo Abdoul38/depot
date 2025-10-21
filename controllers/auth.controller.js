@@ -127,6 +127,7 @@ exports.getProfile = async (req, res) => {
 };
 
 // Mettre à jour le profil
+// Mettre à jour le profil
 exports.updateProfile = async (req, res) => {
     try {
         const { nom, email, telephone } = req.body;
