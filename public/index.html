@@ -975,14 +975,100 @@ document.addEventListener('click', (e) => {
         });
 
         // =================== NAVIGATION ===================
-        function navigateTo(pageId) {
-            // Masquer toutes les pages
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+     // 🔧 CORRECTION NAVIGATETO COMPLÈTE - À remplacer dans index.html
+
+function navigateTo(pageId) {
+    console.log('📄 Navigation vers:', pageId);
+    
+    const isAdmin = apiClient?.currentUser?.role === 'admin';
+    const isLoggedIn = apiClient?.token && apiClient?.currentUser;
+    
+    // ✅ CAS SPÉCIAL 1 : PROFIL (besoin de chercher dans user-content ou admin-content)
+    if (pageId === 'profil') {
+        console.log('👤 Navigation PROFIL');
+        
+        if (!isLoggedIn) {
+            console.warn('⚠️ Non connecté');
+            navigateTo('connexion');
+            return;
+        }
+        
+        // Masquer toutes les pages
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        
+        let profilPage = null;
+        
+        if (isAdmin) {
+            // Chercher dans admin-content
+            const adminContent = document.getElementById('admin-content');
+            if (adminContent) {
+                profilPage = adminContent.querySelector('#profil');
+            }
+        } else {
+            // Chercher dans user-content
+            const userContent = document.getElementById('user-content');
+            if (userContent) {
+                profilPage = userContent.querySelector('#profil');
+            }
+        }
+        
+        if (profilPage) {
+            profilPage.classList.add('active');
+            console.log('✅ Profil affiché');
             
-            // Afficher la page demandée
-            const page = document.getElementById(pageId);
+            // Mettre à jour le menu actif
+            document.querySelectorAll('.menu-item').forEach(item => {
+                item.classList.remove('active');
+                if (item.getAttribute('onclick')?.includes('profil')) {
+                    item.classList.add('active');
+                }
+            });
+            
+            // Charger les données
+            setTimeout(() => {
+                if (typeof chargerProfil === 'function') {
+                    chargerProfil();
+                }
+            }, 100);
+            return;
+        } else {
+            console.error('❌ Page profil introuvable');
+            UIHelpers.showError('Page profil introuvable');
+            return;
+        }
+    }
+    
+    // ✅ CAS SPÉCIAL 2 : PAGES ADMIN (dans admin-content)
+    const pagesAdmin = [
+        'gestionUtilisateurs',
+        'gestionDossiers',
+        'gestionEtudiants',
+        'configInscription',
+        'gestionFormations',
+        'statistiques',
+        'importExport',
+        'adminPanel'
+    ];
+    
+    if (pagesAdmin.includes(pageId)) {
+        console.log('🔐 Page admin:', pageId);
+        
+        if (!isLoggedIn || !isAdmin) {
+            console.warn('⚠️ Accès refusé');
+            navigateTo('connexion');
+            return;
+        }
+        
+        // Masquer toutes les pages
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        
+        // Chercher dans admin-content
+        const adminContent = document.getElementById('admin-content');
+        if (adminContent) {
+            const page = adminContent.querySelector('#' + pageId);
             if (page) {
                 page.classList.add('active');
+                console.log('✅ Page admin affichée:', pageId);
                 
                 // Mettre à jour le menu actif
                 document.querySelectorAll('.menu-item').forEach(item => {
@@ -992,18 +1078,160 @@ document.addEventListener('click', (e) => {
                     }
                 });
                 
-                // Charger les données automatiquement
-                setTimeout(() => chargerDonneesPage(pageId), 100);
+                // Charger les données
+                setTimeout(() => chargerDonneesPageSecurisee(pageId), 100);
+                return;
             }
-            if (pageId === 'statistiques') {
-        setTimeout(() => {
-            console.log('🔄 Recharge stats après navigation');
-            if (typeof chargerTableauBordStats === 'function') {
-                chargerTableauBordStats();
+        }
+        
+        console.error('❌ Page admin introuvable:', pageId);
+        UIHelpers.showError('Page introuvable');
+        return;
+    }
+    
+    // ✅ CAS SPÉCIAL 3 : PAGES USER (dans user-content)
+    const pagesUser = ['mesDossiers', 'nouveauDepot'];
+    
+    if (pagesUser.includes(pageId)) {
+        console.log('👤 Page utilisateur:', pageId);
+        
+        if (!isLoggedIn) {
+            console.warn('⚠️ Non connecté');
+            navigateTo('connexion');
+            return;
+        }
+        
+        // Masquer toutes les pages
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        
+        // Chercher dans user-content
+        const userContent = document.getElementById('user-content');
+        if (userContent) {
+            const page = userContent.querySelector('#' + pageId);
+            if (page) {
+                page.classList.add('active');
+                console.log('✅ Page user affichée:', pageId);
+                
+                // Mettre à jour le menu actif
+                document.querySelectorAll('.menu-item').forEach(item => {
+                    item.classList.remove('active');
+                    if (item.getAttribute('onclick')?.includes(pageId)) {
+                        item.classList.add('active');
+                    }
+                });
+                
+                // Charger les données
+                setTimeout(() => chargerDonneesPageSecurisee(pageId), 100);
+                return;
             }
-        }, 200);
+        }
+        
+        console.error('❌ Page user introuvable:', pageId);
+        UIHelpers.showError('Page introuvable');
+        return;
+    }
+    
+    // ✅ CAS NORMAL : PAGES RACINE (accueil, connexion, inscription, dashboard, etc.)
+    console.log('📄 Page normale:', pageId);
+    
+    // Masquer toutes les pages
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    
+    // Chercher la page à la racine
+    const targetPage = document.getElementById(pageId);
+    
+    if (!targetPage) {
+        console.error('❌ Page non trouvée:', pageId);
+        UIHelpers.showError('Page introuvable');
+        return;
+    }
+    
+    // Afficher la page
+    targetPage.classList.add('active');
+    console.log('✅ Page affichée:', pageId);
+    
+    // Mettre à jour le menu actif
+    document.querySelectorAll('.menu-item').forEach(item => {
+        item.classList.remove('active');
+        if (item.getAttribute('onclick')?.includes(pageId)) {
+            item.classList.add('active');
+        }
+    });
+    
+    // Mettre à jour l'UI générale
+    if (typeof updateUI === 'function') {
+        updateUI();
+    }
+    
+    // Charger les données de la page
+    setTimeout(() => chargerDonneesPageSecurisee(pageId), 50);
+}
+
+// 🔧 FONCTION AUXILIAIRE : Charger données page de manière sécurisée
+async function chargerDonneesPageSecurisee(pageId) {
+    console.log('📊 Chargement données pour:', pageId);
+    
+    try {
+        // Mapping des pages vers leurs fonctions de chargement
+        const chargeurs = {
+            // Pages admin
+            'gestionUtilisateurs': () => typeof chargerUtilisateurs === 'function' && chargerUtilisateurs(),
+            'gestionDossiers': () => typeof chargerDossiersAdmin === 'function' && chargerDossiersAdmin(),
+            'gestionEtudiants': () => typeof rechercherEtudiants === 'function' && rechercherEtudiants(),
+            'configInscription': () => {
+                if (typeof chargerConfigInscription === 'function') chargerConfigInscription();
+                if (typeof chargerRestrictions === 'function') chargerRestrictions();
+                if (typeof chargerStatutGlobalInscriptions === 'function') chargerStatutGlobalInscriptions();
+            },
+            'gestionFormations': () => typeof chargerFacultes === 'function' && chargerFacultes(),
+            'statistiques': () => typeof chargerTableauBordStats === 'function' && chargerTableauBordStats(),
+            
+            // Pages user
+            'mesDossiers': () => typeof chargerMesDossiers === 'function' && chargerMesDossiers(),
+            'profil': () => typeof chargerProfil === 'function' && chargerProfil(),
+            
+            // Dashboard
+            'dashboard': () => typeof chargerDashboard === 'function' && chargerDashboard()
+        };
+        
+        const chargeur = chargeurs[pageId];
+        
+        if (chargeur) {
+            console.log('⚙️ Exécution chargeur pour:', pageId);
+            const result = chargeur();
+            
+            // Si c'est une promesse, l'attendre
+            if (result && typeof result.then === 'function') {
+                await result;
+            }
+            
+            console.log('✅ Données chargées pour:', pageId);
+        } else {
+            console.log('ℹ️ Pas de chargeur pour:', pageId);
+        }
+        
+    } catch (error) {
+        console.error('❌ Erreur chargement données:', error);
+        // Ne pas bloquer la navigation
     }
 }
+
+// 🔧 FONCTION POUR FERMER LE SIDEBAR MOBILE
+function closeMobileSidebar() {
+    const sidebar = document.getElementById('modernSidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    
+    if (sidebar) sidebar.classList.remove('active');
+    if (overlay) overlay.classList.remove('active');
+    document.body.style.overflow = '';
+}
+
+// Export global
+window.navigateTo = navigateTo;
+window.chargerDonneesPageSecurisee = chargerDonneesPageSecurisee;
+window.closeMobileSidebar = closeMobileSidebar;
+
+console.log('✅ Navigation corrigée - toutes les pages fonctionnelles');
         
 async function telechargerDocument(applicationId, documentType) {
     try {
