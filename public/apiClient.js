@@ -5687,13 +5687,6 @@ window.showPage = function(pageId) {
 console.log('✅ Système de filtrage des filières par type de bac initialisé');
 
 // Modifier aussi la structure HTML du résumé dans index.html
-
-// Gestion des erreurs globales
-window.addEventListener('unhandledrejection', (event) => {
-    console.error('Erreur non gérée:', event.reason);
-    UIHelpers.showError('Une erreur inattendue s\'est produite');
-});
-
 // Export des utilitaires
 window.apiClient = apiClient;
 window.UIHelpers = UIHelpers;
