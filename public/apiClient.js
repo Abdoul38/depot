@@ -2124,9 +2124,20 @@ class PerformanceMonitor {
 const perfMonitor = new PerformanceMonitor();
 
 // Processus de dépôt de dossier
+// Améliorer la fonction startApplicationProcess
 function startApplicationProcess() {
+    console.log('🚀 Démarrage du processus de dépôt...');
+    
     currentApplicationData = {};
     showPage('etape1');
+    
+    // ✅ Charger immédiatement les types de bac
+    setTimeout(() => {
+        if (typeof chargerFilieresParTypeBac === 'function') {
+            console.log('📚 Chargement forcé des types de bac...');
+            chargerFilieresParTypeBac();
+        }
+    }, 500);
 }
 
 async function nextStep(event, nextStepNumber) {
@@ -4953,41 +4964,66 @@ function supprimerDocument(inputId) {
 // Modifier la fonction afficherResume pour inclure tous les détails
 
 // 1. Ajouter dans apiClient.js - Nouvelle fonction pour charger les filières filtrées
+// Fonction améliorée pour charger les types de bac
 async function chargerFilieresParTypeBac() {
     try {
-        // Charger d'abord les types de bac disponibles
+        console.log('📚 Chargement des types de bac...');
+        UIHelpers.showLoading(true);
+        
+        // Charger les types de bac disponibles
         const responseTypeBacs = await apiClient.getTypeBacsPublic();
         const typeBacs = responseTypeBacs.typeBacs || [];
         
+        console.log('✅ Types de bac reçus:', typeBacs);
+        
         // Remplir le select des types de bac
         const selectTypeBac = document.getElementById('typeBac');
-        if (selectTypeBac) {
-            // Sauvegarder la valeur actuelle
-            const currentValue = selectTypeBac.value;
-            
-            // Vider et remplir le select
-            selectTypeBac.innerHTML = '<option value="">Sélectionner un type de bac...</option>';
-            
-            typeBacs.forEach(typeBac => {
-                const option = document.createElement('option');
-                option.value = typeBac.nom;
-                option.textContent = `${typeBac.nom} - ${typeBac.libelle}`;
-                selectTypeBac.appendChild(option);
-            });
-            
-            // Restaurer la valeur si elle existe
-            if (currentValue) {
-                selectTypeBac.value = currentValue;
-            }
-            
-            // Ajouter l'événement de changement pour filtrer les filières
-            selectTypeBac.addEventListener('change', function() {
-                filtrerFilieresParBac(this.value);
-            });
+        if (!selectTypeBac) {
+            console.warn('⚠️ Élément typeBac introuvable');
+            return;
         }
         
+        // Sauvegarder la valeur actuelle
+        const currentValue = selectTypeBac.value;
+        
+        // Vider et remplir le select
+        selectTypeBac.innerHTML = '<option value="">Sélectionner un type de bac...</option>';
+        
+        if (typeBacs.length === 0) {
+            selectTypeBac.innerHTML = '<option value="">Aucun type de bac disponible</option>';
+            UIHelpers.showWarning('Aucun type de bac disponible pour le moment');
+            return;
+        }
+        
+        typeBacs.forEach(typeBac => {
+            const option = document.createElement('option');
+            option.value = typeBac.nom;
+            option.textContent = `${typeBac.nom} - ${typeBac.libelle}`;
+            selectTypeBac.appendChild(option);
+        });
+        
+        // Restaurer la valeur si elle existe
+        if (currentValue) {
+            selectTypeBac.value = currentValue;
+        }
+        
+        // Ajouter l'événement de changement pour filtrer les filières (une seule fois)
+        // Supprimer les anciens listeners
+        const newSelect = selectTypeBac.cloneNode(true);
+        selectTypeBac.parentNode.replaceChild(newSelect, selectTypeBac);
+        
+        // Ajouter le nouveau listener
+        document.getElementById('typeBac').addEventListener('change', function() {
+            filtrerFilieresParBac(this.value);
+        });
+        
+        console.log('✅ Types de bac chargés avec succès');
+        
     } catch (error) {
-        console.error('Erreur chargement types de bac:', error);
+        console.error('❌ Erreur chargement types de bac:', error);
+        UIHelpers.showError('Erreur lors du chargement des types de bac');
+    } finally {
+        UIHelpers.showLoading(false);
     }
 }
 
@@ -5675,12 +5711,47 @@ async function soumettreModificationDossier(event) {
 }
 
 const originalShowPage = window.showPage;
+// Modifier la fonction showPage existante
+const originalShowPageFunction = window.showPage;
 window.showPage = function(pageId) {
-    originalShowPage.call(this, pageId);
+    // Appeler la fonction originale
+    if (typeof originalShowPageFunction === 'function') {
+        originalShowPageFunction.call(this, pageId);
+    }
     
+    // ✅ Charger automatiquement les types de bac quand on affiche l'étape 1
+    if (pageId === 'etape1') {
+        console.log('🎯 Étape 1 activée - Chargement des types de bac...');
+        
+        // Utiliser setTimeout pour s'assurer que le DOM est prêt
+        setTimeout(() => {
+            if (typeof chargerFilieresParTypeBac === 'function') {
+                chargerFilieresParTypeBac();
+            } else {
+                console.error('❌ Fonction chargerFilieresParTypeBac non trouvée');
+            }
+        }, 300);
+    }
+    
+    // ✅ Charger aussi pour etape2 (rappel du type de bac)
     if (pageId === 'etape2') {
-        // Configurer les événements pour éviter les doublons de choix
-        setTimeout(() => configurerEvenementsChoixUniques(), 100);
+        setTimeout(() => {
+            const typeBac = document.getElementById('typeBac')?.value;
+            if (typeBac) {
+                // Afficher le rappel
+                const rappelDiv = document.getElementById('rappelTypeBac');
+                const typeBacText = document.getElementById('typeBacSelectionne');
+                if (rappelDiv && typeBacText) {
+                    typeBacText.textContent = typeBac;
+                    rappelDiv.style.display = 'block';
+                }
+                
+                // Charger les filières compatibles
+                if (typeof filtrerFilieresParBac === 'function') {
+                    filtrerFilieresParBac(typeBac);
+                }
+            }
+        }, 300);
     }
 };
 
@@ -5709,3 +5780,64 @@ window.configurerEvenementsChoixUniquesModification = configurerEvenementsChoixU
 window.chargerProfil = chargerProfil;
 window.updateProfile = updateProfile;
 window.changePassword = changePassword;
+window.chargerFilieresParTypeBac = chargerFilieresParTypeBac;
+window.filtrerFilieresParBac = filtrerFilieresParBac;
+window.validerChoixFilieres = validerChoixFilieres;
+window.configurerEvenementsChoixUniques = configurerEvenementsChoixUniques;
+window.startApplicationProcess = startApplicationProcess;
+
+// ✅ OBSERVER POUR ÉTAPE 1 - Solution de secours robuste
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🔧 Initialisation de l\'observer pour étape 1...');
+    
+    // Attendre que le DOM soit complètement chargé
+    setTimeout(() => {
+        const etape1 = document.getElementById('etape1');
+        
+        if (!etape1) {
+            console.warn('⚠️ Étape 1 non trouvée dans le DOM');
+            return;
+        }
+        
+        console.log('✅ Observer configuré pour étape 1');
+        
+        // Créer un observer pour détecter quand l'étape 1 devient active
+        const observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                    const target = mutation.target;
+                    
+                    if (target.id === 'etape1' && target.classList.contains('active')) {
+                        console.log('🎯 Étape 1 devient active - Chargement types de bac...');
+                        
+                        // Attendre un peu pour s'assurer que le DOM est stable
+                        setTimeout(() => {
+                            if (typeof chargerFilieresParTypeBac === 'function') {
+                                chargerFilieresParTypeBac();
+                            } else {
+                                console.error('❌ Fonction chargerFilieresParTypeBac introuvable');
+                            }
+                        }, 500);
+                    }
+                }
+            });
+        });
+        
+        // Observer les changements de classe sur étape 1
+        observer.observe(etape1, {
+            attributes: true,
+            attributeFilter: ['class']
+        });
+        
+        // ✅ Si étape 1 est déjà active au chargement, charger immédiatement
+        if (etape1.classList.contains('active')) {
+            console.log('🎯 Étape 1 déjà active - Chargement immédiat...');
+            setTimeout(() => {
+                if (typeof chargerFilieresParTypeBac === 'function') {
+                    chargerFilieresParTypeBac();
+                }
+            }, 1000);
+        }
+        
+    }, 1000);
+});
