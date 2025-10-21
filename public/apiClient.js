@@ -4002,12 +4002,34 @@ async function genererQuitusAvecDonnees(application) {
       await new Promise(resolve => script.onload = resolve);
     }
 
-    // Charger la bibliothèque QR Code
+    // ✅ CORRECTION : Charger QRCode.js depuis un CDN fiable
     if (typeof QRCode === "undefined") {
+      console.log('📦 Chargement bibliothèque QR Code...');
+      
       const qrScript = document.createElement("script");
-      qrScript.src = "https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js";
+      // ✅ Utiliser un CDN plus fiable
+      qrScript.src = "https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js";
+      qrScript.crossOrigin = "anonymous";
+      
       document.head.appendChild(qrScript);
-      await new Promise(resolve => qrScript.onload = resolve);
+      
+      await new Promise((resolve, reject) => {
+        qrScript.onload = () => {
+          console.log('✅ QRCode.js chargé avec succès');
+          resolve();
+        };
+        qrScript.onerror = (error) => {
+          console.error('❌ Erreur chargement QRCode.js:', error);
+          reject(error);
+        };
+        
+        // Timeout de sécurité
+        setTimeout(() => {
+          if (typeof QRCode === "undefined") {
+            reject(new Error('Timeout chargement QRCode.js'));
+          }
+        }, 10000);
+      });
     }
 
     const { jsPDF } = window.jspdf;
@@ -4239,59 +4261,138 @@ async function genererQuitusAvecDonnees(application) {
 
     // ========== QR CODE (OPTIMISÉ) ==========
     const qrX = 160;
-    const qrY = y;
+    const qrY = 75; // Position après la photo
     const qrSize = 32;
 
     try {
+      console.log('🔲 Génération QR Code...');
+      
+      // ✅ Données du QR Code (simplifiées pour la fiabilité)
       const qrData = JSON.stringify({
         numero_dossier: application.numero_dossier || "En attente",
         numero_depot: application.numero_depot || "En attente",
         nom: application.nom,
         prenom: application.prenom,
-        date_naissance: application.date_naissance,
-        email: application.email
+        email: application.email,
+        date: new Date().toISOString()
       });
 
+      // ✅ Créer un conteneur temporaire MASQUÉ
       const qrContainer = document.createElement('div');
-      qrContainer.style.display = 'none';
+      qrContainer.id = 'qr-temp-container';
+      qrContainer.style.cssText = `
+        position: fixed;
+        top: -9999px;
+        left: -9999px;
+        width: 200px;
+        height: 200px;
+        background: white;
+        z-index: -1;
+      `;
       document.body.appendChild(qrContainer);
 
+      console.log('📝 Données QR:', qrData.substring(0, 100) + '...');
+
+      // ✅ Générer le QR Code avec options robustes
       const qrCode = new QRCode(qrContainer, {
         text: qrData,
-        width: 100,
-        height: 100,
+        width: 200,
+        height: 200,
         colorDark: "#000000",
         colorLight: "#ffffff",
         correctLevel: QRCode.CorrectLevel.H
       });
 
-      await new Promise(resolve => setTimeout(resolve, 500));
+      console.log('⏳ Attente génération QR Code...');
 
-      const qrImage = qrContainer.querySelector('img');
-      if (qrImage && qrImage.src) {
-        doc.addImage(qrImage.src, 'PNG', qrX, qrY, qrSize, qrSize);
+      // ✅ CRITIQUE : Attendre que l'image soit générée
+      await new Promise((resolve, reject) => {
+        let attempts = 0;
+        const maxAttempts = 50; // 5 secondes max
         
+        const checkQR = setInterval(() => {
+          attempts++;
+          
+          const qrImage = qrContainer.querySelector('img');
+          const qrCanvas = qrContainer.querySelector('canvas');
+          
+          if (qrImage && qrImage.src && qrImage.complete) {
+            console.log('✅ QR Code image trouvée');
+            clearInterval(checkQR);
+            resolve(qrImage);
+          } else if (qrCanvas) {
+            console.log('✅ QR Code canvas trouvé, conversion en image...');
+            
+            // Convertir canvas en image
+            const img = new Image();
+            img.onload = () => {
+              clearInterval(checkQR);
+              resolve(img);
+            };
+            img.onerror = () => {
+              clearInterval(checkQR);
+              reject(new Error('Erreur conversion canvas'));
+            };
+            img.src = qrCanvas.toDataURL('image/png');
+          } else if (attempts >= maxAttempts) {
+            clearInterval(checkQR);
+            reject(new Error('Timeout génération QR Code'));
+          }
+        }, 100);
+      });
+
+      // ✅ Récupérer l'image générée
+      const qrImage = qrContainer.querySelector('img') || qrContainer.querySelector('canvas');
+      
+      if (qrImage) {
+        let qrDataUrl;
+        
+        if (qrImage.tagName === 'CANVAS') {
+          qrDataUrl = qrImage.toDataURL('image/png');
+        } else {
+          qrDataUrl = qrImage.src;
+        }
+        
+        console.log('📸 QR Code généré, ajout au PDF...');
+        
+        // ✅ Ajouter au PDF
+        doc.addImage(qrDataUrl, 'PNG', qrX, qrY, qrSize, qrSize);
+        
+        // Cadre autour du QR Code
         doc.setDrawColor(0, 0, 0);
         doc.setLineWidth(0.3);
         doc.rect(qrX, qrY, qrSize, qrSize);
         
+        // Texte sous le QR Code
         doc.setFontSize(7);
         doc.setTextColor(0, 0, 0);
         doc.text('Scanner pour vérifier', qrX + qrSize/2, qrY + qrSize + 3, { align: 'center' });
         
-        console.log('✅ QR Code ajouté');
+        console.log('✅ QR Code ajouté au PDF avec succès');
+      } else {
+        throw new Error('Image QR Code introuvable');
       }
 
+      // ✅ Nettoyer le conteneur temporaire
       document.body.removeChild(qrContainer);
 
     } catch (error) {
-      console.warn('Erreur QR Code:', error);
+      console.error('❌ Erreur génération QR Code:', error);
+      console.error('Stack:', error.stack);
+      
+      // ✅ Afficher un placeholder en cas d'erreur
       doc.setDrawColor(0, 0, 0);
       doc.setLineWidth(0.3);
       doc.rect(qrX, qrY, qrSize, qrSize);
+      
       doc.setFontSize(8);
       doc.setTextColor(150, 150, 150);
       doc.text('QR CODE', qrX + qrSize/2, qrY + qrSize/2, { align: 'center' });
+      
+      doc.setFontSize(6);
+      doc.text('Non disponible', qrX + qrSize/2, qrY + qrSize/2 + 4, { align: 'center' });
+      
+      console.log('⚠️ Placeholder QR Code ajouté');
     }
 
     // ========== SECTION DIPLÔME (OPTIMISÉ) ==========
