@@ -2131,13 +2131,11 @@ function startApplicationProcess() {
     currentApplicationData = {};
     showPage('etape1');
     
-    // ✅ Charger immédiatement les types de bac
+    // ✅ CORRECTION : Charger immédiatement les types de bac avec un délai court
     setTimeout(() => {
-        if (typeof chargerFilieresParTypeBac === 'function') {
-            console.log('📚 Chargement forcé des types de bac...');
-            chargerFilieresParTypeBac();
-        }
-    }, 500);
+        console.log('📚 Chargement automatique des types de bac...');
+        chargerFilieresParTypeBac();
+    }, 300);
 }
 
 async function nextStep(event, nextStepNumber) {
@@ -5719,39 +5717,33 @@ window.showPage = function(pageId) {
         originalShowPageFunction.call(this, pageId);
     }
     
-    // ✅ Charger automatiquement les types de bac quand on affiche l'étape 1
+    // ✅ Si on affiche etape1, charger automatiquement les types de bac
     if (pageId === 'etape1') {
         console.log('🎯 Étape 1 activée - Chargement des types de bac...');
         
-        // Utiliser setTimeout pour s'assurer que le DOM est prêt
+        // Attendre que le DOM soit prêt
         setTimeout(() => {
-            if (typeof chargerFilieresParTypeBac === 'function') {
-                chargerFilieresParTypeBac();
-            } else {
-                console.error('❌ Fonction chargerFilieresParTypeBac non trouvée');
-            }
-        }, 300);
-    }
-    
-    // ✅ Charger aussi pour etape2 (rappel du type de bac)
-    if (pageId === 'etape2') {
-        setTimeout(() => {
-            const typeBac = document.getElementById('typeBac')?.value;
-            if (typeBac) {
-                // Afficher le rappel
-                const rappelDiv = document.getElementById('rappelTypeBac');
-                const typeBacText = document.getElementById('typeBacSelectionne');
-                if (rappelDiv && typeBacText) {
-                    typeBacText.textContent = typeBac;
-                    rappelDiv.style.display = 'block';
-                }
+            const typeBacField = document.getElementById('typeBac');
+            
+            if (typeBacField) {
+                console.log('✅ Champ typeBac trouvé, chargement...');
                 
-                // Charger les filières compatibles
-                if (typeof filtrerFilieresParBac === 'function') {
-                    filtrerFilieresParBac(typeBac);
+                if (typeof chargerFilieresParTypeBac === 'function') {
+                    chargerFilieresParTypeBac();
+                } else {
+                    console.error('❌ Fonction chargerFilieresParTypeBac non disponible');
                 }
+            } else {
+                console.warn('⚠️ Champ typeBac non trouvé, nouvelle tentative...');
+                
+                // Réessayer après un délai plus long
+                setTimeout(() => {
+                    if (typeof chargerFilieresParTypeBac === 'function') {
+                        chargerFilieresParTypeBac();
+                    }
+                }, 500);
             }
-        }, 300);
+        }, 200);
     }
 };
 
@@ -5790,6 +5782,26 @@ window.startApplicationProcess = startApplicationProcess;
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🔧 Initialisation de l\'observer pour étape 1...');
     
+    // Fonction de chargement centralisée
+    function chargerTypeBacEtape1() {
+        const typeBacField = document.getElementById('typeBac');
+        
+        if (!typeBacField) {
+            console.warn('⚠️ Champ typeBac non encore disponible');
+            return false;
+        }
+        
+        console.log('✅ Chargement des types de bac...');
+        
+        if (typeof chargerFilieresParTypeBac === 'function') {
+            chargerFilieresParTypeBac();
+            return true;
+        } else {
+            console.error('❌ Fonction chargerFilieresParTypeBac non disponible');
+            return false;
+        }
+    }
+    
     // Attendre que le DOM soit complètement chargé
     setTimeout(() => {
         const etape1 = document.getElementById('etape1');
@@ -5812,12 +5824,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         
                         // Attendre un peu pour s'assurer que le DOM est stable
                         setTimeout(() => {
-                            if (typeof chargerFilieresParTypeBac === 'function') {
-                                chargerFilieresParTypeBac();
-                            } else {
-                                console.error('❌ Fonction chargerFilieresParTypeBac introuvable');
-                            }
-                        }, 500);
+                            chargerTypeBacEtape1();
+                        }, 300);
                     }
                 }
             });
@@ -5833,11 +5841,37 @@ document.addEventListener('DOMContentLoaded', function() {
         if (etape1.classList.contains('active')) {
             console.log('🎯 Étape 1 déjà active - Chargement immédiat...');
             setTimeout(() => {
-                if (typeof chargerFilieresParTypeBac === 'function') {
-                    chargerFilieresParTypeBac();
-                }
-            }, 1000);
+                chargerTypeBacEtape1();
+            }, 500);
         }
         
-    }, 1000);
+    }, 500);
 });
+function forceChargerTypeBac() {
+    console.log('🔄 Chargement forcé des types de bac...');
+    
+    const etape1 = document.getElementById('etape1');
+    const typeBacField = document.getElementById('typeBac');
+    
+    if (!etape1 || !etape1.classList.contains('active')) {
+        console.warn('⚠️ Étape 1 non active');
+        return false;
+    }
+    
+    if (!typeBacField) {
+        console.warn('⚠️ Champ typeBac non trouvé');
+        return false;
+    }
+    
+    if (typeof chargerFilieresParTypeBac === 'function') {
+        chargerFilieresParTypeBac();
+        return true;
+    } else {
+        console.error('❌ Fonction chargerFilieresParTypeBac non disponible');
+        return false;
+    }
+}
+
+// Export global
+window.forceChargerTypeBac = forceChargerTypeBac;
+console.log('✅ Système de chargement automatique des types de bac initialisé');
