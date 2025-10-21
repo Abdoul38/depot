@@ -111,9 +111,9 @@ class ApiClient {
         const requestPromise = fetch(url, config)
             .then(async response => {
                 if (response.status === 401) {
-                    console.warn('⚠️ Session expirée');
+                    console.warn('⚠️ Probleme de connexion, verifier votre connexion');
                     this.logout();
-                    throw new Error('Session expirée');
+                    throw new Error('Login ou mot de passe incorrect');
                 }
                 
                 if (!response.ok) {
@@ -274,6 +274,7 @@ async importerEtudiants(fichier) {
     
     return response.json();
 }
+
 // Télécharger le modèle Excel
 async telechargerModeleExcel() {
     try {
@@ -975,25 +976,26 @@ async getStatsByTypeBac() {
 }
     // Méthodes pour le profil
     async getProfile() {
-        return this.request('/profile');
-    }
+    return this.request('/profile');
+}
 
-    async updateProfile(profileData) {
-        return this.request('/profile', {
-            method: 'PUT',
-            body: profileData
-        });
-    }
+async updateProfile(profileData) {
+    return this.request('/auth/profile', {
+        method: 'PUT',
+        body: JSON.stringify(profileData)
+    });
+}
+
+async changePassword(passwordData) {
+    return this.request('/auth/change-password', {
+        method: 'PUT',
+        body: JSON.stringify(passwordData)
+    });
+}
 // Dans la classe ApiClient
 async searchApplications(query) {
     return this.request(`/admin/applications/search?q=${encodeURIComponent(query)}`);
 }
-    async changePassword(passwordData) {
-        return this.request('/change-password', {
-            method: 'PUT',
-            body: passwordData
-        });
-    }
 
     // Méthodes administrateur
     async getUsers() {
@@ -1449,13 +1451,14 @@ function showPage(pageId) {
 }
 
 // ✅ Fonction SÉCURISÉE de chargement
+// ✅ Fonction SÉCURISÉE de chargement
 function chargerDonneesPageSecurisee(pageId) {
     try {
         console.log('🔍 Tentative chargement pour:', pageId);
         
         // ✅ Vérifier que l'utilisateur est connecté pour les pages protégées
         const pagesProtegees = ['profil', 'mesDossiers', 'gestionUtilisateurs', 
-                                'gestionDossiers', 'gestionEtudiants', 'configInscription', 
+                                'gestionDossiers', 'gestionEtudiants', 'nouveauDossiers', 'configInscription', 
                                 'statistiques', 'gestionFormations', 'adminPanel'];
         
         if (pagesProtegees.includes(pageId)) {
@@ -1470,17 +1473,21 @@ function chargerDonneesPageSecurisee(pageId) {
         // ✅ Mapping des chargeurs avec vérifications
         const chargeurs = {
             'profil': () => {
+                console.log('🔄 Démarrage chargerProfil...');
                 if (typeof chargerProfil === 'function') {
-                    chargerProfil();
+                    return chargerProfil();
                 } else {
-                    console.warn('⚠️ chargerProfil non disponible');
-                    chargerProfilFallback();
+                    console.error('❌ chargerProfil non disponible');
+                    // Essayer le fallback
+                    if (typeof chargerProfilFallback === 'function') {
+                        return chargerProfilFallback();
+                    }
                 }
             },
             
             'mesDossiers': () => {
                 if (typeof chargerMesDossiers === 'function') {
-                    chargerMesDossiers();
+                    return chargerMesDossiers();
                 } else {
                     console.warn('⚠️ chargerMesDossiers non disponible');
                 }
@@ -1488,7 +1495,7 @@ function chargerDonneesPageSecurisee(pageId) {
             
             'gestionUtilisateurs': () => {
                 if (typeof chargerUtilisateurs === 'function') {
-                    chargerUtilisateurs();
+                    return chargerUtilisateurs();
                 } else {
                     console.warn('⚠️ chargerUtilisateurs non disponible');
                 }
@@ -1496,7 +1503,7 @@ function chargerDonneesPageSecurisee(pageId) {
             
             'gestionDossiers': () => {
                 if (typeof chargerDossiersAdmin === 'function') {
-                    chargerDossiersAdmin();
+                    return chargerDossiersAdmin();
                 } else {
                     console.warn('⚠️ chargerDossiersAdmin non disponible');
                 }
@@ -1504,9 +1511,17 @@ function chargerDonneesPageSecurisee(pageId) {
             
             'gestionEtudiants': () => {
                 if (typeof chargerEtudiants === 'function') {
-                    chargerEtudiants();
+                    return chargerEtudiants();
                 } else {
                     console.warn('⚠️ chargerEtudiants non disponible');
+                }
+            },
+            
+            'nouveauDossiers': () => {
+                if (typeof startApplicationProcess === 'function') {
+                    return startApplicationProcess();
+                } else {
+                    console.warn('⚠️ startApplicationProcess non disponible');
                 }
             },
             
@@ -1533,9 +1548,9 @@ function chargerDonneesPageSecurisee(pageId) {
             
             'statistiques': () => {
                 if (typeof chargerTableauBordStats === 'function') {
-                    chargerTableauBordStats();
+                    return chargerTableauBordStats();
                 } else if (typeof chargerStatistiques === 'function') {
-                    chargerStatistiques();
+                    return chargerStatistiques();
                 } else {
                     console.warn('⚠️ Fonctions statistiques non disponibles');
                 }
@@ -1545,7 +1560,7 @@ function chargerDonneesPageSecurisee(pageId) {
                 if (typeof chargerFacultes === 'function') {
                     const activeTab = document.querySelector('.tab-content.active');
                     if (!activeTab || activeTab.id === 'facultes-tab') {
-                        chargerFacultes();
+                        return chargerFacultes();
                     }
                 } else {
                     console.warn('⚠️ chargerFacultes non disponible');
@@ -1568,17 +1583,24 @@ function chargerDonneesPageSecurisee(pageId) {
         const chargeur = chargeurs[pageId];
         
         if (chargeur) {
-            console.log('✅ Chargement données:', pageId);
-            chargeur();
+            console.log('✅ Exécution chargeur pour:', pageId);
+            const result = chargeur();
+            
+            // Si le chargeur retourne une promesse, l'attendre
+            if (result && typeof result.then === 'function') {
+                result.catch(error => {
+                    console.error('❌ Erreur async dans chargeur:', error);
+                });
+            }
         } else {
             console.log('ℹ️ Aucun chargeur défini pour:', pageId);
         }
         
     } catch (error) {
         console.error('❌ Erreur chargement page:', error);
-        console.error('Stack:', error.stack);
+        console.error('📍 Stack:', error.stack);
         
-        // NE PAS afficher d'erreur à l'utilisateur si c'est juste un chargeur manquant
+        // Afficher l'erreur seulement si c'est critique
         if (error.message && !error.message.includes('is not a function')) {
             if (typeof UIHelpers !== 'undefined' && typeof UIHelpers.showError === 'function') {
                 UIHelpers.showError('Erreur lors du chargement de la page');
@@ -1586,6 +1608,232 @@ function chargerDonneesPageSecurisee(pageId) {
         }
     }
 }
+// 🔧 CORRECTION COMPLÈTE - À remplacer dans apiClient.js
+
+// ========== FONCTION PRINCIPALE CHARGEMENT PROFIL ==========
+// 📧 FONCTION PRINCIPALE CHARGEMENT PROFIL - VERSION CORRIGÉE ADMIN
+async function chargerProfil() {
+    try {
+        console.log('📄 === DÉBUT CHARGEMENT PROFIL ===');
+        
+        // ✅ ÉTAPE 1 : Vérifier que l'utilisateur est connecté
+        if (!apiClient || !apiClient.currentUser) {
+            console.error('❌ Aucun utilisateur connecté');
+            UIHelpers.showError('Vous devez être connecté');
+            showPage('connexion');
+            return;
+        }
+        
+        console.log('👤 Utilisateur actuel:', apiClient.currentUser);
+        
+        UIHelpers.showLoading(true);
+        
+        // ✅ ÉTAPE 2 : Récupérer les données utilisateur
+        let user = null;
+        
+        try {
+            console.log('🌐 Appel API getProfile...');
+            const response = await apiClient.getProfile();
+            user = response.user || response;
+            console.log('✅ Réponse API:', user);
+        } catch (error) {
+            console.warn('⚠️ API échouée, utilisation cache:', error.message);
+            user = apiClient.currentUser;
+        }
+        
+        // ✅ ÉTAPE 3 : Normaliser les données
+        const userData = {
+            nom: user.nom || user.prenom || '',
+            email: user.email || '',
+            telephone: user.telephone || ''
+            
+        };
+        
+        console.log('📋 Données normalisées:', userData);
+        
+        // ✅ ÉTAPE 4 : Déterminer le conteneur actif (ADMIN vs USER)
+        const isAdmin = apiClient.currentUser?.role === 'admin';
+        
+        let activeContainer = document;
+        
+        if (isAdmin) {
+            // Pour admin, chercher d'abord dans #user-content
+            const userContent = document.getElementById('user-content');
+            const profilPageInUserContent = userContent?.querySelector('#profil');
+            
+            if (profilPageInUserContent && profilPageInUserContent.classList.contains('active')) {
+                activeContainer = userContent;
+                console.log('📍 Conteneur actif: user-content (admin mode)');
+            } else {
+                // Sinon chercher dans admin-content
+                const adminContent = document.getElementById('admin-content');
+                const profilPageInAdminContent = adminContent?.querySelector('#profil');
+                
+                if (profilPageInAdminContent && profilPageInAdminContent.classList.contains('active')) {
+                    activeContainer = adminContent;
+                    console.log('📍 Conteneur actif: admin-content');
+                } else {
+                    console.log('📍 Conteneur actif: document (fallback)');
+                }
+            }
+        } else {
+            console.log('📍 Conteneur actif: document (utilisateur simple)');
+        }
+        
+        // ✅ ÉTAPE 5 : Chercher et remplir les champs
+        const fields = {
+            'profilNom': userData.nom,
+            'profilEmail': userData.email,
+            'profilTelephone': userData.telephone
+            
+        };
+        
+        let elementsRemplis = 0;
+        const elementsIntrouvables = [];
+        
+        Object.entries(fields).forEach(([fieldId, value]) => {
+            // Chercher dans le conteneur actif
+            const element = activeContainer.querySelector(`#${fieldId}`);
+            
+            if (element) {
+                // Remplir le champ avec la valeur
+                if (element.tagName === 'TEXTAREA') {
+                    element.textContent = value || '';
+                } else {
+                    element.value = value || '';
+                }
+                
+                elementsRemplis++;
+                console.log(`  ✅ ${fieldId} = "${value}"`);
+            } else {
+                elementsIntrouvables.push(fieldId);
+                console.warn(`  ❌ ${fieldId} INTROUVABLE`);
+            }
+        });
+        
+        // ✅ ÉTAPE 6 : Vérification finale
+        console.log('\n📊 RÉSULTAT FINAL:');
+        console.log(`  - Champs remplis: ${elementsRemplis}/${Object.keys(fields).length}`);
+        console.log(`  - Champs manquants: ${elementsIntrouvables.join(', ') || 'aucun'}`);
+        
+        if (elementsRemplis === 0) {
+            throw new Error('❌ Aucun champ trouvé ! La page profil n\'est pas chargée correctement.');
+        }
+        
+        if (elementsIntrouvables.length > 0) {
+            console.warn(`⚠️ ${elementsIntrouvables.length} champ(s) introuvable(s)`);
+        }
+        
+        console.log('✅ === PROFIL CHARGÉ AVEC SUCCÈS ===\n');
+        
+    } catch (error) {
+        console.error('❌ ERREUR CHARGEMENT PROFIL:', error);
+        console.error('🔍 Stack:', error.stack);
+        UIHelpers.showError('Erreur : ' + error.message);
+    } finally {
+        UIHelpers.showLoading(false);
+    }
+}
+
+// ========== FONCTION UPDATE PROFILE ==========
+async function updateProfile(event) {
+    event.preventDefault();
+    
+    try {
+        console.log('💾 Mise à jour profil...');
+        UIHelpers.showLoading(true);
+        
+        // Récupérer les valeurs des champs
+        const profileData = {
+            nom: document.getElementById('profilNom')?.value?.trim() || '',
+            email: document.getElementById('profilEmail')?.value?.trim() || '',
+            telephone: document.getElementById('profilTelephone')?.value?.trim() || '',
+            
+        };
+        
+        console.log('📤 Données à envoyer:', profileData);
+        
+        // Validation
+        if (!profileData.nom || !profileData.email || !profileData.telephone) {
+            throw new Error('Les champs Nom, Email et Téléphone sont obligatoires');
+        }
+        
+        // Appel API
+        const response = await apiClient.updateProfile(profileData);
+        
+        console.log('✅ Réponse API:', response);
+        
+        // Mettre à jour l'utilisateur courant avec les données retournées
+        if (response.user) {
+            apiClient.currentUser = response.user;
+            localStorage.setItem('currentUser', JSON.stringify(response.user));
+            console.log('💾 Cache mis à jour');
+        }
+        
+        UIHelpers.showSuccess('✅ Profil mis à jour avec succès !');
+        
+        // Recharger le profil pour vérifier
+        setTimeout(() => chargerProfil(), 500);
+        
+    } catch (error) {
+        console.error('❌ Erreur mise à jour profil:', error);
+        UIHelpers.showError(error.message || 'Erreur lors de la mise à jour du profil');
+    } finally {
+        UIHelpers.showLoading(false);
+    }
+}
+
+// ========== FONCTION CHANGE PASSWORD ==========
+async function changePassword(event) {
+    event.preventDefault();
+    
+    try {
+        console.log('🔒 Changement mot de passe...');
+        UIHelpers.showLoading(true);
+        
+        const passwordData = {
+            ancienMotDePasse: document.getElementById('ancienMotDePasse')?.value || '',
+            nouveauMotDePasse: document.getElementById('nouveauMotDePasse')?.value || ''
+        };
+        
+        const confirmNouveauMotDePasse = document.getElementById('confirmNouveauMotDePasse')?.value || '';
+        
+        // Validation
+        if (!passwordData.ancienMotDePasse || !passwordData.nouveauMotDePasse) {
+            throw new Error('Tous les champs sont obligatoires');
+        }
+        
+        if (passwordData.nouveauMotDePasse !== confirmNouveauMotDePasse) {
+            throw new Error('Les nouveaux mots de passe ne correspondent pas');
+        }
+        
+        if (passwordData.nouveauMotDePasse.length < 6) {
+            throw new Error('Le nouveau mot de passe doit contenir au moins 6 caractères');
+        }
+        
+        console.log('🔐 Envoi changement mot de passe...');
+        
+        await apiClient.changePassword(passwordData);
+        
+        UIHelpers.showSuccess('✅ Mot de passe changé avec succès !');
+        document.getElementById('motDePasseForm').reset();
+        
+    } catch (error) {
+        console.error('❌ Erreur changement mot de passe:', error);
+        UIHelpers.showError(error.message || 'Erreur lors du changement de mot de passe');
+    } finally {
+        UIHelpers.showLoading(false);
+    }
+}
+
+
+
+// ========== EXPORT GLOBAL ==========
+window.chargerProfil = chargerProfil;
+window.updateProfile = updateProfile;
+window.changePassword = changePassword;
+window.diagnostiquerProfilDetaille = diagnostiquerProfilDetaille;
+
 
 // ✅ Fonction fallback pour charger le profil
 async function chargerProfilFallback() {
@@ -3133,6 +3381,7 @@ function genererListeDocuments(documentsJson, applicationId, isAdmin = false) {
     }
 }
 
+
 // ✅ Version améliorée avec gestion Cloudinary native
 // ✅ Version améliorée avec gestion Cloudinary native
 async function telechargerDocumentModal(url, nomFichier, typeDocument) {
@@ -3308,28 +3557,58 @@ async function updateProfile(event) {
     event.preventDefault();
     
     try {
+        console.log('💾 Mise à jour profil...');
+        UIHelpers.showLoading(true);
         
+        // ✅ Déterminer le conteneur actif
+        const isAdmin = apiClient.currentUser?.role === 'admin';
+        let container = document;
         
-        const profileData = {
-            nom: document.getElementById('profilNom').value,
-            email: document.getElementById('profilEmail').value,
-            telephone: document.getElementById('profilTelephone').value
-        };
-        
-        await apiClient.updateProfile(profileData);
-        
-        // Mettre à jour l'utilisateur courant
-        if (apiClient.currentUser) {
-            apiClient.currentUser.nom = profileData.nom;
-            apiClient.currentUser.email = profileData.email;
-            apiClient.currentUser.telephone = profileData.telephone;
-            localStorage.setItem('currentUser', JSON.stringify(apiClient.currentUser));
+        if (isAdmin) {
+            const userContent = document.getElementById('user-content');
+            if (userContent?.querySelector('#profil.active')) {
+                container = userContent;
+            } else {
+                const adminContent = document.getElementById('admin-content');
+                if (adminContent?.querySelector('#profil.active')) {
+                    container = adminContent;
+                }
+            }
         }
         
-        UIHelpers.showSuccess('Profil mis à jour avec succès!');
+        // Récupérer les valeurs des champs
+        const profileData = {
+            nom: container.querySelector('#profilNom')?.value?.trim() || '',
+            email: container.querySelector('#profilEmail')?.value?.trim() || '',
+            telephone: container.querySelector('#profilTelephone')?.value?.trim() || '',
+        };
+        
+        console.log('📤 Données à envoyer:', profileData);
+        
+        // Validation
+        if (!profileData.nom || !profileData.email || !profileData.telephone) {
+            throw new Error('Les champs Nom, Email et Téléphone sont obligatoires');
+        }
+        
+        // Appel API
+        const response = await apiClient.updateProfile(profileData);
+        
+        console.log('✅ Réponse API:', response);
+        
+        // Mettre à jour l'utilisateur courant
+        if (response.user) {
+            apiClient.currentUser = response.user;
+            localStorage.setItem('currentUser', JSON.stringify(response.user));
+            console.log('💾 Cache mis à jour');
+        }
+        
+        UIHelpers.showSuccess('✅ Profil mis à jour avec succès !');
+        
+        // Recharger le profil
+        setTimeout(() => chargerProfil(), 500);
         
     } catch (error) {
-        console.error('Erreur mise à jour profil:', error);
+        console.error('❌ Erreur mise à jour profil:', error);
         UIHelpers.showError(error.message || 'Erreur lors de la mise à jour du profil');
     } finally {
         UIHelpers.showLoading(false);
@@ -3430,36 +3709,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// Fonction pour changer le mot de passe
-async function changePassword(event) {
-    event.preventDefault();
-    
-    try {
-        
-        
-        const passwordData = {
-            ancienMotDePasse: document.getElementById('ancienMotDePasse').value,
-            nouveauMotDePasse: document.getElementById('nouveauMotDePasse').value
-        };
-        
-        const confirmNouveauMotDePasse = document.getElementById('confirmNouveauMotDePasse').value;
-        
-        if (passwordData.nouveauMotDePasse !== confirmNouveauMotDePasse) {
-            throw new Error('Les nouveaux mots de passe ne correspondent pas');
-        }
-        
-        await apiClient.changePassword(passwordData);
-        
-        UIHelpers.showSuccess('Mot de passe changé avec succès!');
-        document.getElementById('motDePasseForm').reset();
-        
-    } catch (error) {
-        console.error('Erreur changement mot de passe:', error);
-        UIHelpers.showError(error.message || 'Erreur lors du changement de mot de passe');
-    } finally {
-        UIHelpers.showLoading(false);
-    }
-}
+
 
 // Fonction pour charger les dossiers de l'utilisateur
 // ✅ Fonction chargerMesDossiers AMÉLIORÉE - Support mobile complet
@@ -3752,7 +4002,7 @@ async function genererQuitusAvecDonnees(application) {
 
     // Logo droit (armoirie)
     try {
-      const logoUrl = 'https://depot-w4hn.onrender.com/uploads/armoirie-niger.png';
+      const logoUrl = 'http://localhost:3000/uploads/armoirie-niger.png';
       const response = await fetch(logoUrl);
       if (response.ok) {
         const blob = await response.blob();
@@ -4146,6 +4396,7 @@ async function genererQuitusAvecDonnees(application) {
     throw error;
   }
 }
+
 
 // Fonction utilitaire pour obtenir le nom du document
 function getNomDocument(type) {
@@ -5436,3 +5687,6 @@ window.modifierDossier = modifierDossierEnhanced;
 window.chargerTypeBacModification = chargerTypeBacModification;
 window.filtrerFilieresParBacModification = filtrerFilieresParBacModification;
 window.configurerEvenementsChoixUniquesModification = configurerEvenementsChoixUniquesModification;
+window.chargerProfil = chargerProfil;
+window.updateProfile = updateProfile;
+window.changePassword = changePassword;
