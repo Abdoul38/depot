@@ -1858,15 +1858,6 @@ async function changePassword(event) {
     }
 }
 
-
-
-// ========== EXPORT GLOBAL ==========
-window.chargerProfil = chargerProfil;
-window.updateProfile = updateProfile;
-window.changePassword = changePassword;
-window.diagnostiquerProfilDetaille = diagnostiquerProfilDetaille;
-
-
 // ✅ Fonction fallback pour charger le profil
 async function chargerProfilFallback() {
     try {
