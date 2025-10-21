@@ -1791,32 +1791,64 @@ async function changePassword(event) {
         console.log('🔒 Changement mot de passe...');
         UIHelpers.showLoading(true);
         
-        const passwordData = {
-            ancienMotDePasse: document.getElementById('ancienMotDePasse')?.value || '',
-            nouveauMotDePasse: document.getElementById('nouveauMotDePasse')?.value || ''
-        };
+        // ✅ CORRECTION : Déterminer le conteneur actif (admin ou user)
+        const isAdmin = apiClient.currentUser?.role === 'admin';
+        let container = document;
         
-        const confirmNouveauMotDePasse = document.getElementById('confirmNouveauMotDePasse')?.value || '';
+        if (isAdmin) {
+            const userContent = document.getElementById('user-content');
+            if (userContent?.querySelector('#profil.active')) {
+                container = userContent;
+                console.log('📍 Conteneur: user-content (admin mode)');
+            } else {
+                const adminContent = document.getElementById('admin-content');
+                if (adminContent?.querySelector('#profil.active')) {
+                    container = adminContent;
+                    console.log('📍 Conteneur: admin-content');
+                }
+            }
+        }
+        
+        // Récupérer les champs depuis le bon conteneur
+        const ancienMotDePasse = container.querySelector('#ancienMotDePasse')?.value || '';
+        const nouveauMotDePasse = container.querySelector('#nouveauMotDePasse')?.value || '';
+        const confirmNouveauMotDePasse = container.querySelector('#confirmNouveauMotDePasse')?.value || '';
+        
+        console.log('🔍 Valeurs récupérées:', {
+            ancien: ancienMotDePasse ? '***' : 'vide',
+            nouveau: nouveauMotDePasse ? '***' : 'vide',
+            confirm: confirmNouveauMotDePasse ? '***' : 'vide'
+        });
         
         // Validation
-        if (!passwordData.ancienMotDePasse || !passwordData.nouveauMotDePasse) {
+        if (!ancienMotDePasse || !nouveauMotDePasse) {
             throw new Error('Tous les champs sont obligatoires');
         }
         
-        if (passwordData.nouveauMotDePasse !== confirmNouveauMotDePasse) {
+        if (nouveauMotDePasse !== confirmNouveauMotDePasse) {
             throw new Error('Les nouveaux mots de passe ne correspondent pas');
         }
         
-        if (passwordData.nouveauMotDePasse.length < 6) {
+        if (nouveauMotDePasse.length < 6) {
             throw new Error('Le nouveau mot de passe doit contenir au moins 6 caractères');
         }
         
-        console.log('🔐 Envoi changement mot de passe...');
+        const passwordData = {
+            ancienMotDePasse,
+            nouveauMotDePasse
+        };
+        
+        console.log('📤 Envoi changement mot de passe...');
         
         await apiClient.changePassword(passwordData);
         
         UIHelpers.showSuccess('✅ Mot de passe changé avec succès !');
-        document.getElementById('motDePasseForm').reset();
+        
+        // Réinitialiser le formulaire dans le bon conteneur
+        const form = container.querySelector('#motDePasseForm');
+        if (form) {
+            form.reset();
+        }
         
     } catch (error) {
         console.error('❌ Erreur changement mot de passe:', error);
