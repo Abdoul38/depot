@@ -916,6 +916,49 @@
         </div>
     </div>
 </div>
+<div id="profil" class="page">
+                <h2 style="margin-bottom: 30px;">Mon profil</h2>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+                    <div>
+                        <h3 style="margin-bottom: 20px; color: #667eea;">Informations personnelles</h3>
+                        <form id="profilForm" onsubmit="updateProfile(event)">
+                            <div class="form-group">
+                                <label for="profilNom">Nom complet</label>
+                                <input type="text" id="profilNom" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="profilEmail">Email</label>
+                                <input type="email" id="profilEmail" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="profilTelephone">Téléphone</label>
+                                <input type="tel" id="profilTelephone" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Mettre à jour</button>
+                        </form>
+                    </div>
+                    
+                    <div>
+                        <h3 style="margin-bottom: 20px; color: #667eea;">Changer le mot de passe</h3>
+                        <form id="motDePasseForm" onsubmit="changePassword(event)">
+                            <div class="form-group">
+                                <label for="ancienMotDePasse">Ancien mot de passe</label>
+                                <input type="password" id="ancienMotDePasse" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="nouveauMotDePasse">Nouveau mot de passe</label>
+                                <input type="password" id="nouveauMotDePasse" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="confirmNouveauMotDePasse">Confirmer le nouveau mot de passe</label>
+                                <input type="password" id="confirmNouveauMotDePasse" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Changer le mot de passe</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
 
 
             <!-- Section Admin - Import/Export -->
@@ -1001,3 +1044,4 @@
  
         </main>
     </div>
+
