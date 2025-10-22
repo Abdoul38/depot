@@ -442,6 +442,10 @@
 </div>
 
 <!-- Processus de dépôt - Étape 3 -->
+<!-- Ajoutez Font Awesome dans le <head> si ce n'est pas déjà fait -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+<!-- Processus de dépôt - Étape 3 -->
 <div id="etape3" class="page">
     <div class="step-indicator">
         <div class="step completed">
@@ -466,62 +470,180 @@
         <h2>Étape 3 : Documents requis</h2>
         
         <form id="etape3Form" onsubmit="nextStep(event, 4)">
+            <!-- CONSIGNES -->
+            <div class="consignes-box">
+                <h5>📋 Consignes</h5>
+                <ul>
+                    <li>La taille des fichiers ne peut pas dépasser <strong>3 Mo</strong>.</li>
+                    <li>Les extensions autorisées sont : <strong>pdf, jpg, png</strong></li>
+                </ul>
+            </div>
+
+            <!-- DOCUMENTS OBLIGATOIRES -->
             <div class="form-section">
-                <h3 class="section-title">Téléchargement de documents</h3>
+                <h3 class="section-title-doc obligatoire">🔎 Justificatifs obligatoires</h3>
                 
-                <div class="form-group">
-                    <label>Photo d'identité <span class="required">*</span></label>
-                    <div class="file-upload" onclick="document.getElementById('photoIdentite').click()">
-                        <div class="file-upload-icon">📷</div>
-                        <p>Cliquez pour télécharger votre photo d'identité</p>
-                        <p style="font-size: 12px; color: #666;">Format JPG, PNG - Max 2MB</p>
+                <!-- Photo d'identité -->
+                <div class="document-card">
+                    <div class="doc-header">
+                        <span class="doc-icon">📷</span>
+                        <div class="doc-info">
+                            <strong class="doc-title">Photo d'identité</strong>
+                            <span class="doc-badge required">Obligatoire</span>
+                        </div>
                     </div>
-                    <input type="file" id="photoIdentite" style="display: none;" accept="image/*" required onchange="afficherApercuDocument('photoIdentite', this)">
-                    <div id="apercu-photoIdentite" class="file-preview" style="display: none;"></div>
+                    <div class="doc-upload-zone" id="zone-photoIdentite" onclick="document.getElementById('photoIdentite').click()">
+                        <div class="upload-button" id="btn-photoIdentite">
+                            <span style="font-size: 24px; color: white;">+</span>
+                        </div>
+                        <div class="upload-success-icon" id="success-photoIdentite" style="display: none;">
+                            <span style="font-size: 32px; color: white;">✓</span>
+                        </div>
+                        <p class="upload-text" id="text-photoIdentite">Cliquez pour télécharger</p>
+                        <p class="upload-hint">JPG, PNG - Max 3MB</p>
+                        <input type="file" id="photoIdentite" name="photoIdentite" 
+                               style="display: none;" 
+                               accept="image/*" 
+                               required
+                               onchange="handleFileUpload(this, 'photoIdentite')"/>
+                    </div>
+                    <div class="doc-preview" id="preview-photoIdentite"></div>
                 </div>
 
-                <div class="form-group">
-                    <label>Pièce d'identité (recto-verso) <span class="required">*</span></label>
-                    <div class="file-upload" onclick="document.getElementById('pieceIdentite').click()">
-                        <div class="file-upload-icon">🆔</div>
-                        <p>Extrait de naissance</p>
-                        <p style="font-size: 12px; color: #666;">Format PDF, JPG, PNG - Max 5MB</p>
+                <!-- Pièce d'identité -->
+                <div class="document-card">
+                    <div class="doc-header">
+                        <span class="doc-icon">🆔</span>
+                        <div class="doc-info">
+                            <strong class="doc-title">Extrait de naissance</strong>
+                            <span class="doc-badge required">Obligatoire</span>
+                        </div>
                     </div>
-                    <input type="file" id="pieceIdentite" style="display: none;" accept="image/*,application/pdf" required onchange="afficherApercuDocument('pieceIdentite', this)">
-                    <div id="apercu-pieceIdentite" class="file-preview" style="display: none;"></div>
+                    <div class="doc-upload-zone" id="zone-pieceIdentite" onclick="document.getElementById('pieceIdentite').click()">
+                        <div class="upload-button" id="btn-pieceIdentite">
+                            <span style="font-size: 24px; color: white;">+</span>
+                        </div>
+                        <div class="upload-success-icon" id="success-pieceIdentite" style="display: none;">
+                            <span style="font-size: 32px; color: white;">✓</span>
+                        </div>
+                        <p class="upload-text" id="text-pieceIdentite">Cliquez pour télécharger</p>
+                        <p class="upload-hint">PDF, JPG, PNG - Max 3MB</p>
+                        <input type="file" id="pieceIdentite" name="pieceIdentite" 
+                               style="display: none;" 
+                               accept="image/*,application/pdf" 
+                               required
+                               onchange="handleFileUpload(this, 'pieceIdentite')"/>
+                    </div>
+                    <div class="doc-preview" id="preview-pieceIdentite"></div>
                 </div>
 
-                <div class="form-group">
-                    <label>Diplôme de baccalauréat <span class="required">*</span></label>
-                    <div class="file-upload" onclick="document.getElementById('diplomeBac').click()">
-                        <div class="file-upload-icon">🎓</div>
-                        <p>Télécharger votre diplôme de baccalauréat</p>
-                        <p style="font-size: 12px; color: #666;">Format PDF, JPG, PNG - Max 5MB</p>
+                <!-- Diplôme de baccalauréat -->
+                <div class="document-card">
+                    <div class="doc-header">
+                        <span class="doc-icon">🎓</span>
+                        <div class="doc-info">
+                            <strong class="doc-title">Diplôme de baccalauréat</strong>
+                            <span class="doc-badge required">Obligatoire</span>
+                        </div>
                     </div>
-                    <input type="file" id="diplomeBac" style="display: none;" accept="image/*,application/pdf" required onchange="afficherApercuDocument('diplomeBac', this)">
-                    <div id="apercu-diplomeBac" class="file-preview" style="display: none;"></div>
+                    <div class="doc-upload-zone" id="zone-diplomeBac" onclick="document.getElementById('diplomeBac').click()">
+                        <div class="upload-button" id="btn-diplomeBac">
+                            <span style="font-size: 24px; color: white;">+</span>
+                        </div>
+                        <div class="upload-success-icon" id="success-diplomeBac" style="display: none;">
+                            <span style="font-size: 32px; color: white;">✓</span>
+                        </div>
+                        <p class="upload-text" id="text-diplomeBac">Cliquez pour télécharger</p>
+                        <p class="upload-hint">PDF, JPG, PNG - Max 3MB</p>
+                        <input type="file" id="diplomeBac" name="diplomeBac" 
+                               style="display: none;" 
+                               accept="image/*,application/pdf" 
+                               required
+                               onchange="handleFileUpload(this, 'diplomeBac')"/>
+                    </div>
+                    <div class="doc-preview" id="preview-diplomeBac"></div>
                 </div>
 
-                <div class="form-group">
-                    <label>Relevé de notes du baccalauréat <span class="required">*</span></label>
-                    <div class="file-upload" onclick="document.getElementById('releve').click()">
-                        <div class="file-upload-icon">📊</div>
-                        <p>Télécharger votre relevé de notes</p>
-                        <p style="font-size: 12px; color: #666;">Format PDF, JPG, PNG - Max 5MB</p>
+                <!-- Relevé de notes -->
+                <div class="document-card">
+                    <div class="doc-header">
+                        <span class="doc-icon">📊</span>
+                        <div class="doc-info">
+                            <strong class="doc-title">Relevé de notes du baccalauréat</strong>
+                            <span class="doc-badge required">Obligatoire</span>
+                        </div>
                     </div>
-                    <input type="file" id="releve" style="display: none;" accept="image/*,application/pdf" required onchange="afficherApercuDocument('releve', this)">
-                    <div id="apercu-releve" class="file-preview" style="display: none;"></div>
+                    <div class="doc-upload-zone" id="zone-releve" onclick="document.getElementById('releve').click()">
+                        <div class="upload-button" id="btn-releve">
+                            <span style="font-size: 24px; color: white;">+</span>
+                        </div>
+                        <div class="upload-success-icon" id="success-releve" style="display: none;">
+                            <span style="font-size: 32px; color: white;">✓</span>
+                        </div>
+                        <p class="upload-text" id="text-releve">Cliquez pour télécharger</p>
+                        <p class="upload-hint">PDF, JPG, PNG - Max 3MB</p>
+                        <input type="file" id="releve" name="releve" 
+                               style="display: none;" 
+                               accept="image/*,application/pdf" 
+                               required
+                               onchange="handleFileUpload(this, 'releve')"/>
+                    </div>
+                    <div class="doc-preview" id="preview-releve"></div>
                 </div>
-
-                <div class="form-group">
-                    <label>Certificat de nationalité</label>
-                    <div class="file-upload" onclick="document.getElementById('certificatNationalite').click()">
-                        <div class="file-upload-icon">🌍</div>
-                        <p>Télécharger votre certificat de nationalité (optionnel)</p>
-                        <p style="font-size: 12px; color: #666;">Format PDF, JPG, PNG - Max 5MB</p>
+                <!-- Certificat de nationalité -->
+                <div class="document-card">
+                    <div class="doc-header">
+                        <span class="doc-icon">🌍</span>
+                        <div class="doc-info">
+                            <strong class="doc-title">Certificat de nationalité</strong>
+                           <span class="doc-badge required">Obligatoire</span>
+                        </div>
                     </div>
-                    <input type="file" id="certificatNationalite" style="display: none;" accept="image/*,application/pdf" onchange="afficherApercuDocument('certificatNationalite', this)">
-                    <div id="apercu-certificatNationalite" class="file-preview" style="display: none;"></div>
+                    <div class="doc-upload-zone" id="zone-certificatNationalite" onclick="document.getElementById('certificatNationalite').click()">
+                        <div class="upload-button optional-btn" id="btn-certificatNationalite">
+                            <span style="font-size: 24px; color: white;">+</span>
+                        </div>
+                        <div class="upload-success-icon" id="success-certificatNationalite" style="display: none;">
+                            <span style="font-size: 32px; color: white;">✓</span>
+                        </div>
+                        <p class="upload-text" id="text-certificatNationalite">Cliquez pour télécharger</p>
+                        <p class="upload-hint">PDF, JPG, PNG - Max 3MB</p>
+                        <input type="file" id="certificatNationalite" name="certificatNationalite" 
+                               style="display: none;" 
+                               accept="image/*,application/pdf"
+                               onchange="handleFileUpload(this, 'certificatNationalite')"/>
+                    </div>
+                    <div class="doc-preview" id="preview-certificatNationalite"></div>
+                </div>
+            </div>
+
+            <!-- DOCUMENTS RECOMMANDÉS -->
+            <div class="form-section" style="margin-top: 40px;">
+                
+                <!-- Relevé de notes de Terminale -->
+                <div class="document-card iut-special">
+                    <div class="doc-header">
+                        <span class="doc-icon">📈</span>
+                        <div class="doc-info">
+                            <strong class="doc-title">Relevé de notes de Terminale</strong>
+                            <span class="doc-badge iut">Pour IUT</span>
+                        </div>
+                    </div>
+                    <div class="doc-upload-zone" id="zone-releveTerminale" onclick="document.getElementById('releveTerminale').click()">
+                        <div class="upload-button optional-btn" id="btn-releveTerminale">
+                            <span style="font-size: 24px; color: white;">+</span>
+                        </div>
+                        <div class="upload-success-icon" id="success-releveTerminale" style="display: none;">
+                            <span style="font-size: 32px; color: white;">✓</span>
+                        </div>
+                        <p class="upload-text" id="text-releveTerminale">Cliquez pour télécharger</p>
+                        <p class="upload-hint">Recommandé pour IUT - PDF, JPG, PNG - Max 3MB</p>
+                        <input type="file" id="releveTerminale" name="releveTerminale" 
+                               style="display: none;" 
+                               accept="image/*,application/pdf"
+                               onchange="handleFileUpload(this, 'releveTerminale')"/>
+                    </div>
+                    <div class="doc-preview" id="preview-releveTerminale"></div>
                 </div>
             </div>
 
@@ -532,6 +654,238 @@
         </form>
     </div>
 </div>
+
+<style>
+/* Icône de succès (coche verte) */
+.upload-success-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #28a745, #20c997);
+    margin: 0 auto 15px;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4);
+}
+
+.upload-success-icon.show {
+    display: flex !important;
+    animation: successPop 0.5s ease;
+}
+
+@keyframes successPop {
+    0% {
+        transform: scale(0);
+        opacity: 0;
+    }
+    50% {
+        transform: scale(1.2);
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* Modifier la zone d'upload quand le fichier est validé */
+.doc-upload-zone.has-file {
+    border-color: #28a745 !important;
+    background: #f0fff4 !important;
+    border-style: solid !important;
+}
+
+.doc-upload-zone.has-file .upload-text {
+    color: #28a745 !important;
+    font-weight: 700 !important;
+}
+
+.doc-upload-zone.has-file .upload-hint {
+    color: #20c997 !important;
+}
+
+/* Reste des styles existants... */
+.consignes-box {
+    background: linear-gradient(135deg, #fff3cd, #fffacd);
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 30px;
+    border-left: 5px solid #ffc107;
+    box-shadow: 0 2px 10px rgba(255, 193, 7, 0.2);
+}
+
+.consignes-box h5 {
+    color: #856404;
+    margin: 0 0 15px 0;
+    font-weight: 600;
+    font-size: 1.1em;
+}
+
+.consignes-box ul {
+    color: #856404;
+    margin: 0;
+    padding-left: 25px;
+}
+
+.consignes-box li {
+    margin-bottom: 8px;
+}
+
+.section-title-doc {
+    font-size: 1.2em;
+    font-weight: 600;
+    margin-bottom: 25px;
+    padding: 15px 20px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.section-title-doc.obligatoire {
+    background: linear-gradient(135deg, #ffe6e6, #fff0f0);
+    color: #dc3545;
+    border-left: 5px solid #dc3545;
+}
+
+.section-title-doc.optionnel {
+    background: linear-gradient(135deg, #e6f7ff, #f0f9ff);
+    color: #17a2b8;
+    border-left: 5px solid #17a2b8;
+}
+
+.document-card {
+    background: white;
+    border: 2px solid #e9ecef;
+    border-radius: 15px;
+    padding: 20px;
+    margin-bottom: 20px;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.document-card:hover {
+    border-color: #667eea;
+    box-shadow: 0 5px 20px rgba(102, 126, 234, 0.15);
+    transform: translateY(-2px);
+}
+
+.document-card.iut-special {
+    background: linear-gradient(135deg, #f0f8ff, #e8f4ff);
+    border-color: #17a2b8;
+}
+
+.doc-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.doc-icon {
+    font-size: 2.5em;
+    flex-shrink: 0;
+}
+
+.doc-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.doc-title {
+    font-size: 1.05em;
+    color: #333;
+}
+
+.doc-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.75em;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    width: fit-content;
+}
+
+.doc-badge.required {
+    background: linear-gradient(135deg, #dc3545, #c82333);
+    color: white;
+}
+
+.doc-badge.optional {
+    background: linear-gradient(135deg, #17a2b8, #138496);
+    color: white;
+}
+
+.doc-badge.iut {
+    background: linear-gradient(135deg, #ffc107, #ff9800);
+    color: #333;
+}
+
+.doc-upload-zone {
+    border: 3px dashed #d0d0d0;
+    border-radius: 12px;
+    padding: 30px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: #fafafa;
+}
+
+.doc-upload-zone:hover {
+    border-color: #667eea;
+    background: #f0f2ff;
+}
+
+.upload-button {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    margin: 0 auto 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    transition: all 0.3s ease;
+}
+
+.upload-button.optional-btn {
+    background: linear-gradient(135deg, #17a2b8, #138496);
+    box-shadow: 0 4px 15px rgba(23, 162, 184, 0.3);
+}
+
+.doc-upload-zone:hover .upload-button {
+    transform: scale(1.15);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.upload-text {
+    font-weight: 600;
+    color: #333;
+    margin: 10px 0 5px;
+}
+
+.upload-hint {
+    font-size: 0.85em;
+    color: #666;
+    margin: 0;
+}
+
+.doc-preview {
+    margin-top: 15px;
+    display: none;
+}
+
+.doc-preview.active {
+    display: block;
+}
+</style>
+
+
 
 <!-- Processus de dépôt - Étape 4 -->
 <!-- Processus de dépôt - Étape 4 - VERSION RESPONSIVE -->
