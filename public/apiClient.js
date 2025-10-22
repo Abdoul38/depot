@@ -2123,10 +2123,11 @@ class PerformanceMonitor {
 
 const perfMonitor = new PerformanceMonitor();
 
-// ✅ FONCTION CORRIGÉE : Démarrer le processus avec chargement auto des types de bac
+// ✅ SOLUTION DÉFINITIVE : Actualisation forcée avant affichage
 function startApplicationProcess() {
     console.log('🚀 Démarrage du processus de dépôt...');
     
+    // ✅ Vérifier si on vient juste d'actualiser
     const justRefreshed = sessionStorage.getItem('justRefreshed');
     
     if (justRefreshed === 'true') {
@@ -2137,22 +2138,22 @@ function startApplicationProcess() {
         currentApplicationData = {};
         showPage('etape1');
         
+        // Charger les types de bac
         setTimeout(() => {
+            console.log('📦 Chargement types de bac...');
             chargerFilieresParTypeBac();
-        }, 100);
+        }, 500);
         
     } else {
-        // Afficher message de chargement
-        UIHelpers.showMessage('Préparation du formulaire...', 'info');
+        // Première visite, actualiser la page
+        console.log('🔄 Actualisation de la page...');
         
         // Marquer qu'on va actualiser
         sessionStorage.setItem('justRefreshed', 'true');
         sessionStorage.setItem('targetPage', 'etape1');
         
-        // Actualiser après un court délai
-        setTimeout(() => {
-            window.location.reload();
-        }, 100);
+        // Actualiser la page
+        window.location.reload();
     }
 }
 
@@ -2191,7 +2192,8 @@ async function nextStep(event, nextStepNumber) {
                 pieceIdentite: document.getElementById('pieceIdentite').files[0]?.name || 'Non fourni',
                 diplomeBac: document.getElementById('diplomeBac').files[0]?.name || 'Non fourni',
                 releve: document.getElementById('releve').files[0]?.name || 'Non fourni',
-                certificatNationalite: document.getElementById('certificatNationalite').files[0]?.name || 'Optionnel'
+                certificatNationalite: document.getElementById('certificatNationalite').files[0]?.name || 'Optionnel',
+                releveTerminale: document.getElementById('releveTerminale').files[0]?.name || 'Non fourni'
             };
             
             afficherResume();
@@ -2266,12 +2268,13 @@ function afficherResume() {
     listeDocuments.innerHTML = '';
     
     const documentTypes = {
-        'photoIdentite': '📷 Photo d\'identité',
-        'pieceIdentite': '🆔 Pièce d\'identité',
-        'diplomeBac': '🎓 Diplôme de baccalauréat',
-        'releve': '📊 Relevé de notes',
-        'certificatNationalite': '🌍 Certificat de nationalité'
-    };
+    'photoIdentite': { label: 'Photo d\'identité', icon: '📷' },
+    'pieceIdentite': { label: 'Pièce d\'identité', icon: '🆔' },
+    'diplomeBac': { label: 'Diplôme de baccalauréat', icon: '🎓' },
+    'releve': { label: 'Relevé de notes', icon: '📊' },
+    'certificatNationalite': { label: 'Certificat de nationalité', icon: '🌍' },
+    'releveTerminale': { label: 'Relevé de notes Terminale', icon: '📋' }  // ✅ AJOUT
+};
     
     Object.entries(documentTypes).forEach(([type, label]) => {
         const input = document.getElementById(type);
@@ -2353,7 +2356,7 @@ async function submitApplication(event) {
         
         // Ajouter les fichiers
         const fileInputs = [
-            'photoIdentite', 'pieceIdentite', 'diplomeBac', 'releve', 'certificatNationalite'
+            'photoIdentite', 'pieceIdentite', 'diplomeBac', 'releve', 'certificatNationalite','releveTerminale'
         ];
         
         fileInputs.forEach(inputId => {
@@ -3065,12 +3068,13 @@ function genererListeDocuments(documentsJson, applicationId, isAdmin = false) {
         const documents = typeof documentsJson === 'string' ? JSON.parse(documentsJson) : documentsJson || {};
         
         const documentTypes = {
-            'photoIdentite': { label: 'Photo d\'identité', icon: '📷' },
-            'pieceIdentite': { label: 'Pièce d\'identité', icon: '🆔' },
-            'diplomeBac': { label: 'Diplôme de baccalauréat', icon: '🎓' },
-            'releve': { label: 'Relevé de notes', icon: '📊' },
-            'certificatNationalite': { label: 'Certificat de nationalité', icon: '🌍' }
-        };
+    'photoIdentite': { label: 'Photo d\'identité', icon: '📷' },
+    'pieceIdentite': { label: 'Pièce d\'identité', icon: '🆔' },
+    'diplomeBac': { label: 'Diplôme de baccalauréat', icon: '🎓' },
+    'releve': { label: 'Relevé de notes', icon: '📊' },
+    'certificatNationalite': { label: 'Certificat de nationalité', icon: '🌍' },
+    'releveTerminale': { label: 'Relevé de notes Terminale', icon: '📋' }  // ✅ AJOUT
+};
         
         let html = '';
         
@@ -3325,12 +3329,13 @@ function genererListeDocuments(documentsJson, applicationId, isAdmin = false) {
         const documents = typeof documentsJson === 'string' ? JSON.parse(documentsJson) : documentsJson || {};
         
         const documentTypes = {
-            'photoIdentite': { label: 'Photo d\'identité', icon: '📷' },
-            'pieceIdentite': { label: 'Pièce d\'identité', icon: '🆔' },
-            'diplomeBac': { label: 'Diplôme de baccalauréat', icon: '🎓' },
-            'releve': { label: 'Relevé de notes', icon: '📊' },
-            'certificatNationalite': { label: 'Certificat de nationalité', icon: '🌍' }
-        };
+    'photoIdentite': { label: 'Photo d\'identité', icon: '📷' },
+    'pieceIdentite': { label: 'Pièce d\'identité', icon: '🆔' },
+    'diplomeBac': { label: 'Diplôme de baccalauréat', icon: '🎓' },
+    'releve': { label: 'Relevé de notes', icon: '📊' },
+    'certificatNationalite': { label: 'Certificat de nationalité', icon: '🌍' },
+    'releveTerminale': { label: 'Relevé de notes Terminale', icon: '📋' }  // ✅ AJOUT
+};
         
         let html = '';
         
@@ -4559,7 +4564,8 @@ function getNomDocument(type) {
     'pieceIdentite': 'Pièce d\'identité',
     'diplomeBac': 'Diplôme de baccalauréat',
     'releve': 'Relevé de notes',
-    'certificatNationalite': 'Certificat de nationalité'
+    'certificatNationalite': 'Certificat de nationalité',
+    'releveTerminale': 'releve Terminale'
   };
   return nomsDocuments[type] || type;
 }
@@ -5078,73 +5084,41 @@ function supprimerDocument(inputId) {
     fileUpload.classList.remove('has-file');
 }
 
-// ✅ FONCTION OPTIMISÉE : Charger les types de bac
 async function chargerFilieresParTypeBac() {
     try {
-        console.log('🔄 Début chargement types de bac...');
-        
-        // Charger les types de bac disponibles
+        // Charger d'abord les types de bac disponibles
         const responseTypeBacs = await apiClient.getTypeBacsPublic();
         const typeBacs = responseTypeBacs.typeBacs || [];
         
-        console.log(`✅ ${typeBacs.length} type(s) de bac récupéré(s):`, typeBacs);
-        
-        // Trouver le select des types de bac
-        const selectTypeBac = document.getElementById('typeBac');
-        
-        if (!selectTypeBac) {
-            console.warn('⚠️ Élément #typeBac non trouvé');
-            return;
-        }
-        
-        // Sauvegarder la valeur actuelle
-        const currentValue = selectTypeBac.value;
-        
-        // Vider et remplir le select
-        selectTypeBac.innerHTML = '<option value="">Sélectionner un type de bac...</option>';
-        
-        if (typeBacs.length === 0) {
-            selectTypeBac.innerHTML = '<option value="">Aucun type de bac disponible</option>';
-            console.warn('⚠️ Aucun type de bac disponible');
-            return;
-        }
-        
-        typeBacs.forEach(typeBac => {
-            const option = document.createElement('option');
-            option.value = typeBac.nom;
-            option.textContent = `${typeBac.nom} - ${typeBac.libelle}`;
-            selectTypeBac.appendChild(option);
-        });
-        
-        // Restaurer la valeur si elle existe
-        if (currentValue && typeBacs.some(tb => tb.nom === currentValue)) {
-            selectTypeBac.value = currentValue;
-            console.log('✅ Valeur restaurée:', currentValue);
-        }
-        
-        // Ajouter l'événement de changement (supprimer les anciens d'abord)
-        const newSelect = selectTypeBac.cloneNode(true);
-        selectTypeBac.replaceWith(newSelect);
-        
-        document.getElementById('typeBac').addEventListener('change', function() {
-            console.log('🔄 Type de bac changé:', this.value);
-            filtrerFilieresParBac(this.value);
-        });
-        
-        console.log('✅ Types de bac chargés avec succès');
-        
-    } catch (error) {
-        console.error('❌ Erreur chargement types de bac:', error);
-        
+        // Remplir le select des types de bac
         const selectTypeBac = document.getElementById('typeBac');
         if (selectTypeBac) {
-            selectTypeBac.innerHTML = `
-                <option value="">Erreur de chargement</option>
-                <option value="A">A (Série Littéraire)</option>
-                <option value="C">C (Série Scientifique)</option>
-                <option value="D">D (Série Scientifique)</option>
-            `;
+            // Sauvegarder la valeur actuelle
+            const currentValue = selectTypeBac.value;
+            
+            // Vider et remplir le select
+            selectTypeBac.innerHTML = '<option value="">Sélectionner un type de bac...</option>';
+            
+            typeBacs.forEach(typeBac => {
+                const option = document.createElement('option');
+                option.value = typeBac.nom;
+                option.textContent = `${typeBac.nom} - ${typeBac.libelle}`;
+                selectTypeBac.appendChild(option);
+            });
+            
+            // Restaurer la valeur si elle existe
+            if (currentValue) {
+                selectTypeBac.value = currentValue;
+            }
+            
+            // Ajouter l'événement de changement pour filtrer les filières
+            selectTypeBac.addEventListener('change', function() {
+                filtrerFilieresParBac(this.value);
+            });
         }
+        
+    } catch (error) {
+        console.error('Erreur chargement types de bac:', error);
     }
 }
 // 2. Fonction pour filtrer les filières selon le type de bac sélectionné
@@ -5294,49 +5268,28 @@ window.nextStep = function(event, nextStepNumber) {
 };
 
 // 5. Initialiser le filtrage quand on arrive sur l'étape 1
-// ✅ OBSERVER POUR DÉTECTER QUAND L'ÉTAPE 1 DEVIENT ACTIVE
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🔍 Initialisation observateur étape 1...');
-    
     // Attendre que la page soit complètement chargée
     setTimeout(() => {
         const etape1 = document.getElementById('etape1');
-        
         if (etape1) {
-            // Observer les changements de classe sur l'étape 1
+            // Observer les changements de visibilité de l'étape 1
             const observer = new MutationObserver(function(mutations) {
                 mutations.forEach(function(mutation) {
                     if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
                         const target = mutation.target;
-                        
-                        // Si l'étape 1 devient active
                         if (target.classList.contains('active') && target.id === 'etape1') {
-                            console.log('✅ Étape 1 active détectée, chargement types de bac...');
-                            
-                            // Charger les types de bac après un court délai
-                            setTimeout(() => {
-                                chargerFilieresParTypeBac();
-                            }, 300);
+                            // L'étape 1 devient active, charger les types de bac
+                            setTimeout(() => chargerFilieresParTypeBac(), 500);
                         }
                     }
                 });
             });
             
-            // Observer les changements de la classe "active"
             observer.observe(etape1, {
                 attributes: true,
                 attributeFilter: ['class']
             });
-            
-            console.log('✅ Observateur étape 1 configuré');
-            
-            // Si l'étape 1 est déjà active au chargement
-            if (etape1.classList.contains('active')) {
-                console.log('ℹ️ Étape 1 déjà active, chargement immédiat...');
-                setTimeout(() => {
-                    chargerFilieresParTypeBac();
-                }, 500);
-            }
         }
     }, 1000);
 });
@@ -5851,23 +5804,12 @@ async function soumettreModificationDossier(event) {
     }
 }
 
-
 const originalShowPage = window.showPage;
 window.showPage = function(pageId) {
-    // Appeler la fonction originale
     originalShowPage.call(this, pageId);
     
-    // Si on affiche l'étape 1, charger les types de bac
-    if (pageId === 'etape1') {
-        console.log('🎯 Navigation vers étape 1 détectée');
-        setTimeout(() => {
-            console.log('📦 Chargement types de bac...');
-            chargerFilieresParTypeBac();
-        }, 500);
-    }
-    
-    // Si on affiche l'étape 2, configurer les événements
     if (pageId === 'etape2') {
+        // Configurer les événements pour éviter les doublons de choix
         setTimeout(() => configurerEvenementsChoixUniques(), 100);
     }
 };
