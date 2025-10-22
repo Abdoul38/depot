@@ -2123,54 +2123,21 @@ class PerformanceMonitor {
 
 const perfMonitor = new PerformanceMonitor();
 
-const originalStartApplicationProcess = window.startApplicationProcess;
-window.startApplicationProcess = function() {
+// Processus de dépôt de dossier
+// Améliorer la fonction startApplicationProcess
+function startApplicationProcess() {
     console.log('🚀 Démarrage du processus de dépôt...');
     
-    // Appeler la fonction originale si elle existe
-    if (typeof originalStartApplicationProcess === 'function') {
-        originalStartApplicationProcess.call(this);
-    } else {
-        // Sinon, code de base
-        currentApplicationData = {};
-        showPage('etape1');
-    }
+    currentApplicationData = {};
+    showPage('etape1');
     
-    // ✅ CHARGEMENT AUTOMATIQUE après affichage
+    // ✅ CORRECTION : Charger immédiatement les types de bac avec un délai court
     setTimeout(() => {
-        const typeBacField = document.getElementById('typeBac');
-        
-        if (typeBacField) {
-            if (!typeBacField.dataset.loaded) {
-                console.log('🔌 Chargement automatique des types de bac...');
-                
-                if (typeof chargerFilieresParTypeBac === 'function') {
-                    chargerFilieresParTypeBac();
-                } else {
-                    console.error('❌ Fonction chargerFilieresParTypeBac non disponible');
-                }
-                
-                // ✅ Backup: Charger au focus
-                typeBacField.addEventListener('focus', function loadOnce() {
-                    if (!typeBacField.dataset.loaded) {
-                        console.log('🎯 Focus détecté - Rechargement...');
-                        if (typeof chargerFilieresParTypeBac === 'function') {
-                            chargerFilieresParTypeBac();
-                        }
-                    }
-                    typeBacField.removeEventListener('focus', loadOnce);
-                }, { once: true });
-            }
-        } else {
-            console.warn('⚠️ Champ typeBac non trouvé, nouvelle tentative...');
-            setTimeout(() => {
-                if (typeof chargerFilieresParTypeBac === 'function') {
-                    chargerFilieresParTypeBac();
-                }
-            }, 300);
-        }
-    }, 150);
-};
+        console.log('📚 Chargement automatique des types de bac...');
+        chargerFilieresParTypeBac();
+    }, 300);
+}
+
 async function nextStep(event, nextStepNumber) {
     event.preventDefault();
     
@@ -5093,39 +5060,39 @@ function supprimerDocument(inputId) {
     fileUpload.classList.remove('has-file');
 }
 
+// Modifier la fonction afficherResume pour inclure tous les détails
+
+// 1. Ajouter dans apiClient.js - Nouvelle fonction pour charger les filières filtrées
+// Fonction améliorée pour charger les types de bac
 async function chargerFilieresParTypeBac() {
     try {
-        console.log('📚 [TYPE_BAC] Début chargement...');
+        console.log('📚 Chargement des types de bac...');
+        UIHelpers.showLoading(true);
         
-        // ✅ ÉTAPE 1: Vérifier que l'élément existe AVANT de charger
-        const selectTypeBac = document.getElementById('typeBac');
-        if (!selectTypeBac) {
-            console.error('❌ [TYPE_BAC] Élément typeBac introuvable dans le DOM');
-            // Réessayer après un court délai
-            setTimeout(() => chargerFilieresParTypeBac(), 200);
-            return;
-        }
-        
-        console.log('✅ [TYPE_BAC] Élément trouvé, chargement API...');
-        
-        // ✅ ÉTAPE 2: Charger les données depuis l'API
+        // Charger les types de bac disponibles
         const responseTypeBacs = await apiClient.getTypeBacsPublic();
         const typeBacs = responseTypeBacs.typeBacs || [];
         
-        console.log(`✅ [TYPE_BAC] ${typeBacs.length} types reçus de l'API`);
+        console.log('✅ Types de bac reçus:', typeBacs);
         
-        // ✅ ÉTAPE 3: Vérifier qu'on a des données
-        if (typeBacs.length === 0) {
-            selectTypeBac.innerHTML = '<option value="">Aucun type de bac disponible</option>';
-            UIHelpers.showWarning('Aucun type de bac disponible');
+        // Remplir le select des types de bac
+        const selectTypeBac = document.getElementById('typeBac');
+        if (!selectTypeBac) {
+            console.warn('⚠️ Élément typeBac introuvable');
             return;
         }
         
-        // ✅ ÉTAPE 4: Sauvegarder la valeur actuelle
+        // Sauvegarder la valeur actuelle
         const currentValue = selectTypeBac.value;
         
-        // ✅ ÉTAPE 5: Remplir le select (sans cloner)
+        // Vider et remplir le select
         selectTypeBac.innerHTML = '<option value="">Sélectionner un type de bac...</option>';
+        
+        if (typeBacs.length === 0) {
+            selectTypeBac.innerHTML = '<option value="">Aucun type de bac disponible</option>';
+            UIHelpers.showWarning('Aucun type de bac disponible pour le moment');
+            return;
+        }
         
         typeBacs.forEach(typeBac => {
             const option = document.createElement('option');
@@ -5134,29 +5101,29 @@ async function chargerFilieresParTypeBac() {
             selectTypeBac.appendChild(option);
         });
         
-        // ✅ ÉTAPE 6: Restaurer la valeur
+        // Restaurer la valeur si elle existe
         if (currentValue) {
             selectTypeBac.value = currentValue;
         }
         
-        // ✅ ÉTAPE 7: Ajouter l'événement (supprimer les anciens d'abord)
-        selectTypeBac.removeEventListener('change', handleTypeBacChange);
-        selectTypeBac.addEventListener('change', handleTypeBacChange);
+        // Ajouter l'événement de changement pour filtrer les filières (une seule fois)
+        // Supprimer les anciens listeners
+        const newSelect = selectTypeBac.cloneNode(true);
+        selectTypeBac.parentNode.replaceChild(newSelect, selectTypeBac);
         
-        console.log('✅ [TYPE_BAC] Chargement terminé avec succès');
+        // Ajouter le nouveau listener
+        document.getElementById('typeBac').addEventListener('change', function() {
+            filtrerFilieresParBac(this.value);
+        });
         
-        // ✅ ÉTAPE 8: Marquer comme chargé pour éviter les doublons
-        selectTypeBac.dataset.loaded = 'true';
+        console.log('✅ Types de bac chargés avec succès');
         
     } catch (error) {
-        console.error('❌ [TYPE_BAC] Erreur:', error);
+        console.error('❌ Erreur chargement types de bac:', error);
         UIHelpers.showError('Erreur lors du chargement des types de bac');
+    } finally {
+        UIHelpers.showLoading(false);
     }
-}
-
-// ✅ Handler séparé pour éviter les duplications d'événements
-function handleTypeBacChange(event) {
-    filtrerFilieresParBac(event.target.value);
 }
 
 // 2. Fonction pour filtrer les filières selon le type de bac sélectionné
@@ -5846,47 +5813,38 @@ const originalShowPage = window.showPage;
 // Modifier la fonction showPage existante
 const originalShowPageFunction = window.showPage;
 window.showPage = function(pageId) {
-    console.log('🎯 Navigation vers:', pageId);
-    
     // Appeler la fonction originale
     if (typeof originalShowPageFunction === 'function') {
         originalShowPageFunction.call(this, pageId);
     }
     
-    // ✅ DÉTECTION AUTOMATIQUE : Si c'est etape1, charger les types de bac
+    // ✅ Si on affiche etape1, charger automatiquement les types de bac
     if (pageId === 'etape1') {
-        console.log('🎯 Étape 1 détectée - Chargement automatique des types de bac...');
+        console.log('🎯 Étape 1 activée - Chargement des types de bac...');
         
         // Attendre que le DOM soit prêt
         setTimeout(() => {
             const typeBacField = document.getElementById('typeBac');
             
             if (typeBacField) {
-                console.log('✅ Champ typeBac trouvé');
+                console.log('✅ Champ typeBac trouvé, chargement...');
                 
-                // Vérifier si déjà chargé
-                if (!typeBacField.dataset.loaded) {
-                    console.log('🔄 Chargement des types de bac...');
-                    
-                    if (typeof chargerFilieresParTypeBac === 'function') {
-                        chargerFilieresParTypeBac();
-                    } else {
-                        console.error('❌ Fonction chargerFilieresParTypeBac non disponible');
-                    }
+                if (typeof chargerFilieresParTypeBac === 'function') {
+                    chargerFilieresParTypeBac();
                 } else {
-                    console.log('✅ Types de bac déjà chargés');
+                    console.error('❌ Fonction chargerFilieresParTypeBac non disponible');
                 }
             } else {
-                console.warn('⚠️ Champ typeBac non trouvé, réessai dans 300ms...');
+                console.warn('⚠️ Champ typeBac non trouvé, nouvelle tentative...');
                 
                 // Réessayer après un délai plus long
                 setTimeout(() => {
                     if (typeof chargerFilieresParTypeBac === 'function') {
                         chargerFilieresParTypeBac();
                     }
-                }, 300);
+                }, 500);
             }
-        }, 100);
+        }, 200);
     }
 };
 
@@ -5934,12 +5892,6 @@ document.addEventListener('DOMContentLoaded', function() {
             return false;
         }
         
-        // Vérifier si déjà chargé
-        if (typeBacField.dataset.loaded === 'true') {
-            console.log('✅ Types de bac déjà chargés');
-            return true;
-        }
-        
         console.log('✅ Chargement des types de bac...');
         
         if (typeof chargerFilieresParTypeBac === 'function') {
@@ -5974,7 +5926,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         // Attendre un peu pour s'assurer que le DOM est stable
                         setTimeout(() => {
                             chargerTypeBacEtape1();
-                        }, 200);
+                        }, 300);
                     }
                 }
             });
@@ -5991,7 +5943,7 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('🎯 Étape 1 déjà active - Chargement immédiat...');
             setTimeout(() => {
                 chargerTypeBacEtape1();
-            }, 300);
+            }, 500);
         }
         
     }, 500);
