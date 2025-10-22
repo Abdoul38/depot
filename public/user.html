@@ -790,7 +790,33 @@
     </div>
 </div>
 
-          
+<script>
+
+function toggleViewMode() {
+    const tableContainer = document.getElementById('tableContainer');
+    const cardsContainer = document.getElementById('mobileCardsContainer');
+    const isMobile = window.innerWidth <= 768;
+    
+    if (isMobile && cardsContainer && cardsContainer.children.length > 0) {
+        // Afficher les cartes sur mobile si elles existent
+        tableContainer.style.display = 'none';
+        cardsContainer.style.display = 'block';
+    } else {
+        // Afficher le tableau sur desktop
+        tableContainer.style.display = 'block';
+        cardsContainer.style.display = 'none';
+    }
+}
+
+// Écouter les changements de taille d'écran
+window.addEventListener('resize', toggleViewMode);
+window.addEventListener('load', toggleViewMode);
+</script>
+
+
+           <!-- Page de modification de dossier -->
+            <!-- Modifier la page de modification de dossier -->
+<!-- Page de modification de dossier - À REMPLACER COMPLÈTEMENT dans user.html -->
 <div id="modifierDossier" class="page">
     <h2 style="margin-bottom: 30px;">Modifier mon dossier</h2>
     
