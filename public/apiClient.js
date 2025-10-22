@@ -2123,42 +2123,54 @@ class PerformanceMonitor {
 
 const perfMonitor = new PerformanceMonitor();
 
-function startApplicationProcess() {
+const originalStartApplicationProcess = window.startApplicationProcess;
+window.startApplicationProcess = function() {
     console.log('🚀 Démarrage du processus de dépôt...');
     
-    currentApplicationData = {};
-    showPage('etape1');
+    // Appeler la fonction originale si elle existe
+    if (typeof originalStartApplicationProcess === 'function') {
+        originalStartApplicationProcess.call(this);
+    } else {
+        // Sinon, code de base
+        currentApplicationData = {};
+        showPage('etape1');
+    }
     
-    // ✅ SOLUTION INFAILLIBLE: Charger dès que la page est affichée + au focus
+    // ✅ CHARGEMENT AUTOMATIQUE après affichage
     setTimeout(() => {
         const typeBacField = document.getElementById('typeBac');
         
         if (typeBacField) {
-            // Si pas encore chargé
             if (!typeBacField.dataset.loaded) {
-                console.log('📌 Installation du chargement automatique...');
+                console.log('🔌 Chargement automatique des types de bac...');
                 
-                // ✅ 1. Chargement immédiat
-                chargerFilieresParTypeBac();
+                if (typeof chargerFilieresParTypeBac === 'function') {
+                    chargerFilieresParTypeBac();
+                } else {
+                    console.error('❌ Fonction chargerFilieresParTypeBac non disponible');
+                }
                 
-                // ✅ 2. Backup: Charger au focus (si l'utilisateur clique dessus)
+                // ✅ Backup: Charger au focus
                 typeBacField.addEventListener('focus', function loadOnce() {
                     if (!typeBacField.dataset.loaded) {
                         console.log('🎯 Focus détecté - Rechargement...');
-                        chargerFilieresParTypeBac();
+                        if (typeof chargerFilieresParTypeBac === 'function') {
+                            chargerFilieresParTypeBac();
+                        }
                     }
                     typeBacField.removeEventListener('focus', loadOnce);
                 }, { once: true });
-            } else {
-                console.log('✅ Types de bac déjà chargés');
             }
         } else {
             console.warn('⚠️ Champ typeBac non trouvé, nouvelle tentative...');
-            setTimeout(() => startApplicationProcess(), 300);
+            setTimeout(() => {
+                if (typeof chargerFilieresParTypeBac === 'function') {
+                    chargerFilieresParTypeBac();
+                }
+            }, 300);
         }
-    }, 100);
-}
-
+    }, 150);
+};
 async function nextStep(event, nextStepNumber) {
     event.preventDefault();
     
@@ -5834,38 +5846,47 @@ const originalShowPage = window.showPage;
 // Modifier la fonction showPage existante
 const originalShowPageFunction = window.showPage;
 window.showPage = function(pageId) {
+    console.log('🎯 Navigation vers:', pageId);
+    
     // Appeler la fonction originale
     if (typeof originalShowPageFunction === 'function') {
         originalShowPageFunction.call(this, pageId);
     }
     
-    // ✅ Si on affiche etape1, charger automatiquement les types de bac
+    // ✅ DÉTECTION AUTOMATIQUE : Si c'est etape1, charger les types de bac
     if (pageId === 'etape1') {
-        console.log('🎯 Étape 1 activée - Chargement des types de bac...');
+        console.log('🎯 Étape 1 détectée - Chargement automatique des types de bac...');
         
         // Attendre que le DOM soit prêt
         setTimeout(() => {
             const typeBacField = document.getElementById('typeBac');
             
             if (typeBacField) {
-                console.log('✅ Champ typeBac trouvé, chargement...');
+                console.log('✅ Champ typeBac trouvé');
                 
-                if (typeof chargerFilieresParTypeBac === 'function') {
-                    chargerFilieresParTypeBac();
+                // Vérifier si déjà chargé
+                if (!typeBacField.dataset.loaded) {
+                    console.log('🔄 Chargement des types de bac...');
+                    
+                    if (typeof chargerFilieresParTypeBac === 'function') {
+                        chargerFilieresParTypeBac();
+                    } else {
+                        console.error('❌ Fonction chargerFilieresParTypeBac non disponible');
+                    }
                 } else {
-                    console.error('❌ Fonction chargerFilieresParTypeBac non disponible');
+                    console.log('✅ Types de bac déjà chargés');
                 }
             } else {
-                console.warn('⚠️ Champ typeBac non trouvé, nouvelle tentative...');
+                console.warn('⚠️ Champ typeBac non trouvé, réessai dans 300ms...');
                 
                 // Réessayer après un délai plus long
                 setTimeout(() => {
                     if (typeof chargerFilieresParTypeBac === 'function') {
                         chargerFilieresParTypeBac();
                     }
-                }, 500);
+                }, 300);
             }
-        }, 200);
+        }, 100);
     }
 };
 
@@ -5913,6 +5934,12 @@ document.addEventListener('DOMContentLoaded', function() {
             return false;
         }
         
+        // Vérifier si déjà chargé
+        if (typeBacField.dataset.loaded === 'true') {
+            console.log('✅ Types de bac déjà chargés');
+            return true;
+        }
+        
         console.log('✅ Chargement des types de bac...');
         
         if (typeof chargerFilieresParTypeBac === 'function') {
@@ -5947,7 +5974,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         // Attendre un peu pour s'assurer que le DOM est stable
                         setTimeout(() => {
                             chargerTypeBacEtape1();
-                        }, 300);
+                        }, 200);
                     }
                 }
             });
@@ -5964,7 +5991,7 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('🎯 Étape 1 déjà active - Chargement immédiat...');
             setTimeout(() => {
                 chargerTypeBacEtape1();
-            }, 500);
+            }, 300);
         }
         
     }, 500);
