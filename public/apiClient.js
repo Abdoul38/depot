@@ -5295,43 +5295,29 @@ window.nextStep = function(event, nextStepNumber) {
 
 // 5. Initialiser le filtrage quand on arrive sur l'étape 1
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🔧 Initialisation du système de chargement des types de bac...');
-    
-    // Observer global pour détecter quand etape1 devient active
-    const observer = new MutationObserver(function(mutations) {
-        mutations.forEach(function(mutation) {
-            const target = mutation.target;
-            
-            // Si c'est etape1 qui devient active
-            if (target.id === 'etape1' && target.classList.contains('active')) {
-                console.log('🎯 Étape 1 activée - Chargement types de bac...');
-                
-                const typeBacField = document.getElementById('typeBac');
-                
-                if (typeBacField && !typeBacField.dataset.loaded) {
-                    setTimeout(() => {
-                        chargerFilieresParTypeBac();
-                    }, 200);
-                }
-            }
-        });
-    });
-    
-    // Observer tous les éléments qui pourraient devenir actifs
+    // Attendre que la page soit complètement chargée
     setTimeout(() => {
         const etape1 = document.getElementById('etape1');
         if (etape1) {
+            // Observer les changements de visibilité de l'étape 1
+            const observer = new MutationObserver(function(mutations) {
+                mutations.forEach(function(mutation) {
+                    if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                        const target = mutation.target;
+                        if (target.classList.contains('active') && target.id === 'etape1') {
+                            // L'étape 1 devient active, charger les types de bac
+                            setTimeout(() => chargerFilieresParTypeBac(), 500);
+                        }
+                    }
+                });
+            });
+            
             observer.observe(etape1, {
                 attributes: true,
                 attributeFilter: ['class']
             });
-            
-            // Si déjà active au chargement
-            if (etape1.classList.contains('active')) {
-                setTimeout(() => chargerFilieresParTypeBac(), 300);
-            }
         }
-    }, 500);
+    }, 1000);
 });
 
 // 6. Fonction utilitaire pour réinitialiser les filières
