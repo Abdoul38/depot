@@ -2127,14 +2127,33 @@ const perfMonitor = new PerformanceMonitor();
 function startApplicationProcess() {
     console.log('🚀 Démarrage du processus de dépôt...');
     
-    currentApplicationData = {};
-    showPage('etape1');
+    const justRefreshed = sessionStorage.getItem('justRefreshed');
     
-    // ✅ CRUCIAL : Charger les types de bac dès l'affichage de l'étape 1
-    setTimeout(() => {
-        console.log('📦 Chargement automatique des types de bac...');
-        chargerFilieresParTypeBac();
-    }, 500);
+    if (justRefreshed === 'true') {
+        // On vient d'actualiser, afficher le formulaire
+        console.log('✅ Page actualisée, affichage formulaire...');
+        sessionStorage.removeItem('justRefreshed');
+        
+        currentApplicationData = {};
+        showPage('etape1');
+        
+        setTimeout(() => {
+            chargerFilieresParTypeBac();
+        }, 100);
+        
+    } else {
+        // Afficher message de chargement
+        UIHelpers.showMessage('Préparation du formulaire...', 'info');
+        
+        // Marquer qu'on va actualiser
+        sessionStorage.setItem('justRefreshed', 'true');
+        sessionStorage.setItem('targetPage', 'etape1');
+        
+        // Actualiser après un court délai
+        setTimeout(() => {
+            window.location.reload();
+        }, 100);
+    }
 }
 
 async function nextStep(event, nextStepNumber) {
