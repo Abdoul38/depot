@@ -57,7 +57,7 @@ function viderCacheAPI(pattern) {
 }
 class ApiClient {
     constructor() {
-        this.baseURL = 'https://depot-w4hn.onrender.com/api';
+        this.baseURL = 'hhttps://depot-w4hn.onrender.com/api';
         this.token = localStorage.getItem('authToken');
         this.currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
         this.pendingRequests = new Map(); // Éviter les requêtes doublons
@@ -2129,34 +2129,42 @@ function startApplicationProcess() {
     currentApplicationData = {};
     showPage('etape1');
     
-    // ✅ SOLUTION INFAILLIBLE: Charger dès que la page est affichée + au focus
-    setTimeout(() => {
-        const typeBacField = document.getElementById('typeBac');
-        
-        if (typeBacField) {
-            // Si pas encore chargé
-            if (!typeBacField.dataset.loaded) {
-                console.log('📌 Installation du chargement automatique...');
-                
-                // ✅ 1. Chargement immédiat
-                chargerFilieresParTypeBac();
-                
-                // ✅ 2. Backup: Charger au focus (si l'utilisateur clique dessus)
-                typeBacField.addEventListener('focus', function loadOnce() {
-                    if (!typeBacField.dataset.loaded) {
-                        console.log('🎯 Focus détecté - Rechargement...');
+    // ✅ SOLUTION TRIPLE SÉCURITÉ : 3 tentatives avec délais croissants
+    const tentatives = [100, 500, 1000]; // 3 tentatives espacées
+    
+    tentatives.forEach((delai, index) => {
+        setTimeout(() => {
+            const typeBacField = document.getElementById('typeBac');
+            
+            if (!typeBacField) {
+                console.warn(`⚠️ [Tentative ${index + 1}/${tentatives.length}] Champ typeBac non trouvé`);
+                return;
+            }
+            
+            // Vérifier si déjà chargé
+            if (typeBacField.dataset.loaded === 'true' && typeBacField.options.length > 1) {
+                console.log('✅ Types de bac déjà chargés');
+                return;
+            }
+            
+            console.log(`🔄 [Tentative ${index + 1}/${tentatives.length}] Chargement des types de bac...`);
+            
+            // Forcer le chargement
+            chargerFilieresParTypeBac();
+            
+            // Backup: Ajouter un listener au focus (une seule fois)
+            if (index === 0) {
+                typeBacField.addEventListener('focus', function loadOnFocus() {
+                    console.log('🎯 Focus détecté - Vérification...');
+                    if (typeBacField.options.length <= 1) {
+                        console.log('🔄 Rechargement suite au focus...');
                         chargerFilieresParTypeBac();
                     }
-                    typeBacField.removeEventListener('focus', loadOnce);
                 }, { once: true });
-            } else {
-                console.log('✅ Types de bac déjà chargés');
             }
-        } else {
-            console.warn('⚠️ Champ typeBac non trouvé, nouvelle tentative...');
-            setTimeout(() => startApplicationProcess(), 300);
-        }
-    }, 100);
+            
+        }, delai);
+    });
 }
 
 async function nextStep(event, nextStepNumber) {
@@ -5085,34 +5093,46 @@ async function chargerFilieresParTypeBac() {
     try {
         console.log('📚 [TYPE_BAC] Début chargement...');
         
-        // ✅ ÉTAPE 1: Vérifier que l'élément existe AVANT de charger
+        // ✅ ÉTAPE 1: Vérifier que l'élément existe
         const selectTypeBac = document.getElementById('typeBac');
         if (!selectTypeBac) {
-            console.error('❌ [TYPE_BAC] Élément typeBac introuvable dans le DOM');
-            // Réessayer après un court délai
-            setTimeout(() => chargerFilieresParTypeBac(), 200);
+            console.error('❌ [TYPE_BAC] Élément typeBac introuvable');
             return;
         }
         
+        // ✅ Éviter les chargements multiples
+        if (selectTypeBac.dataset.loading === 'true') {
+            console.log('⏳ Chargement déjà en cours...');
+            return;
+        }
+        
+        if (selectTypeBac.dataset.loaded === 'true' && selectTypeBac.options.length > 1) {
+            console.log('✅ Types de bac déjà chargés');
+            return;
+        }
+        
+        // Marquer comme en cours de chargement
+        selectTypeBac.dataset.loading = 'true';
+        
         console.log('✅ [TYPE_BAC] Élément trouvé, chargement API...');
         
-        // ✅ ÉTAPE 2: Charger les données depuis l'API
+        // ✅ ÉTAPE 2: Charger depuis l'API
         const responseTypeBacs = await apiClient.getTypeBacsPublic();
         const typeBacs = responseTypeBacs.typeBacs || [];
         
-        console.log(`✅ [TYPE_BAC] ${typeBacs.length} types reçus de l'API`);
+        console.log(`✅ [TYPE_BAC] ${typeBacs.length} types reçus`);
         
-        // ✅ ÉTAPE 3: Vérifier qu'on a des données
         if (typeBacs.length === 0) {
             selectTypeBac.innerHTML = '<option value="">Aucun type de bac disponible</option>';
+            selectTypeBac.dataset.loading = 'false';
             UIHelpers.showWarning('Aucun type de bac disponible');
             return;
         }
         
-        // ✅ ÉTAPE 4: Sauvegarder la valeur actuelle
+        // ✅ ÉTAPE 3: Sauvegarder la valeur actuelle
         const currentValue = selectTypeBac.value;
         
-        // ✅ ÉTAPE 5: Remplir le select (sans cloner)
+        // ✅ ÉTAPE 4: Vider et remplir
         selectTypeBac.innerHTML = '<option value="">Sélectionner un type de bac...</option>';
         
         typeBacs.forEach(typeBac => {
@@ -5122,27 +5142,37 @@ async function chargerFilieresParTypeBac() {
             selectTypeBac.appendChild(option);
         });
         
-        // ✅ ÉTAPE 6: Restaurer la valeur
+        // ✅ ÉTAPE 5: Restaurer la valeur
         if (currentValue) {
             selectTypeBac.value = currentValue;
         }
         
-        // ✅ ÉTAPE 7: Ajouter l'événement (supprimer les anciens d'abord)
-        selectTypeBac.removeEventListener('change', handleTypeBacChange);
-        selectTypeBac.addEventListener('change', handleTypeBacChange);
+        // ✅ ÉTAPE 6: Supprimer et réajouter l'événement (éviter doublons)
+        const newSelect = selectTypeBac.cloneNode(true);
+        selectTypeBac.replaceWith(newSelect);
+        
+        // Réattacher l'événement au nouveau select
+        document.getElementById('typeBac').addEventListener('change', handleTypeBacChange);
+        
+        // ✅ ÉTAPE 7: Marquer comme chargé
+        document.getElementById('typeBac').dataset.loaded = 'true';
+        document.getElementById('typeBac').dataset.loading = 'false';
         
         console.log('✅ [TYPE_BAC] Chargement terminé avec succès');
         
-        // ✅ ÉTAPE 8: Marquer comme chargé pour éviter les doublons
-        selectTypeBac.dataset.loaded = 'true';
-        
     } catch (error) {
         console.error('❌ [TYPE_BAC] Erreur:', error);
+        
+        const selectTypeBac = document.getElementById('typeBac');
+        if (selectTypeBac) {
+            selectTypeBac.dataset.loading = 'false';
+        }
+        
         UIHelpers.showError('Erreur lors du chargement des types de bac');
     }
 }
 
-// ✅ Handler séparé pour éviter les duplications d'événements
+// ✅ Handler séparé pour éviter les duplications
 function handleTypeBacChange(event) {
     filtrerFilieresParBac(event.target.value);
 }
