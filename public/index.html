@@ -2900,6 +2900,192 @@ function ouvrirModalAjoutEtudiant() {
         </div>
     </div>
 </div>
+<script>
+// Fonction complète pour gérer l'upload de fichier et afficher la validation
+function handleFileUpload(input, fieldId) {
+    const file = input.files[0];
+    
+    if (!file) {
+        console.log('Aucun fichier sélectionné');
+        return;
+    }
+    
+    console.log('Fichier sélectionné:', file.name, 'Taille:', file.size, 'Type:', file.type);
+    
+    // Validation de la taille (max 3MB)
+    const maxSize = 3 * 1024 * 1024; // 3MB en bytes
+    if (file.size > maxSize) {
+        alert('Le fichier est trop volumineux. Taille maximum : 3 MB');
+        input.value = ''; // Réinitialiser l'input
+        return;
+    }
+    
+    // Validation des extensions
+    const validExtensions = ['pdf', 'jpg', 'jpeg', 'png'];
+    const fileExtension = file.name.split('.').pop().toLowerCase();
+    
+    if (!validExtensions.includes(fileExtension)) {
+        alert('Format de fichier non autorisé. Extensions acceptées : PDF, JPG, PNG');
+        input.value = ''; // Réinitialiser l'input
+        return;
+    }
+    
+    // Récupérer les éléments du DOM
+    const zone = document.getElementById('zone-' + fieldId);
+    const btnIcon = document.getElementById('btn-' + fieldId);
+    const successIcon = document.getElementById('success-' + fieldId);
+    const uploadText = document.getElementById('text-' + fieldId);
+    const previewDiv = document.getElementById('preview-' + fieldId);
+    
+    console.log('Éléments trouvés:', {
+        zone: !!zone,
+        btnIcon: !!btnIcon,
+        successIcon: !!successIcon,
+        uploadText: !!uploadText,
+        previewDiv: !!previewDiv
+    });
+    
+    // Ajouter la classe pour changer l'apparence de la zone
+    if (zone) {
+        zone.classList.add('has-file');
+    }
+    
+    // Cacher le bouton + et afficher la coche
+    if (btnIcon) {
+        btnIcon.style.display = 'none';
+    }
+    
+    if (successIcon) {
+        successIcon.style.display = 'flex';
+        successIcon.classList.add('show');
+    }
+    
+    // Changer le texte
+    if (uploadText) {
+        uploadText.textContent = '✓ Fichier sélectionné : ' + file.name;
+        uploadText.style.color = '#28a745';
+        uploadText.style.fontWeight = '700';
+    }
+    
+    // Afficher un aperçu détaillé
+    if (previewDiv) {
+        previewDiv.classList.add('active');
+        previewDiv.style.display = 'block';
+        
+        // Déterminer l'icône selon le type de fichier
+        let fileIcon = '📄';
+        if (file.type.startsWith('image/')) {
+            fileIcon = '🖼️';
+        } else if (file.type === 'application/pdf') {
+            fileIcon = '📑';
+        }
+        
+        previewDiv.innerHTML = `
+            <div style="background: #e8f5e9; padding: 15px; border-radius: 8px; border-left: 4px solid #28a745; margin-top: 15px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 24px;">${fileIcon}</span>
+                    <div style="flex: 1;">
+                        <strong style="color: #28a745; display: block;">✓ Document validé</strong>
+                        <p style="margin: 5px 0 0 0; font-size: 0.9em; color: #666;">
+                            ${file.name}
+                        </p>
+                        <p style="margin: 3px 0 0 0; font-size: 0.85em; color: #999;">
+                            Taille: ${(file.size / 1024).toFixed(2)} KB | Type: ${file.type || 'Non spécifié'}
+                        </p>
+                    </div>
+                    <button type="button" onclick="resetFileUpload('${fieldId}')" 
+                            style="background: #dc3545; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-size: 0.85em;">
+                        Supprimer
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        // Si c'est une image, afficher un aperçu visuel
+        if (file.type.startsWith('image/')) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const imgPreview = document.createElement('div');
+                imgPreview.style.marginTop = '10px';
+                imgPreview.innerHTML = `
+                    <img src="${e.target.result}" 
+                         style="max-width: 200px; max-height: 200px; border-radius: 8px; border: 2px solid #28a745; display: block;">
+                `;
+                previewDiv.appendChild(imgPreview);
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+    
+    console.log('Upload traité avec succès pour:', fieldId);
+}
+
+// Fonction pour réinitialiser un champ de fichier
+function resetFileUpload(fieldId) {
+    const input = document.getElementById(fieldId);
+    const zone = document.getElementById('zone-' + fieldId);
+    const btnIcon = document.getElementById('btn-' + fieldId);
+    const successIcon = document.getElementById('success-' + fieldId);
+    const uploadText = document.getElementById('text-' + fieldId);
+    const previewDiv = document.getElementById('preview-' + fieldId);
+    
+    // Réinitialiser l'input
+    if (input) {
+        input.value = '';
+    }
+    
+    // Retirer la classe has-file
+    if (zone) {
+        zone.classList.remove('has-file');
+    }
+    
+    // Réafficher le bouton + et cacher la coche
+    if (btnIcon) {
+        btnIcon.style.display = 'flex';
+    }
+    
+    if (successIcon) {
+        successIcon.style.display = 'none';
+        successIcon.classList.remove('show');
+    }
+    
+    // Remettre le texte d'origine
+    if (uploadText) {
+        uploadText.textContent = 'Cliquez pour télécharger';
+        uploadText.style.color = '';
+        uploadText.style.fontWeight = '';
+    }
+    
+    // Cacher l'aperçu
+    if (previewDiv) {
+        previewDiv.classList.remove('active');
+        previewDiv.style.display = 'none';
+        previewDiv.innerHTML = '';
+    }
+}
+
+// Vérifier que tous les documents obligatoires sont remplis avant de passer à l'étape suivante
+function validateDocuments() {
+    const requiredDocs = ['photoIdentite', 'pieceIdentite', 'diplomeBac', 'releve'];
+    const missingDocs = [];
+    
+    requiredDocs.forEach(docId => {
+        const input = document.getElementById(docId);
+        if (!input || !input.files || input.files.length === 0) {
+            missingDocs.push(docId);
+        }
+    });
+    
+    if (missingDocs.length > 0) {
+        alert('Veuillez télécharger tous les documents obligatoires.');
+        return false;
+    }
+    
+    return true;
+}
+
+console.log('Script de gestion des uploads chargé avec succès');
+</script>
 </body>
 </html>
  
