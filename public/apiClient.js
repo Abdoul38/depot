@@ -2123,19 +2123,13 @@ class PerformanceMonitor {
 
 const perfMonitor = new PerformanceMonitor();
 
-// Processus de dépôt de dossier
-// Améliorer la fonction startApplicationProcess
 function startApplicationProcess() {
     console.log('🚀 Démarrage du processus de dépôt...');
     
     currentApplicationData = {};
     showPage('etape1');
     
-    // ✅ CORRECTION : Charger immédiatement les types de bac avec un délai court
-    setTimeout(() => {
-        console.log('📚 Chargement automatique des types de bac...');
-        chargerFilieresParTypeBac();
-    }, 300);
+    
 }
 
 async function nextStep(event, nextStepNumber) {
@@ -5060,72 +5054,43 @@ function supprimerDocument(inputId) {
     fileUpload.classList.remove('has-file');
 }
 
-// Modifier la fonction afficherResume pour inclure tous les détails
-
-// 1. Ajouter dans apiClient.js - Nouvelle fonction pour charger les filières filtrées
-// Fonction améliorée pour charger les types de bac
 async function chargerFilieresParTypeBac() {
     try {
-        console.log('📚 Chargement des types de bac...');
-        UIHelpers.showLoading(true);
-        
-        // Charger les types de bac disponibles
+        // Charger d'abord les types de bac disponibles
         const responseTypeBacs = await apiClient.getTypeBacsPublic();
         const typeBacs = responseTypeBacs.typeBacs || [];
         
-        console.log('✅ Types de bac reçus:', typeBacs);
-        
         // Remplir le select des types de bac
         const selectTypeBac = document.getElementById('typeBac');
-        if (!selectTypeBac) {
-            console.warn('⚠️ Élément typeBac introuvable');
-            return;
+        if (selectTypeBac) {
+            // Sauvegarder la valeur actuelle
+            const currentValue = selectTypeBac.value;
+            
+            // Vider et remplir le select
+            selectTypeBac.innerHTML = '<option value="">Sélectionner un type de bac...</option>';
+            
+            typeBacs.forEach(typeBac => {
+                const option = document.createElement('option');
+                option.value = typeBac.nom;
+                option.textContent = `${typeBac.nom} - ${typeBac.libelle}`;
+                selectTypeBac.appendChild(option);
+            });
+            
+            // Restaurer la valeur si elle existe
+            if (currentValue) {
+                selectTypeBac.value = currentValue;
+            }
+            
+            // Ajouter l'événement de changement pour filtrer les filières
+            selectTypeBac.addEventListener('change', function() {
+                filtrerFilieresParBac(this.value);
+            });
         }
-        
-        // Sauvegarder la valeur actuelle
-        const currentValue = selectTypeBac.value;
-        
-        // Vider et remplir le select
-        selectTypeBac.innerHTML = '<option value="">Sélectionner un type de bac...</option>';
-        
-        if (typeBacs.length === 0) {
-            selectTypeBac.innerHTML = '<option value="">Aucun type de bac disponible</option>';
-            UIHelpers.showWarning('Aucun type de bac disponible pour le moment');
-            return;
-        }
-        
-        typeBacs.forEach(typeBac => {
-            const option = document.createElement('option');
-            option.value = typeBac.nom;
-            option.textContent = `${typeBac.nom} - ${typeBac.libelle}`;
-            selectTypeBac.appendChild(option);
-        });
-        
-        // Restaurer la valeur si elle existe
-        if (currentValue) {
-            selectTypeBac.value = currentValue;
-        }
-        
-        // Ajouter l'événement de changement pour filtrer les filières (une seule fois)
-        // Supprimer les anciens listeners
-        const newSelect = selectTypeBac.cloneNode(true);
-        selectTypeBac.parentNode.replaceChild(newSelect, selectTypeBac);
-        
-        // Ajouter le nouveau listener
-        document.getElementById('typeBac').addEventListener('change', function() {
-            filtrerFilieresParBac(this.value);
-        });
-        
-        console.log('✅ Types de bac chargés avec succès');
         
     } catch (error) {
-        console.error('❌ Erreur chargement types de bac:', error);
-        UIHelpers.showError('Erreur lors du chargement des types de bac');
-    } finally {
-        UIHelpers.showLoading(false);
+        console.error('Erreur chargement types de bac:', error);
     }
 }
-
 // 2. Fonction pour filtrer les filières selon le type de bac sélectionné
 async function filtrerFilieresParBac(typeBac) {
     try {
@@ -5810,44 +5775,14 @@ async function soumettreModificationDossier(event) {
 }
 
 const originalShowPage = window.showPage;
-// Modifier la fonction showPage existante
-const originalShowPageFunction = window.showPage;
 window.showPage = function(pageId) {
-    // Appeler la fonction originale
-    if (typeof originalShowPageFunction === 'function') {
-        originalShowPageFunction.call(this, pageId);
-    }
+    originalShowPage.call(this, pageId);
     
-    // ✅ Si on affiche etape1, charger automatiquement les types de bac
-    if (pageId === 'etape1') {
-        console.log('🎯 Étape 1 activée - Chargement des types de bac...');
-        
-        // Attendre que le DOM soit prêt
-        setTimeout(() => {
-            const typeBacField = document.getElementById('typeBac');
-            
-            if (typeBacField) {
-                console.log('✅ Champ typeBac trouvé, chargement...');
-                
-                if (typeof chargerFilieresParTypeBac === 'function') {
-                    chargerFilieresParTypeBac();
-                } else {
-                    console.error('❌ Fonction chargerFilieresParTypeBac non disponible');
-                }
-            } else {
-                console.warn('⚠️ Champ typeBac non trouvé, nouvelle tentative...');
-                
-                // Réessayer après un délai plus long
-                setTimeout(() => {
-                    if (typeof chargerFilieresParTypeBac === 'function') {
-                        chargerFilieresParTypeBac();
-                    }
-                }, 500);
-            }
-        }, 200);
+    if (pageId === 'etape2') {
+        // Configurer les événements pour éviter les doublons de choix
+        setTimeout(() => configurerEvenementsChoixUniques(), 100);
     }
 };
-
 console.log('✅ Système de filtrage des filières par type de bac initialisé');
 
 // Modifier aussi la structure HTML du résumé dans index.html
@@ -5878,101 +5813,3 @@ window.filtrerFilieresParBac = filtrerFilieresParBac;
 window.validerChoixFilieres = validerChoixFilieres;
 window.configurerEvenementsChoixUniques = configurerEvenementsChoixUniques;
 window.startApplicationProcess = startApplicationProcess;
-
-// ✅ OBSERVER POUR ÉTAPE 1 - Solution de secours robuste
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('🔧 Initialisation de l\'observer pour étape 1...');
-    
-    // Fonction de chargement centralisée
-    function chargerTypeBacEtape1() {
-        const typeBacField = document.getElementById('typeBac');
-        
-        if (!typeBacField) {
-            console.warn('⚠️ Champ typeBac non encore disponible');
-            return false;
-        }
-        
-        console.log('✅ Chargement des types de bac...');
-        
-        if (typeof chargerFilieresParTypeBac === 'function') {
-            chargerFilieresParTypeBac();
-            return true;
-        } else {
-            console.error('❌ Fonction chargerFilieresParTypeBac non disponible');
-            return false;
-        }
-    }
-    
-    // Attendre que le DOM soit complètement chargé
-    setTimeout(() => {
-        const etape1 = document.getElementById('etape1');
-        
-        if (!etape1) {
-            console.warn('⚠️ Étape 1 non trouvée dans le DOM');
-            return;
-        }
-        
-        console.log('✅ Observer configuré pour étape 1');
-        
-        // Créer un observer pour détecter quand l'étape 1 devient active
-        const observer = new MutationObserver(function(mutations) {
-            mutations.forEach(function(mutation) {
-                if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
-                    const target = mutation.target;
-                    
-                    if (target.id === 'etape1' && target.classList.contains('active')) {
-                        console.log('🎯 Étape 1 devient active - Chargement types de bac...');
-                        
-                        // Attendre un peu pour s'assurer que le DOM est stable
-                        setTimeout(() => {
-                            chargerTypeBacEtape1();
-                        }, 300);
-                    }
-                }
-            });
-        });
-        
-        // Observer les changements de classe sur étape 1
-        observer.observe(etape1, {
-            attributes: true,
-            attributeFilter: ['class']
-        });
-        
-        // ✅ Si étape 1 est déjà active au chargement, charger immédiatement
-        if (etape1.classList.contains('active')) {
-            console.log('🎯 Étape 1 déjà active - Chargement immédiat...');
-            setTimeout(() => {
-                chargerTypeBacEtape1();
-            }, 500);
-        }
-        
-    }, 500);
-});
-function forceChargerTypeBac() {
-    console.log('🔄 Chargement forcé des types de bac...');
-    
-    const etape1 = document.getElementById('etape1');
-    const typeBacField = document.getElementById('typeBac');
-    
-    if (!etape1 || !etape1.classList.contains('active')) {
-        console.warn('⚠️ Étape 1 non active');
-        return false;
-    }
-    
-    if (!typeBacField) {
-        console.warn('⚠️ Champ typeBac non trouvé');
-        return false;
-    }
-    
-    if (typeof chargerFilieresParTypeBac === 'function') {
-        chargerFilieresParTypeBac();
-        return true;
-    } else {
-        console.error('❌ Fonction chargerFilieresParTypeBac non disponible');
-        return false;
-    }
-}
-
-// Export global
-window.forceChargerTypeBac = forceChargerTypeBac;
-console.log('✅ Système de chargement automatique des types de bac initialisé');
