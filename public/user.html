@@ -239,14 +239,16 @@
                 <h3 class="section-title">Baccalauréat</h3>
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="typeBac">Type de Bac <span class="required">*</span> <small>(Filtre les filières disponibles)</small></label>
-                        <select id="typeBac" required>
-                            <option value="">Chargement des types de bac...</option>
-                        </select>
-                        <div class="form-hint">
-                            <small>Sélectionnez votre type de bac pour voir les filières compatibles à l'étape suivante</small>
-                        </div>
-                    </div>
+    <label for="typeBac">Type de Bac <span class="required">*</span></label>
+    
+    <select id="typeBac" required onclick="chargerTypeBacSiVide(this)">
+        <option value="">👆 Cliquez ici pour charger les types de bac</option>
+    </select>
+    
+    <div class="form-hint">
+        <small>Les types de bac se chargeront automatiquement au premier clic</small>
+    </div>
+</div>
                     <div class="form-group">
                         <label for="lieuObtention">Lieu d'obtention <span class="required">*</span></label>
                         <select id="lieuObtention" required>
@@ -808,7 +810,355 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 });
+async function chargerFilieresParTypeBac() {
+    try {
+        // Charger d'abord les types de bac disponibles
+        const responseTypeBacs = await apiClient.getTypeBacsPublic();
+        const typeBacs = responseTypeBacs.typeBacs || [];
+        
+        // Remplir le select des types de bac
+        const selectTypeBac = document.getElementById('typeBac');
+        if (selectTypeBac) {
+            // Sauvegarder la valeur actuelle
+            const currentValue = selectTypeBac.value;
+            
+            // Vider et remplir le select
+            selectTypeBac.innerHTML = '<option value="">Sélectionner un type de bac...</option>';
+            
+            typeBacs.forEach(typeBac => {
+                const option = document.createElement('option');
+                option.value = typeBac.nom;
+                option.textContent = `${typeBac.nom} - ${typeBac.libelle}`;
+                selectTypeBac.appendChild(option);
+            });
+            
+            // Restaurer la valeur si elle existe
+            if (currentValue) {
+                selectTypeBac.value = currentValue;
+            }
+            
+            // Ajouter l'événement de changement pour filtrer les filières
+            selectTypeBac.addEventListener('change', function() {
+                filtrerFilieresParBac(this.value);
+            });
+        }
+        
+    } catch (error) {
+        console.error('Erreur chargement types de bac:', error);
+    }
+}
 
+// 2. Fonction pour filtrer les filières selon le type de bac sélectionné
+async function filtrerFilieresParBac(typeBac) {
+    try {
+        
+        
+        // Réinitialiser tous les selects de filières
+        const selectsFilieres = [
+            document.getElementById('premierChoix'),
+            document.getElementById('deuxiemeChoix'), 
+            document.getElementById('troisiemeChoix')
+        ];
+        
+        selectsFilieres.forEach(select => {
+            if (select) {
+                const currentValue = select.value;
+                select.innerHTML = '<option value="">Sélectionner une filière...</option>';
+                
+                // Si on efface le type de bac, recharger toutes les filières
+               
+            }
+        });
+        
+        // Si un type de bac est sélectionné, charger les filières compatibles
+        if (typeBac) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/filieres-by-bac/${encodeURIComponent(typeBac)}`);
+                
+                if (!response.ok) {
+                    throw new Error(`Erreur ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                const filieres = data.filieres || [];
+                
+                console.log(`Filières trouvées pour ${typeBac}:`, filieres);
+                
+                if (filieres.length === 0) {
+                    selectsFilieres.forEach(select => {
+                        if (select) {
+                            select.innerHTML = `<option value="">Aucune filière disponible pour ce type de bac</option>`;
+                        }
+                    });
+                    UIHelpers.showMessage(`Aucune filière trouvée pour le type de bac ${typeBac}`, 'warning');
+                    return;
+                }
+                
+                // Remplir les selects avec les filières compatibles
+                selectsFilieres.forEach(select => {
+                    if (select) {
+                        const currentValue = select.value;
+                        select.innerHTML = '<option value="">Sélectionner une filière...</option>';
+                        
+                        filieres.forEach(filiere => {
+                            const option = document.createElement('option');
+                            option.value = filiere.nom.toLowerCase();
+                            option.textContent = `${filiere.libelle} (${filiere.faculte_nom})`;
+                            
+                            // Ajouter des informations sur la capacité si disponible
+                            if (filiere.capacite_max) {
+                                option.textContent += ` - Places: ${filiere.capacite_max}`;
+                            }
+                            
+                            select.appendChild(option);
+                        });
+                        
+                        // Restaurer la valeur si elle est encore valide
+                        const isValidChoice = filieres.some(f => f.nom.toLowerCase() === currentValue);
+                        if (currentValue && isValidChoice) {
+                            select.value = currentValue;
+                        }
+                    }
+                });
+                
+                UIHelpers.showSuccess(`${filieres.length} filière(s) disponible(s) pour le ${typeBac}`);
+                
+            } catch (error) {
+                console.error('Erreur lors du chargement des filières:', error);
+                
+                // En cas d'erreur, afficher un message et proposer les filières génériques
+                selectsFilieres.forEach(select => {
+                    if (select) {
+                        select.innerHTML = `
+                            <option value="">Erreur de chargement - Filières génériques</option>
+                            <option value="informatique">Informatique</option>
+                            <option value="mathematiques">Mathématiques</option>
+                        `;
+                    }
+                });
+                
+                UIHelpers.showError('Erreur lors du filtrage. Filières génériques affichées.');
+            }
+        }
+        
+    } catch (error) {
+        console.error('Erreur filtrage filières:', error);
+        UIHelpers.showError('Erreur lors du filtrage des filières');
+    } finally {
+        UIHelpers.showLoading(false);
+    }
+}
+
+// 3. Fonction pour valider la cohérence des choix
+function validerChoixFilieres() {
+    const typeBac = document.getElementById('typeBac')?.value;
+    const premierChoix = document.getElementById('premierChoix')?.value;
+    const deuxiemeChoix = document.getElementById('deuxiemeChoix')?.value;
+    const troisiemeChoix = document.getElementById('troisiemeChoix')?.value;
+    
+    const erreurs = [];
+    
+    // Vérifier que les trois choix sont différents
+    const choix = [premierChoix, deuxiemeChoix, troisiemeChoix].filter(Boolean);
+    const choixUniques = [...new Set(choix)];
+    
+    if (choix.length !== choixUniques.length) {
+        erreurs.push('Les trois choix de filières doivent être différents');
+    }
+    
+    // Vérifier qu'au moins le premier choix est fait
+    if (!premierChoix) {
+        erreurs.push('Le premier choix de filière est obligatoire');
+    }
+    
+    if (erreurs.length > 0) {
+        UIHelpers.showError(erreurs.join('\n'));
+        return false;
+    }
+    
+    return true;
+}
+
+// 4. Modifier la fonction nextStep pour inclure la validation
+const originalNextStep = window.nextStep;
+window.nextStep = function(event, nextStepNumber) {
+    // Si on passe de l'étape 2 à l'étape 3, valider les choix
+    if (nextStepNumber === 3) {
+        if (!validerChoixFilieres()) {
+            event.preventDefault();
+            return false;
+        }
+    }
+    
+    // Appeler la fonction originale
+    return originalNextStep.call(this, event, nextStepNumber);
+};
+
+// 5. Initialiser le filtrage quand on arrive sur l'étape 1
+document.addEventListener('DOMContentLoaded', function() {
+    // Attendre que la page soit complètement chargée
+    setTimeout(() => {
+        const etape1 = document.getElementById('etape1');
+        if (etape1) {
+            // Observer les changements de visibilité de l'étape 1
+            const observer = new MutationObserver(function(mutations) {
+                mutations.forEach(function(mutation) {
+                    if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                        const target = mutation.target;
+                        if (target.classList.contains('active') && target.id === 'etape1') {
+                            // L'étape 1 devient active, charger les types de bac
+                            setTimeout(() => chargerFilieresParTypeBac(), 500);
+                        }
+                    }
+                });
+            });
+            
+            observer.observe(etape1, {
+                attributes: true,
+                attributeFilter: ['class']
+            });
+        }
+    }, 1000);
+});
+
+// 6. Fonction utilitaire pour réinitialiser les filières
+function reinitialiserFilieres() {
+    const selectsFilieres = [
+        document.getElementById('premierChoix'),
+        document.getElementById('deuxiemeChoix'), 
+        document.getElementById('troisiemeChoix')
+    ];
+    
+    selectsFilieres.forEach(select => {
+        if (select) {
+            select.innerHTML = '<option value="">Sélectionner d\'abord un type de bac</option>';
+            select.value = '';
+        }
+    });
+}
+
+
+// 7. Ajouter des événements pour éviter la sélection multiple de la même filière
+function configurerEvenementsChoixUniques() {
+    const selectsFilieres = [
+        document.getElementById('premierChoix'),
+        document.getElementById('deuxiemeChoix'), 
+        document.getElementById('troisiemeChoix')
+    ];
+    
+    selectsFilieres.forEach((select, index) => {
+        if (select) {
+            select.addEventListener('change', function() {
+                const valeurSelectionnee = this.value;
+                
+                if (valeurSelectionnee) {
+                    // Désactiver cette option dans les autres selects
+                    selectsFilieres.forEach((autreSelect, autreIndex) => {
+                        if (autreIndex !== index && autreSelect) {
+                            const options = autreSelect.querySelectorAll('option');
+                            options.forEach(option => {
+                                if (option.value === valeurSelectionnee) {
+                                    option.disabled = true;
+                                    option.textContent = option.textContent.replace(' (déjà sélectionné)', '') + ' (déjà sélectionné)';
+                                }
+                            });
+                        }
+                    });
+                }
+                
+                // Réactiver toutes les options puis désactiver celles qui sont prises
+                selectsFilieres.forEach((autreSelect, autreIndex) => {
+                    if (autreIndex !== index && autreSelect) {
+                        const options = autreSelect.querySelectorAll('option');
+                        options.forEach(option => {
+                            option.disabled = false;
+                            option.textContent = option.textContent.replace(' (déjà sélectionné)', '');
+                        });
+                    }
+                });
+                
+                // Désactiver les options déjà sélectionnées dans les autres selects
+                const valeursSelectionnees = selectsFilieres
+                    .filter((s, i) => i !== index && s)
+                    .map(s => s.value)
+                    .filter(Boolean);
+                
+                selectsFilieres.forEach((autreSelect, autreIndex) => {
+                    if (autreIndex !== index && autreSelect) {
+                        const options = autreSelect.querySelectorAll('option');
+                        options.forEach(option => {
+                            if (valeursSelectionnees.includes(option.value) && option.value) {
+                                option.disabled = true;
+                                if (!option.textContent.includes('(déjà sélectionné)')) {
+                                    option.textContent += ' (déjà sélectionné)';
+                                }
+                            }
+                        });
+                    }
+                });
+            });
+        }
+    });
+}
+// ✅ Chargement au premier clic sur le select
+async function chargerTypeBacSiVide(selectElement) {
+    // Si déjà chargé, ne rien faire
+    if (selectElement.dataset.loaded === 'true') {
+        return;
+    }
+    
+    try {
+        console.log('🎯 Premier clic - Chargement des types de bac...');
+        
+        // Marquer comme en cours de chargement
+        selectElement.dataset.loading = 'true';
+        selectElement.innerHTML = '<option value="">⏳ Chargement...</option>';
+        
+        const response = await apiClient.getTypeBacsPublic();
+        const typeBacs = response.typeBacs || [];
+        
+        if (typeBacs.length === 0) {
+            selectElement.innerHTML = '<option value="">❌ Aucun type disponible</option>';
+            return;
+        }
+        
+        // Remplir le select
+        selectElement.innerHTML = '<option value="">Sélectionner un type de bac...</option>';
+        
+        typeBacs.forEach(typeBac => {
+            const option = document.createElement('option');
+            option.value = typeBac.nom;
+            option.textContent = `${typeBac.nom} - ${typeBac.libelle}`;
+            selectElement.appendChild(option);
+        });
+        
+        // Marquer comme chargé
+        selectElement.dataset.loaded = 'true';
+        delete selectElement.dataset.loading;
+        
+        // Ajouter l'événement de filtrage
+        selectElement.addEventListener('change', function() {
+            filtrerFilieresParBac(this.value);
+        });
+        
+        console.log(`✅ ${typeBacs.length} types de bac chargés`);
+        
+        // Rouvrir automatiquement le select après chargement
+        setTimeout(() => {
+            selectElement.focus();
+            selectElement.click();
+        }, 100);
+        
+    } catch (error) {
+        console.error('❌ Erreur:', error);
+        selectElement.innerHTML = '<option value="">❌ Erreur - Cliquez pour réessayer</option>';
+        delete selectElement.dataset.loading;
+        UIHelpers.showError('Erreur de chargement');
+    }
+}
+
+// Export global
+window.chargerTypeBacSiVide = chargerTypeBacSiVide;
 // Fonction pour basculer entre tableau et cartes selon la largeur d'écran
 function toggleViewMode() {
     const tableContainer = document.getElementById('tableContainer');
@@ -831,1100 +1181,7 @@ window.addEventListener('resize', toggleViewMode);
 window.addEventListener('load', toggleViewMode);
 </script>
 
-<style>
-/* Styles pour le modal */
-.modal {
-    display: none;
-    position: fixed;
-    z-index: 10000;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    overflow: auto;
-    background-color: rgba(0,0,0,0.5);
-    animation: fadeIn 0.3s ease;
-}
 
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
-
-.modal-content {
-    background-color: #fefefe;
-    margin: 2% auto;
-    padding: 30px;
-    border: 1px solid #888;
-    max-width: 900px;
-    border-radius: 15px;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-    animation: slideDown 0.3s ease;
-    max-height: 90vh;
-    overflow-y: auto;
-}
-
-@keyframes slideDown {
-    from {
-        transform: translateY(-50px);
-        opacity: 0;
-    }
-    to {
-        transform: translateY(0);
-        opacity: 1;
-    }
-}
-
-.close {
-    color: #aaa;
-    float: right;
-    font-size: 35px;
-    font-weight: bold;
-    line-height: 20px;
-    cursor: pointer;
-    transition: color 0.3s ease;
-}
-
-.close:hover,
-.close:focus {
-    color: #dc3545;
-}
-
-.modal-content h3 {
-    color: #667eea;
-    margin: 0 0 25px 0;
-    padding-bottom: 15px;
-    border-bottom: 3px solid #667eea;
-    font-size: 1.5em;
-}
-
-.form-section {
-    margin-bottom: 25px;
-    padding: 20px;
-    background: #f8f9fa;
-    border-radius: 10px;
-}
-
-.form-section h4 {
-    margin: 0 0 15px 0;
-}
-
-.form-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-    margin-bottom: 15px;
-}
-
-.form-group {
-    display: flex;
-    flex-direction: column;
-}
-
-.form-group label {
-    font-weight: 600;
-    margin-bottom: 8px;
-    color: #333;
-}
-
-.form-group input,
-.form-group select,
-.form-group textarea {
-    padding: 12px;
-    border: 2px solid #e0e0e0;
-    border-radius: 8px;
-    font-size: 0.95em;
-    transition: all 0.3s ease;
-}
-
-.form-group input:focus,
-.form-group select:focus,
-.form-group textarea:focus {
-    outline: none;
-    border-color: #667eea;
-    background: #f0f2ff;
-    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
-}
-
-.form-group small {
-    margin-top: 5px;
-    font-size: 0.85em;
-}
-
-.btn {
-    padding: 12px 25px;
-    border: none;
-    border-radius: 8px;
-    font-size: 1em;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.btn-primary {
-    background: linear-gradient(135deg, #667eea, #764ba2);
-    color: white;
-}
-
-.btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
-}
-
-.btn-secondary {
-    background: #f0f0f0;
-    color: #333;
-    border: 2px solid #e0e0e0;
-}
-
-.btn-secondary:hover {
-    background: #e8e8e8;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-    .modal-content {
-        margin: 5% 10px;
-        padding: 20px;
-        max-width: 100%;
-    }
-    
-    .form-row {
-        grid-template-columns: 1fr;
-        gap: 15px;
-    }
-    
-    .form-section {
-        padding: 15px;
-    }
-}
-    /* ==================== PAGE CONFIRMATION RESPONSIVE ==================== */
-
-.confirmation-header {
-    text-align: center;
-    margin-bottom: 40px;
-    animation: fadeInDown 0.6s ease-out;
-}
-
-.success-icon {
-    font-size: 80px;
-    margin-bottom: 20px;
-    animation: bounceIn 0.8s ease-out;
-}
-
-@keyframes fadeInDown {
-    from {
-        opacity: 0;
-        transform: translateY(-20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-@keyframes bounceIn {
-    0% {
-        opacity: 0;
-        transform: scale(0.3);
-    }
-    50% {
-        opacity: 1;
-        transform: scale(1.05);
-    }
-    70% {
-        transform: scale(0.9);
-    }
-    100% {
-        transform: scale(1);
-    }
-}
-
-/* Grid responsive pour la confirmation */
-.confirmation-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 30px;
-    max-width: 1200px;
-    margin: 0 auto 40px;
-}
-
-.confirmation-column {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-}
-
-/* Cartes de confirmation */
-.confirmation-card {
-    background: white;
-    padding: 25px;
-    border-radius: 15px;
-    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-    animation: slideUp 0.5s ease-out;
-}
-
-@keyframes slideUp {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.card-title {
-    color: #667eea;
-    margin: 0 0 20px 0;
-    padding-bottom: 15px;
-    border-bottom: 2px solid #667eea;
-    font-size: 1.1em;
-}
-
-/* Grille d'informations */
-.info-grid {
-    display: grid;
-    gap: 15px;
-}
-
-.info-item {
-    display: flex;
-    flex-direction: column;
-    padding: 12px 15px;
-    background: #f8f9fa;
-    border-radius: 8px;
-    border-left: 3px solid #667eea;
-    transition: transform 0.2s ease;
-}
-
-.info-item:hover {
-    transform: translateX(5px);
-}
-
-.info-item.highlight {
-    background: linear-gradient(135deg, #e8f4ff, #f0f8ff);
-    border-left-color: #28a745;
-}
-
-.info-label {
-    font-size: 0.85em;
-    color: #999;
-    margin-bottom: 5px;
-    font-weight: 500;
-}
-
-.info-value {
-    font-size: 1em;
-    color: #333;
-    font-weight: 600;
-    word-wrap: break-word;
-}
-
-.numero-dossier {
-    font-family: monospace;
-    color: #667eea;
-    font-size: 1.1em;
-}
-
-/* Grille des choix */
-.choix-grid {
-    display: grid;
-    gap: 15px;
-}
-
-.choix-item {
-    padding: 15px;
-    border-radius: 10px;
-    border-left: 4px solid;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    transition: transform 0.2s ease;
-}
-
-.choix-item:hover {
-    transform: translateX(5px);
-}
-
-.choix-1 {
-    background: #d4edda;
-    border-left-color: #28a745;
-}
-
-.choix-2 {
-    background: #fff3cd;
-    border-left-color: #ffc107;
-}
-
-.choix-3 {
-    background: #f8d7da;
-    border-left-color: #dc3545;
-}
-
-.choix-badge {
-    font-size: 0.75em;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.choix-1 .choix-badge {
-    color: #155724;
-}
-
-.choix-2 .choix-badge {
-    color: #856404;
-}
-
-.choix-3 .choix-badge {
-    color: #721c24;
-}
-
-.choix-label {
-    font-size: 0.85em;
-    color: #666;
-}
-
-.choix-value {
-    font-weight: 600;
-    color: #333;
-    font-size: 0.95em;
-}
-
-/* Liste des documents */
-.documents-list {
-    display: grid;
-    gap: 10px;
-}
-
-.documents-list button {
-    width: 100%;
-    padding: 15px;
-    background: #d1ecf1;
-    color: #0c5460;
-    border: 1px solid #bee5eb;
-    border-radius: 8px;
-    text-align: left;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.documents-list button:hover {
-    background: #bee5eb;
-    transform: translateX(5px);
-}
-
-.documents-list button:disabled {
-    background: #e9ecef;
-    color: #6c757d;
-    cursor: not-allowed;
-    opacity: 0.6;
-}
-
-/* Carte prochaines étapes */
-.next-steps-card {
-    background: linear-gradient(135deg, #e8f4ff, #f0f8ff);
-    padding: 25px;
-    border-radius: 15px;
-    border-left: 4px solid #667eea;
-}
-
-.steps-list {
-    margin: 0;
-    padding-left: 25px;
-    color: #555;
-    line-height: 1.8;
-}
-
-.steps-list li {
-    margin-bottom: 12px;
-    padding-left: 5px;
-}
-
-.steps-list strong {
-    color: #667eea;
-}
-
-/* Conteneur des boutons d'action */
-.action-buttons-container {
-    display: flex;
-    gap: 15px;
-    justify-content: center;
-    flex-wrap: wrap;
-    max-width: 900px;
-    margin: 0 auto;
-}
-
-.btn-large {
-    padding: 15px 30px;
-    font-size: 1.05em;
-    flex: 1;
-    min-width: 200px;
-}
-
-/* ==================== RESPONSIVE MOBILE ==================== */
-@media (max-width: 968px) {
-    .confirmation-grid {
-        grid-template-columns: 1fr;
-        gap: 20px;
-        padding: 0 15px;
-    }
-}
-
-@media (max-width: 768px) {
-    .confirmation-header {
-        margin-bottom: 30px;
-    }
-    
-    .success-icon {
-        font-size: 60px;
-        margin-bottom: 15px;
-    }
-    
-    .confirmation-header h2 {
-        font-size: 1.5em;
-    }
-    
-    .confirmation-header p {
-        font-size: 1em;
-    }
-    
-    .confirmation-grid {
-        gap: 20px;
-        padding: 0 10px;
-    }
-    
-    .confirmation-card {
-        padding: 20px;
-    }
-    
-    .card-title {
-        font-size: 1em;
-        margin-bottom: 15px;
-    }
-    
-    .info-item {
-        padding: 10px 12px;
-    }
-    
-    .info-label {
-        font-size: 0.8em;
-    }
-    
-    .info-value {
-        font-size: 0.9em;
-    }
-    
-    .numero-dossier {
-        font-size: 1em;
-    }
-    
-    .choix-item {
-        padding: 12px;
-    }
-    
-    .choix-badge {
-        font-size: 0.7em;
-    }
-    
-    .choix-label {
-        font-size: 0.8em;
-    }
-    
-    .choix-value {
-        font-size: 0.9em;
-    }
-    
-    .documents-list button {
-        padding: 12px;
-        font-size: 0.9em;
-    }
-    
-    .next-steps-card {
-        padding: 20px;
-    }
-    
-    .steps-list {
-        font-size: 0.9em;
-        padding-left: 20px;
-    }
-    
-    .steps-list li {
-        margin-bottom: 10px;
-    }
-    
-    .action-buttons-container {
-        flex-direction: column;
-        padding: 0 15px;
-    }
-    
-    .btn-large {
-        width: 100%;
-        min-width: 0;
-        padding: 15px 20px;
-        font-size: 1em;
-    }
-}
-
-@media (max-width: 480px) {
-    .success-icon {
-        font-size: 50px;
-    }
-    
-    .confirmation-header h2 {
-        font-size: 1.3em;
-    }
-    
-    .confirmation-header p {
-        font-size: 0.95em;
-    }
-    
-    .confirmation-card {
-        padding: 15px;
-        border-radius: 10px;
-    }
-    
-    .card-title {
-        font-size: 0.95em;
-        padding-bottom: 10px;
-    }
-    
-    .info-item {
-        padding: 8px 10px;
-    }
-    
-    .choix-item {
-        padding: 10px;
-    }
-    
-    .documents-list button {
-        padding: 10px;
-        font-size: 0.85em;
-    }
-    
-    .next-steps-card {
-        padding: 15px;
-    }
-    
-    .steps-list {
-        font-size: 0.85em;
-        line-height: 1.6;
-    }
-    
-    .btn-large {
-        padding: 12px 15px;
-        font-size: 0.95em;
-    }
-}
-/* ==================== STYLES DOCUMENTS CONFIRMATION ==================== */
-
-.document-item {
-    animation: fadeInUp 0.4s ease-out;
-}
-
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.btn-download-doc:active {
-    transform: scale(0.95);
-}
-
-/* Responsive pour les documents */
-@media (max-width: 768px) {
-    .document-item {
-        flex-direction: column !important;
-        align-items: flex-start !important;
-        padding: 12px !important;
-    }
-    
-    .document-item > div:first-child {
-        margin-bottom: 10px;
-        width: 100%;
-    }
-    
-    .btn-download-doc {
-        width: 100%;
-        padding: 10px 16px !important;
-    }
-}
-
-@media (max-width: 480px) {
-    .document-item {
-        padding: 10px !important;
-    }
-    
-    .document-item > div:first-child > span {
-        font-size: 1.2em !important;
-    }
-    
-    .document-item > div:first-child > div > div:first-child {
-        font-size: 0.9em;
-    }
-    
-    .document-item > div:first-child > div > div:last-child {
-        font-size: 0.7em !important;
-    }
-}
-
-/* Styles intégrés - À AJOUTER dans votre fichier CSS principal */
-
-/* Conteneur responsive */
-.table-responsive {
-    width: 100%;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    margin-bottom: 20px;
-    background: white;
-    border-radius: 10px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
-
-/* Table */
-.table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.table thead {
-    background: linear-gradient(135deg, #667eea, #764ba2);
-    color: white;
-}
-
-.table th {
-    padding: 15px;
-    text-align: left;
-    font-weight: 600;
-    white-space: nowrap;
-}
-
-.table td {
-    padding: 12px 15px;
-    border-bottom: 1px solid #f0f0f0;
-    white-space: nowrap;
-}
-
-.table tbody tr:hover {
-    background-color: #f8f9fa;
-}
-
-/* Badges de statut */
-.status-badge {
-    padding: 5px 12px;
-    border-radius: 15px;
-    font-size: 12px;
-    font-weight: 600;
-    display: inline-block;
-    white-space: nowrap;
-}
-
-.status-approved {
-    background: #d4edda;
-    color: #155724;
-}
-
-.status-rejected {
-    background: #f8d7da;
-    color: #721c24;
-}
-
-.status-pending {
-    background: #fff3cd;
-    color: #856404;
-}
-
-/* Boutons */
-.table .btn {
-    padding: 6px 12px;
-    margin: 2px;
-    font-size: 13px;
-    white-space: nowrap;
-}
-
-/* ===== RESPONSIVE MOBILE ===== */
-@media (max-width: 768px) {
-    .table-responsive {
-        margin: 0 -15px;
-        padding: 0 15px;
-        border-radius: 0;
-    }
-    
-    .table {
-        min-width: 900px; /* Largeur minimum pour voir toutes les colonnes */
-    }
-    
-    .table th,
-    .table td {
-        padding: 10px;
-        font-size: 13px;
-    }
-    
-    /* Boutons empilés verticalement */
-    .table td:last-child {
-        min-width: 150px;
-    }
-    
-    .table .btn {
-        display: block;
-        width: 100%;
-        margin: 3px 0;
-        padding: 8px;
-        font-size: 12px;
-    }
-    
-    /* Indicateur de scroll */
-    .scroll-indicator::after {
-        content: '👉 Faites glisser pour voir plus';
-        display: block;
-        text-align: center;
-        padding: 8px;
-        font-size: 11px;
-        color: #667eea;
-        font-weight: 600;
-        background: linear-gradient(90deg, transparent, #f0f2ff, transparent);
-        animation: pulse 2s infinite;
-    }
-    
-    .scroll-indicator.scrolled::after {
-        display: none;
-    }
-    
-    @keyframes pulse {
-        0%, 100% { opacity: 0.5; }
-        50% { opacity: 1; }
-    }
-}
-
-/* Barre de scroll personnalisée */
-.table-responsive::-webkit-scrollbar {
-    height: 8px;
-}
-
-.table-responsive::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 10px;
-}
-
-.table-responsive::-webkit-scrollbar-thumb {
-    background: linear-gradient(135deg, #667eea, #764ba2);
-    border-radius: 10px;
-}
-
-.table-responsive::-webkit-scrollbar-thumb:hover {
-    background: #667eea;
-}
-
-/* État vide */
-.empty-state {
-    text-align: center;
-    padding: 40px 20px;
-}
-
-.empty-state-icon {
-    font-size: 60px;
-    margin-bottom: 15px;
-    opacity: 0.5;
-}
-
-.empty-state-text {
-    font-size: 16px;
-    color: #999;
-}
-
-/* ===== VERSION CARTES MOBILE (optionnel) ===== */
-.mobile-card {
-    background: white;
-    border-radius: 12px;
-    padding: 20px;
-    margin-bottom: 15px;
-    box-shadow: 0 3px 10px rgba(0,0,0,0.1);
-    border-left: 4px solid #667eea;
-}
-
-.mobile-card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 15px;
-    padding-bottom: 15px;
-    border-bottom: 2px solid #f0f0f0;
-}
-
-.mobile-card-title {
-    font-weight: 600;
-    color: #333;
-    font-size: 16px;
-}
-
-.mobile-card-date {
-    font-size: 12px;
-    color: #666;
-}
-
-.mobile-card-info {
-    display: grid;
-    gap: 10px;
-    margin-bottom: 15px;
-}
-
-.mobile-card-row {
-    display: flex;
-    justify-content: space-between;
-    padding: 5px 0;
-}
-
-.mobile-card-label {
-    font-weight: 600;
-    color: #666;
-    font-size: 13px;
-}
-
-.mobile-card-value {
-    color: #333;
-    font-size: 14px;
-    font-family: monospace;
-}
-
-.mobile-card-actions {
-    display: grid;
-    gap: 8px;
-}
-
-.mobile-card-actions .btn {
-    width: 100%;
-    padding: 12px;
-    font-size: 14px;
-}
-/* ==================== RÉSUMÉ RESPONSIVE ==================== */
-
-/* Grid responsive pour le résumé */
-.resume-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-}
-
-.resume-section {
-    width: 100%;
-}
-
-.resume-card {
-    background: white;
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-}
-
-.resume-item {
-    display: flex;
-    flex-direction: column;
-    padding: 12px 0;
-    border-bottom: 1px solid #f0f0f0;
-}
-
-.resume-item:last-child {
-    border-bottom: none;
-}
-
-.resume-label {
-    font-size: 0.85em;
-    color: #999;
-    margin-bottom: 5px;
-    font-weight: 500;
-}
-
-.resume-value {
-    font-size: 0.95em;
-    color: #333;
-    font-weight: 600;
-    word-wrap: break-word;
-}
-
-/* Grid pour les documents */
-.documents-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 15px;
-    background: white;
-    padding: 20px;
-    border-radius: 10px;
-}
-
-.document-resume-item {
-    padding: 15px;
-    background: #f8f9fa;
-    border-radius: 8px;
-    border: 1px solid #e1e5e9;
-}
-
-/* Checkbox container */
-.checkbox-container {
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-    margin: 30px 0;
-    padding: 20px;
-    background: #fff3cd;
-    border-radius: 8px;
-    border-left: 4px solid #ffc107;
-}
-
-.checkbox-container input[type="checkbox"] {
-    margin-top: 3px;
-    width: 20px;
-    height: 20px;
-    cursor: pointer;
-    flex-shrink: 0;
-}
-
-.checkbox-container label {
-    cursor: pointer;
-    font-size: 0.95em;
-    color: #333;
-    line-height: 1.5;
-    margin: 0;
-}
-
-/* ==================== RESPONSIVE MOBILE ==================== */
-@media (max-width: 768px) {
-    /* Grid devient une colonne sur mobile */
-    .resume-grid {
-        grid-template-columns: 1fr;
-        gap: 20px;
-    }
-    
-    .resume-card {
-        padding: 15px;
-    }
-    
-    .resume-item {
-        padding: 10px 0;
-    }
-    
-    .resume-label {
-        font-size: 0.8em;
-    }
-    
-    .resume-value {
-        font-size: 0.9em;
-    }
-    
-    /* Documents en une seule colonne sur mobile */
-    .documents-grid {
-        grid-template-columns: 1fr;
-        padding: 15px;
-    }
-    
-    .document-resume-item {
-        padding: 12px;
-    }
-    
-    /* Info box plus compact */
-    .info-box {
-        padding: 15px;
-        font-size: 0.9em;
-    }
-    
-    /* Checkbox container */
-    .checkbox-container {
-        padding: 15px;
-        flex-direction: row;
-        align-items: flex-start;
-    }
-    
-    .checkbox-container input[type="checkbox"] {
-        width: 18px;
-        height: 18px;
-        margin-top: 2px;
-    }
-    
-    .checkbox-container label {
-        font-size: 0.9em;
-    }
-    
-    /* Boutons */
-    .button-group {
-        flex-direction: column;
-        gap: 10px;
-    }
-    
-    .button-group .btn {
-        width: 100%;
-        padding: 15px;
-    }
-    
-    /* Form container moins de padding */
-    .form-container {
-        padding: 20px 15px;
-    }
-    
-    /* Step indicator plus compact */
-    .step {
-        font-size: 0.85em;
-    }
-    
-    .step-number {
-        width: 35px;
-        height: 35px;
-        font-size: 0.9em;
-    }
-    
-    .step > span {
-        font-size: 0.75em;
-    }
-}
-
-@media (max-width: 480px) {
-    /* Très petits écrans */
-    .form-container {
-        padding: 15px 10px;
-        border-radius: 10px;
-    }
-    
-    h2 {
-        font-size: 1.3em;
-        padding-left: 10px;
-    }
-    
-    h2::before {
-        width: 4px;
-        height: 25px;
-    }
-    
-    h3 {
-        font-size: 1.1em;
-    }
-    
-    h4 {
-        font-size: 1em;
-    }
-    
-    .resume-card {
-        padding: 12px;
-    }
-    
-    .checkbox-container {
-        padding: 12px;
-    }
-    
-    .info-box {
-        padding: 12px;
-    }
-}
-</style>
            <!-- Page de modification de dossier -->
             <!-- Modifier la page de modification de dossier -->
 <!-- Page de modification de dossier - À REMPLACER COMPLÈTEMENT dans user.html -->
