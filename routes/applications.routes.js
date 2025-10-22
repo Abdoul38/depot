@@ -21,7 +21,8 @@ router.post('/',
         { name: 'pieceIdentite', maxCount: 1 },
         { name: 'diplomeBac', maxCount: 1 },
         { name: 'releve', maxCount: 1 },
-        { name: 'certificatNationalite', maxCount: 1 }
+        { name: 'certificatNationalite', maxCount: 1 },
+        { name: 'releveTerminale', maxCount: 1 }
     ]),
     applicationsController.submitApplication
 );
@@ -35,7 +36,8 @@ router.put('/:id',
         { name: 'pieceIdentite', maxCount: 1 },
         { name: 'diplomeBac', maxCount: 1 },
         { name: 'releve', maxCount: 1 },
-        { name: 'certificatNationalite', maxCount: 1 }
+        { name: 'certificatNationalite', maxCount: 1 },
+        { name: 'releveTerminale', maxCount: 1 }
     ]),
     applicationsController.updateApplication
 );
