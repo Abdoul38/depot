@@ -2123,123 +2123,18 @@ class PerformanceMonitor {
 
 const perfMonitor = new PerformanceMonitor();
 
-async function startApplicationProcess() {
+// ✅ FONCTION CORRIGÉE : Démarrer le processus avec chargement auto des types de bac
+function startApplicationProcess() {
     console.log('🚀 Démarrage du processus de dépôt...');
     
-    try {
-        UIHelpers.showLoading(true);
-        
-        // Réinitialiser les données
-        currentApplicationData = {};
-        
-        // Afficher la page
-        showPage('etape1');
-        
-        console.log('🔄 Synchronisation des données du formulaire...');
-        
-        // ✅ SYNCHRONISATION AUTOMATIQUE des types de bac et filières
-        await Promise.all([
-            chargerTypeBacsDansFormulaire(),
-            prechargerFilieresEnCache()
-        ]);
-        
-        console.log('✅ Formulaire synchronisé et prêt');
-        UIHelpers.showSuccess('Formulaire prêt ! Vous pouvez commencer.');
-        
-    } catch (error) {
-        console.error('❌ Erreur synchronisation formulaire:', error);
-        UIHelpers.showWarning('Formulaire chargé, mais certaines données peuvent manquer');
-    } finally {
-        UIHelpers.showLoading(false);
-    }
-}
-// ✅ NOUVELLE FONCTION : Charger les types de bac dans le formulaire
-async function chargerTypeBacsDansFormulaire() {
-    try {
-        console.log('📚 Chargement types de bac...');
-        
-        const response = await apiClient.getTypeBacsPublic();
-        const typeBacs = response.typeBacs || [];
-        
-        if (typeBacs.length === 0) {
-            console.warn('⚠️ Aucun type de bac trouvé');
-            return;
-        }
-        
-        // Charger dans le select de l'étape 1
-        const selectTypeBac = document.getElementById('typeBac');
-        
-        if (selectTypeBac) {
-            // Vider et remplir le select
-            selectTypeBac.innerHTML = '<option value="">Sélectionner un type de bac...</option>';
-            
-            typeBacs.forEach(typeBac => {
-                const option = document.createElement('option');
-                option.value = typeBac.nom;
-                option.textContent = `${typeBac.nom} - ${typeBac.libelle}`;
-                selectTypeBac.appendChild(option);
-            });
-            
-            console.log(`✅ ${typeBacs.length} types de bac chargés`);
-            
-            // Configurer l'événement de changement
-            selectTypeBac.removeEventListener('change', handleTypeBacChange);
-            selectTypeBac.addEventListener('change', handleTypeBacChange);
-        }
-        
-    } catch (error) {
-        console.error('❌ Erreur chargement types de bac:', error);
-        
-        // Fallback avec types de bac par défaut
-        const selectTypeBac = document.getElementById('typeBac');
-        if (selectTypeBac) {
-            selectTypeBac.innerHTML = `
-                <option value="">Sélectionner un type de bac...</option>
-                <option value="A">Bac A - Littéraire</option>
-                <option value="C">Bac C - Scientifique</option>
-                <option value="D">Bac D - Sciences de la vie</option>
-            `;
-        }
-    }
-}
-
-// ✅ FONCTION : Gérer le changement de type de bac
-async function handleTypeBacChange(event) {
-    const typeBac = event.target.value;
+    currentApplicationData = {};
+    showPage('etape1');
     
-    console.log('🔄 Type de bac sélectionné:', typeBac);
-    
-    if (!typeBac) {
-        // Réinitialiser les filières
-        reinitialiserFilieres();
-        return;
-    }
-    
-    // Filtrer les filières
-    await filtrerFilieresParBac(typeBac);
-    
-    // Afficher le rappel du type de bac sélectionné (étape 2)
-    const rappelDiv = document.getElementById('rappelTypeBac');
-    const typeBacSelectionne = document.getElementById('typeBacSelectionne');
-    
-    if (rappelDiv && typeBacSelectionne) {
-        typeBacSelectionne.textContent = typeBac;
-        rappelDiv.style.display = 'block';
-    }
-}
-// ✅ NOUVELLE FONCTION : Précharger les filières en cache
-async function prechargerFilieresEnCache() {
-    try {
-        console.log('📦 Préchargement filières en cache...');
-        
-        // Charger toutes les filières pour les avoir en cache
-        const response = await apiClient.getFilieresPublic();
-        
-        console.log('✅ Filières préchargées en cache');
-        
-    } catch (error) {
-        console.warn('⚠️ Erreur préchargement filières:', error);
-    }
+    // ✅ CRUCIAL : Charger les types de bac dès l'affichage de l'étape 1
+    setTimeout(() => {
+        console.log('📦 Chargement automatique des types de bac...');
+        chargerFilieresParTypeBac();
+    }, 500);
 }
 
 async function nextStep(event, nextStepNumber) {
@@ -5164,47 +5059,79 @@ function supprimerDocument(inputId) {
     fileUpload.classList.remove('has-file');
 }
 
+// ✅ FONCTION OPTIMISÉE : Charger les types de bac
 async function chargerFilieresParTypeBac() {
     try {
-        // Charger d'abord les types de bac disponibles
+        console.log('🔄 Début chargement types de bac...');
+        
+        // Charger les types de bac disponibles
         const responseTypeBacs = await apiClient.getTypeBacsPublic();
         const typeBacs = responseTypeBacs.typeBacs || [];
         
-        // Remplir le select des types de bac
+        console.log(`✅ ${typeBacs.length} type(s) de bac récupéré(s):`, typeBacs);
+        
+        // Trouver le select des types de bac
         const selectTypeBac = document.getElementById('typeBac');
-        if (selectTypeBac) {
-            // Sauvegarder la valeur actuelle
-            const currentValue = selectTypeBac.value;
-            
-            // Vider et remplir le select
-            selectTypeBac.innerHTML = '<option value="">Sélectionner un type de bac...</option>';
-            
-            typeBacs.forEach(typeBac => {
-                const option = document.createElement('option');
-                option.value = typeBac.nom;
-                option.textContent = `${typeBac.nom} - ${typeBac.libelle}`;
-                selectTypeBac.appendChild(option);
-            });
-            
-            // Restaurer la valeur si elle existe
-            if (currentValue) {
-                selectTypeBac.value = currentValue;
-            }
-            
-            // Ajouter l'événement de changement pour filtrer les filières
-            selectTypeBac.addEventListener('change', function() {
-                filtrerFilieresParBac(this.value);
-            });
+        
+        if (!selectTypeBac) {
+            console.warn('⚠️ Élément #typeBac non trouvé');
+            return;
         }
         
+        // Sauvegarder la valeur actuelle
+        const currentValue = selectTypeBac.value;
+        
+        // Vider et remplir le select
+        selectTypeBac.innerHTML = '<option value="">Sélectionner un type de bac...</option>';
+        
+        if (typeBacs.length === 0) {
+            selectTypeBac.innerHTML = '<option value="">Aucun type de bac disponible</option>';
+            console.warn('⚠️ Aucun type de bac disponible');
+            return;
+        }
+        
+        typeBacs.forEach(typeBac => {
+            const option = document.createElement('option');
+            option.value = typeBac.nom;
+            option.textContent = `${typeBac.nom} - ${typeBac.libelle}`;
+            selectTypeBac.appendChild(option);
+        });
+        
+        // Restaurer la valeur si elle existe
+        if (currentValue && typeBacs.some(tb => tb.nom === currentValue)) {
+            selectTypeBac.value = currentValue;
+            console.log('✅ Valeur restaurée:', currentValue);
+        }
+        
+        // Ajouter l'événement de changement (supprimer les anciens d'abord)
+        const newSelect = selectTypeBac.cloneNode(true);
+        selectTypeBac.replaceWith(newSelect);
+        
+        document.getElementById('typeBac').addEventListener('change', function() {
+            console.log('🔄 Type de bac changé:', this.value);
+            filtrerFilieresParBac(this.value);
+        });
+        
+        console.log('✅ Types de bac chargés avec succès');
+        
     } catch (error) {
-        console.error('Erreur chargement types de bac:', error);
+        console.error('❌ Erreur chargement types de bac:', error);
+        
+        const selectTypeBac = document.getElementById('typeBac');
+        if (selectTypeBac) {
+            selectTypeBac.innerHTML = `
+                <option value="">Erreur de chargement</option>
+                <option value="A">A (Série Littéraire)</option>
+                <option value="C">C (Série Scientifique)</option>
+                <option value="D">D (Série Scientifique)</option>
+            `;
+        }
     }
 }
 // 2. Fonction pour filtrer les filières selon le type de bac sélectionné
 async function filtrerFilieresParBac(typeBac) {
     try {
-        console.log('🔍 Filtrage filières pour:', typeBac);
+        
         
         // Réinitialiser tous les selects de filières
         const selectsFilieres = [
@@ -5213,11 +5140,13 @@ async function filtrerFilieresParBac(typeBac) {
             document.getElementById('troisiemeChoix')
         ];
         
-        // Afficher un message de chargement
         selectsFilieres.forEach(select => {
             if (select) {
-                select.innerHTML = '<option value="">⏳ Chargement des filières...</option>';
-                select.disabled = true;
+                const currentValue = select.value;
+                select.innerHTML = '<option value="">Sélectionner une filière...</option>';
+                
+                // Si on efface le type de bac, recharger toutes les filières
+               
             }
         });
         
@@ -5233,16 +5162,15 @@ async function filtrerFilieresParBac(typeBac) {
                 const data = await response.json();
                 const filieres = data.filieres || [];
                 
-                console.log(`✅ ${filieres.length} filière(s) trouvée(s) pour ${typeBac}`);
+                console.log(`Filières trouvées pour ${typeBac}:`, filieres);
                 
                 if (filieres.length === 0) {
                     selectsFilieres.forEach(select => {
                         if (select) {
-                            select.innerHTML = `<option value="">❌ Aucune filière disponible pour ce type de bac</option>`;
-                            select.disabled = false;
+                            select.innerHTML = `<option value="">Aucune filière disponible pour ce type de bac</option>`;
                         }
                     });
-                    UIHelpers.showWarning(`Aucune filière trouvée pour le type de bac ${typeBac}`);
+                    UIHelpers.showMessage(`Aucune filière trouvée pour le type de bac ${typeBac}`, 'warning');
                     return;
                 }
                 
@@ -5255,12 +5183,9 @@ async function filtrerFilieresParBac(typeBac) {
                         filieres.forEach(filiere => {
                             const option = document.createElement('option');
                             option.value = filiere.nom.toLowerCase();
-                            option.textContent = `${filiere.libelle}`;
+                            option.textContent = `${filiere.libelle} (${filiere.faculte_nom})`;
                             
-                            // Ajouter des informations supplémentaires
-                            if (filiere.faculte_nom) {
-                                option.textContent += ` (${filiere.faculte_nom})`;
-                            }
+                            // Ajouter des informations sur la capacité si disponible
                             if (filiere.capacite_max) {
                                 option.textContent += ` - Places: ${filiere.capacite_max}`;
                             }
@@ -5268,10 +5193,7 @@ async function filtrerFilieresParBac(typeBac) {
                             select.appendChild(option);
                         });
                         
-                        // Réactiver le select
-                        select.disabled = false;
-                        
-                        // Restaurer la valeur si elle est toujours valide
+                        // Restaurer la valeur si elle est encore valide
                         const isValidChoice = filieres.some(f => f.nom.toLowerCase() === currentValue);
                         if (currentValue && isValidChoice) {
                             select.value = currentValue;
@@ -5279,25 +5201,19 @@ async function filtrerFilieresParBac(typeBac) {
                     }
                 });
                 
-                // Configurer les événements pour éviter les doublons
-                configurerEvenementsChoixUniques();
-                
-                UIHelpers.showSuccess(`${filieres.length} filière(s) disponible(s)`);
+                UIHelpers.showSuccess(`${filieres.length} filière(s) disponible(s) pour le ${typeBac}`);
                 
             } catch (error) {
-                console.error('❌ Erreur lors du chargement des filières:', error);
+                console.error('Erreur lors du chargement des filières:', error);
                 
-                // Afficher les filières génériques en cas d'erreur
+                // En cas d'erreur, afficher un message et proposer les filières génériques
                 selectsFilieres.forEach(select => {
                     if (select) {
                         select.innerHTML = `
                             <option value="">Erreur de chargement - Filières génériques</option>
                             <option value="informatique">Informatique</option>
                             <option value="mathematiques">Mathématiques</option>
-                            <option value="physique">Physique</option>
-                            <option value="chimie">Chimie</option>
                         `;
-                        select.disabled = false;
                     }
                 });
                 
@@ -5306,8 +5222,10 @@ async function filtrerFilieresParBac(typeBac) {
         }
         
     } catch (error) {
-        console.error('❌ Erreur filtrage filières:', error);
+        console.error('Erreur filtrage filières:', error);
         UIHelpers.showError('Erreur lors du filtrage des filières');
+    } finally {
+        UIHelpers.showLoading(false);
     }
 }
 
@@ -5357,87 +5275,52 @@ window.nextStep = function(event, nextStepNumber) {
 };
 
 // 5. Initialiser le filtrage quand on arrive sur l'étape 1
-// ✅ AMÉLIORATION : Observer les changements de page pour synchroniser automatiquement
+// ✅ OBSERVER POUR DÉTECTER QUAND L'ÉTAPE 1 DEVIENT ACTIVE
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('📱 Initialisation observateurs formulaire...');
+    console.log('🔍 Initialisation observateur étape 1...');
     
-    // Observer l'étape 1 pour synchroniser automatiquement
+    // Attendre que la page soit complètement chargée
     setTimeout(() => {
         const etape1 = document.getElementById('etape1');
         
         if (etape1) {
+            // Observer les changements de classe sur l'étape 1
             const observer = new MutationObserver(function(mutations) {
                 mutations.forEach(function(mutation) {
                     if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
                         const target = mutation.target;
                         
+                        // Si l'étape 1 devient active
                         if (target.classList.contains('active') && target.id === 'etape1') {
-                            console.log('👁️ Étape 1 activée - Vérification synchronisation...');
+                            console.log('✅ Étape 1 active détectée, chargement types de bac...');
                             
-                            // Vérifier si les types de bac sont déjà chargés
-                            const selectTypeBac = document.getElementById('typeBac');
-                            
-                            if (selectTypeBac && selectTypeBac.options.length <= 1) {
-                                console.log('🔄 Types de bac manquants - Rechargement...');
-                                setTimeout(() => chargerTypeBacsDansFormulaire(), 300);
-                            } else {
-                                console.log('✅ Types de bac déjà chargés');
-                            }
+                            // Charger les types de bac après un court délai
+                            setTimeout(() => {
+                                chargerFilieresParTypeBac();
+                            }, 300);
                         }
                     }
                 });
             });
             
+            // Observer les changements de la classe "active"
             observer.observe(etape1, {
                 attributes: true,
                 attributeFilter: ['class']
             });
             
             console.log('✅ Observateur étape 1 configuré');
-        }
-        
-        // Observer l'étape 2 pour le rappel du type de bac
-        const etape2 = document.getElementById('etape2');
-        
-        if (etape2) {
-            const observer2 = new MutationObserver(function(mutations) {
-                mutations.forEach(function(mutation) {
-                    if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
-                        const target = mutation.target;
-                        
-                        if (target.classList.contains('active') && target.id === 'etape2') {
-                            // Afficher le rappel du type de bac sélectionné
-                            const typeBacField = document.getElementById('typeBac');
-                            const rappelDiv = document.getElementById('rappelTypeBac');
-                            const typeBacSelectionne = document.getElementById('typeBacSelectionne');
-                            
-                            if (typeBacField && typeBacField.value && rappelDiv && typeBacSelectionne) {
-                                typeBacSelectionne.textContent = typeBacField.value;
-                                rappelDiv.style.display = 'block';
-                            }
-                        }
-                    }
-                });
-            });
             
-            observer2.observe(etape2, {
-                attributes: true,
-                attributeFilter: ['class']
-            });
-            
-            console.log('✅ Observateur étape 2 configuré');
+            // Si l'étape 1 est déjà active au chargement
+            if (etape1.classList.contains('active')) {
+                console.log('ℹ️ Étape 1 déjà active, chargement immédiat...');
+                setTimeout(() => {
+                    chargerFilieresParTypeBac();
+                }, 500);
+            }
         }
     }, 1000);
 });
-
-// ✅ EXPORT DES FONCTIONS GLOBALES
-window.startApplicationProcess = startApplicationProcess;
-window.chargerTypeBacsDansFormulaire = chargerTypeBacsDansFormulaire;
-window.handleTypeBacChange = handleTypeBacChange;
-window.prechargerFilieresEnCache = prechargerFilieresEnCache;
-window.filtrerFilieresParBac = filtrerFilieresParBac;
-
-console.log('✅ Système de synchronisation automatique du formulaire initialisé');
 
 // 6. Fonction utilitaire pour réinitialiser les filières
 function reinitialiserFilieres() {
@@ -5949,12 +5832,23 @@ async function soumettreModificationDossier(event) {
     }
 }
 
+
 const originalShowPage = window.showPage;
 window.showPage = function(pageId) {
+    // Appeler la fonction originale
     originalShowPage.call(this, pageId);
     
+    // Si on affiche l'étape 1, charger les types de bac
+    if (pageId === 'etape1') {
+        console.log('🎯 Navigation vers étape 1 détectée');
+        setTimeout(() => {
+            console.log('📦 Chargement types de bac...');
+            chargerFilieresParTypeBac();
+        }, 500);
+    }
+    
+    // Si on affiche l'étape 2, configurer les événements
     if (pageId === 'etape2') {
-        // Configurer les événements pour éviter les doublons de choix
         setTimeout(() => configurerEvenementsChoixUniques(), 100);
     }
 };
