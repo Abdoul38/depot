@@ -2123,38 +2123,162 @@ class PerformanceMonitor {
 
 const perfMonitor = new PerformanceMonitor();
 
-// ✅ SOLUTION DÉFINITIVE : Actualisation forcée avant affichage
-function startApplicationProcess() {
-    console.log('🚀 Démarrage du processus de dépôt...');
-    
-    // ✅ Vérifier si on vient juste d'actualiser
-    const justRefreshed = sessionStorage.getItem('justRefreshed');
-    
-    if (justRefreshed === 'true') {
-        // On vient d'actualiser, afficher le formulaire
-        console.log('✅ Page actualisée, affichage formulaire...');
-        sessionStorage.removeItem('justRefreshed');
+// ✅ SOLUTION AMÉLIORÉE : Chargement progressif avec indication visuelle
+async function startApplicationProcess() {
+    try {
+        console.log('🚀 Démarrage du processus de dépôt...');
         
+        // Réinitialiser les données
         currentApplicationData = {};
+        
+        // ✅ ÉTAPE 1 : Afficher d'abord la page nouveauDossiers avec un loader
+        showPage('nouveauDossiers');
+        
+        // Afficher un message de chargement
+        const pageNouveauDossiers = document.getElementById('nouveauDossiers');
+        if (pageNouveauDossiers) {
+            const loaderHtml = `
+                <div id="loaderEtapes" style="
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                    min-height: 400px;
+                    text-align: center;
+                    padding: 40px;
+                ">
+                    <div class="spinner" style="
+                        width: 60px;
+                        height: 60px;
+                        border: 6px solid #f3f3f3;
+                        border-top: 6px solid #667eea;
+                        border-radius: 50%;
+                        animation: spin 1s linear infinite;
+                        margin-bottom: 20px;
+                    "></div>
+                    <h3 style="color: #667eea; margin-bottom: 10px;">Préparation du formulaire</h3>
+                    <p style="color: #666; max-width: 400px;">
+                        Chargement des types de bac et filières disponibles...
+                    </p>
+                </div>
+            `;
+            
+            // Insérer le loader temporaire
+            pageNouveauDossiers.insertAdjacentHTML('afterbegin', loaderHtml);
+        }
+        
+        // ✅ ÉTAPE 2 : Précharger les données nécessaires
+        console.log('📦 Préchargement des données...');
+        
+        await Promise.all([
+            chargerTypeBacsEtape1(),
+            prechargerFacultes()
+        ]).catch(error => {
+            console.warn('⚠️ Erreur préchargement partielle:', error);
+            // Continuer même en cas d'erreur
+        });
+        
+        // ✅ ÉTAPE 3 : Attendre un court délai pour que le DOM soit prêt
+        await new Promise(resolve => setTimeout(resolve, 800));
+        
+        // ✅ ÉTAPE 4 : Supprimer le loader
+        const loader = document.getElementById('loaderEtapes');
+        if (loader) {
+            loader.style.transition = 'opacity 0.3s ease';
+            loader.style.opacity = '0';
+            setTimeout(() => loader.remove(), 300);
+        }
+        
+        // ✅ ÉTAPE 5 : Afficher l'étape 1
+        console.log('✅ Affichage étape 1');
         showPage('etape1');
         
-        // Charger les types de bac
+        // ✅ ÉTAPE 6 : Configurer les événements après affichage
         setTimeout(() => {
-            console.log('📦 Chargement types de bac...');
-            chargerFilieresParTypeBac();
-        }, 500);
+            configurerEvenementsChoixUniques();
+            initialiserFormulaireDossier();
+        }, 200);
         
-    } else {
-        // Première visite, actualiser la page
-        console.log('🔄 Actualisation de la page...');
+    } catch (error) {
+        console.error('❌ Erreur démarrage processus:', error);
         
-        // Marquer qu'on va actualiser
-        sessionStorage.setItem('justRefreshed', 'true');
-        sessionStorage.setItem('targetPage', 'etape1');
+        // Supprimer le loader en cas d'erreur
+        const loader = document.getElementById('loaderEtapes');
+        if (loader) loader.remove();
         
-        // Actualiser la page
-        window.location.reload();
+        // Afficher quand même l'étape 1
+        showPage('etape1');
+        
+        UIHelpers.showError('Erreur lors du chargement. Vous pouvez continuer mais certaines données peuvent être manquantes.');
     }
+}
+window.chargerTypeBacsEtape1=chargerTypeBacsEtape1;
+// ✅ NOUVELLE FONCTION : Précharger les types de bac pour l'étape 1
+async function chargerTypeBacsEtape1() {
+    try {
+        const response = await apiClient.getTypeBacsPublic();
+        const typeBacs = response.typeBacs || [];
+        
+        console.log('📚 Types de bac préchargés:', typeBacs.length);
+        
+        // Stocker en cache pour utilisation rapide
+        window._cachedTypeBacs = typeBacs;
+        
+        return typeBacs;
+    } catch (error) {
+        console.error('❌ Erreur chargement types de bac:', error);
+        return [];
+    }
+}
+window.prechargerFacultes=prechargerFacultes;
+// ✅ NOUVELLE FONCTION : Précharger les facultés
+async function prechargerFacultes() {
+    try {
+        const response = await apiClient.getFacultesPublic();
+        const facultes = response.facultes || [];
+        
+        console.log('🏛️ Facultés préchargées:', facultes.length);
+        
+        window._cachedFacultes = facultes;
+        
+        return facultes;
+    } catch (error) {
+        console.error('❌ Erreur chargement facultés:', error);
+        return [];
+    }
+}
+window.initialiserFormulaireDossier=initialiserFormulaireDossier;
+
+// ✅ NOUVELLE FONCTION : Initialiser le formulaire après affichage
+function initialiserFormulaireDossier() {
+    console.log('🔧 Initialisation formulaire dossier...');
+    
+    // Remplir le select des types de bac si les données sont en cache
+    const selectTypeBac = document.getElementById('typeBac');
+    if (selectTypeBac && window._cachedTypeBacs) {
+        const currentValue = selectTypeBac.value;
+        selectTypeBac.innerHTML = '<option value="">Sélectionner un type de bac...</option>';
+        
+        window._cachedTypeBacs.forEach(typeBac => {
+            const option = document.createElement('option');
+            option.value = typeBac.nom;
+            option.textContent = `${typeBac.nom} - ${typeBac.libelle}`;
+            selectTypeBac.appendChild(option);
+        });
+        
+        if (currentValue) selectTypeBac.value = currentValue;
+        
+        console.log('✅ Types de bac chargés dans le select');
+    }
+    
+    // Réinitialiser les aperçus de documents
+    const previewContainers = document.querySelectorAll('[id^="apercu-"]');
+    previewContainers.forEach(container => {
+        container.style.display = 'none';
+        container.innerHTML = '';
+    });
+    
+    console.log('✅ Formulaire initialisé');
 }
 
 async function nextStep(event, nextStepNumber) {
