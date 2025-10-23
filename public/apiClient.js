@@ -2124,38 +2124,122 @@ class PerformanceMonitor {
 const perfMonitor = new PerformanceMonitor();
 
 // ✅ SOLUTION DÉFINITIVE : Actualisation forcée avant affichage
-function startApplicationProcess() {
-    console.log('🚀 Démarrage du processus de dépôt...');
+async function startApplicationProcess() {
+    console.log('🚀 === DÉBUT PROCESSUS DÉPÔT ===');
     
-    // ✅ Vérifier si on vient juste d'actualiser
-    const justRefreshed = sessionStorage.getItem('justRefreshed');
-    
-    if (justRefreshed === 'true') {
-        // On vient d'actualiser, afficher le formulaire
-        console.log('✅ Page actualisée, affichage formulaire...');
-        sessionStorage.removeItem('justRefreshed');
+    try {
+        // ✅ ÉTAPE 1 : Vérifier que l'utilisateur est connecté
+        if (!apiClient || !apiClient.token) {
+            console.warn('⚠️ Non connecté');
+            if (typeof UIHelpers !== 'undefined') {
+                UIHelpers.showError('Vous devez être connecté pour déposer un dossier');
+            }
+            navigateTo('connexion');
+            return;
+        }
         
-        currentApplicationData = {};
-        showPage('etape1');
+        console.log('👤 Utilisateur:', apiClient.currentUser?.nom);
         
-        // Charger les types de bac
+        // ✅ ÉTAPE 2 : Afficher le loader (avec protection)
+        try {
+            if (typeof UIHelpers !== 'undefined' && typeof UIHelpers.showLoading === 'function') {
+                UIHelpers.showLoading(true);
+            }
+        } catch (loaderError) {
+            console.warn('⚠️ Loader non disponible:', loaderError.message);
+        }
+        
+        // ✅ ÉTAPE 3 : Réinitialiser les données
+        window.currentApplicationData = {};
+        console.log('🗑️ Données réinitialisées');
+        
+        // ✅ ÉTAPE 4 : Vérifier que la page etape1 existe
+        await new Promise(resolve => setTimeout(resolve, 100)); // Petit délai
+        
+        const etape1 = document.getElementById('etape1');
+        
+        if (!etape1) {
+            console.error('❌ Page etape1 introuvable dans le DOM');
+            
+            // Chercher dans user-content
+            const userContent = document.getElementById('user-content');
+            if (userContent) {
+                const etape1InUser = userContent.querySelector('#etape1');
+                if (etape1InUser) {
+                    console.log('✅ etape1 trouvée dans user-content');
+                    
+                    // Masquer toutes les pages
+                    userContent.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+                    
+                    // Afficher etape1
+                    etape1InUser.classList.add('active');
+                    etape1InUser.style.display = 'block';
+                    
+                    console.log('✅ Formulaire affiché');
+                } else {
+                    throw new Error('Page etape1 introuvable même dans user-content');
+                }
+            } else {
+                throw new Error('Container user-content introuvable');
+            }
+        } else {
+            // ✅ ÉTAPE 5 : Afficher la page normalement
+            console.log('✅ etape1 trouvée, affichage...');
+            
+            // Masquer toutes les pages
+            document.querySelectorAll('.page').forEach(p => {
+                p.classList.remove('active');
+                if (p.id !== 'etape1') {
+                    p.style.display = 'none';
+                }
+            });
+            
+            // Afficher etape1
+            etape1.classList.add('active');
+            etape1.style.display = 'block';
+            
+            console.log('✅ Formulaire affiché');
+        }
+        
+        // ✅ ÉTAPE 6 : Charger les types de bac (si la fonction existe)
+        if (typeof chargerFilieresParTypeBac === 'function') {
+            setTimeout(() => {
+                try {
+                    chargerFilieresParTypeBac();
+                    console.log('✅ Types de bac chargés');
+                } catch (err) {
+                    console.warn('⚠️ Erreur chargement types bac:', err);
+                }
+            }, 500);
+        }
+        
+        console.log('✅ === PROCESSUS DÉMARRÉ AVEC SUCCÈS ===');
+        
+    } catch (error) {
+        console.error('❌ ERREUR CRITIQUE:', error);
+        console.error('📍 Stack:', error.stack);
+        
+        // Afficher l'erreur à l'utilisateur
+        if (typeof UIHelpers !== 'undefined' && typeof UIHelpers.showError === 'function') {
+            UIHelpers.showError('Erreur : ' + error.message);
+        } else {
+            alert('❌ Erreur lors du chargement du formulaire:\n' + error.message);
+        }
+        
+    } finally {
+        // ✅ ÉTAPE 7 : Masquer le loader (avec protection)
         setTimeout(() => {
-            console.log('📦 Chargement types de bac...');
-            chargerFilieresParTypeBac();
-        }, 500);
-        
-    } else {
-        // Première visite, actualiser la page
-        console.log('🔄 Actualisation de la page...');
-        
-        // Marquer qu'on va actualiser
-        sessionStorage.setItem('justRefreshed', 'true');
-        sessionStorage.setItem('targetPage', 'etape1');
-        
-        // Actualiser la page
-        window.location.reload();
+            try {
+                if (typeof UIHelpers !== 'undefined' && typeof UIHelpers.showLoading === 'function') {
+                    UIHelpers.showLoading(false);
+                }
+            } catch (loaderError) {
+                console.warn('⚠️ Erreur masquage loader:', loaderError.message);
+            }
+        }, 300);
     }
 }
+
 
 async function nextStep(event, nextStepNumber) {
     event.preventDefault();
