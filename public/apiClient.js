@@ -2124,38 +2124,182 @@ class PerformanceMonitor {
 const perfMonitor = new PerformanceMonitor();
 
 // ✅ SOLUTION DÉFINITIVE : Actualisation forcée avant affichage
-function startApplicationProcess() {
-    console.log('🚀 Démarrage du processus de dépôt...');
-    
-    // ✅ Vérifier si on vient juste d'actualiser
-    const justRefreshed = sessionStorage.getItem('justRefreshed');
-    
-    if (justRefreshed === 'true') {
-        // On vient d'actualiser, afficher le formulaire
-        console.log('✅ Page actualisée, affichage formulaire...');
-        sessionStorage.removeItem('justRefreshed');
+// ✅ SOLUTION DÉFINITIVE : Actualisation forcée avant affichage
+async function startApplicationProcess() {
+    try {
+        console.log('🆕 Démarrage processus de candidature');
         
+        // ✅ ÉTAPE 1 : Vérifier la connexion
+        if (!apiClient || !apiClient.token) {
+            UIHelpers.showError('Vous devez être connecté pour déposer un dossier');
+            navigateTo('connexion');
+            return;
+        }
+        
+        // ✅ ÉTAPE 2 : Afficher le splash screen personnalisé
+        showApplicationSplashScreen();
+        
+        // ✅ ÉTAPE 3 : Attendre un court instant pour l'effet visuel
+        await new Promise(resolve => setTimeout(resolve, 800));
+        
+        // ✅ ÉTAPE 4 : Vider COMPLÈTEMENT le cache et les données
+        console.log('🗑️ Nettoyage complet des données...');
+        updateApplicationSplashStatus('Préparation du formulaire...');
+        
+        // Vider les données temporaires
         currentApplicationData = {};
-        showPage('etape1');
         
-        // Charger les types de bac
-        setTimeout(() => {
-            console.log('📦 Chargement types de bac...');
-            chargerFilieresParTypeBac();
-        }, 500);
+        // Vider le cache API lié aux applications
+        if (typeof apiCache !== 'undefined') {
+            apiCache.clear('applications');
+            apiCache.clear('filieres');
+        }
         
-    } else {
-        // Première visite, actualiser la page
-        console.log('🔄 Actualisation de la page...');
+        // ✅ ÉTAPE 5 : Réinitialiser TOUS les champs du formulaire
+        console.log('🔄 Réinitialisation des formulaires...');
+        updateApplicationSplashStatus('Réinitialisation des champs...');
         
-        // Marquer qu'on va actualiser
-        sessionStorage.setItem('justRefreshed', 'true');
-        sessionStorage.setItem('targetPage', 'etape1');
+        await new Promise(resolve => setTimeout(resolve, 500));
         
-        // Actualiser la page
-        window.location.reload();
+        // Réinitialiser étape 1
+        const form1 = document.getElementById('applicationForm1');
+        if (form1) {
+            form1.reset();
+            console.log('✅ Formulaire étape 1 réinitialisé');
+        }
+        
+        // Réinitialiser étape 2
+        const form2 = document.getElementById('applicationForm2');
+        if (form2) {
+            form2.reset();
+            console.log('✅ Formulaire étape 2 réinitialisé');
+        }
+        
+        // Réinitialiser étape 3 (fichiers)
+        const form3 = document.getElementById('applicationForm3');
+        if (form3) {
+            form3.reset();
+            
+            // Réinitialiser visuellement les zones de fichiers
+            const fileFields = [
+                'photoIdentite',
+                'pieceIdentite', 
+                'diplomeBac',
+                'releve',
+                'certificatNationalite',
+                'releveTerminale'
+            ];
+            
+            fileFields.forEach(fieldId => {
+                resetFileUpload(fieldId);
+            });
+            
+            console.log('✅ Formulaire étape 3 et fichiers réinitialisés');
+        }
+        
+        // ✅ ÉTAPE 6 : Recharger les données des selects
+        console.log('📋 Rechargement des données...');
+        updateApplicationSplashStatus('Chargement des filières...');
+        
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // Recharger les types de bac
+        if (typeof chargerFilieresParTypeBac === 'function') {
+            await chargerFilieresParTypeBac();
+            console.log('✅ Types de bac rechargés');
+        }
+        
+        // ✅ ÉTAPE 7 : Afficher l'étape 1
+        console.log('🎯 Affichage étape 1...');
+        updateApplicationSplashStatus('Préparation terminée !');
+        
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // Masquer toutes les pages
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        
+        // Afficher l'étape 1
+        const etape1 = document.getElementById('etape1');
+        if (etape1) {
+            etape1.classList.add('active');
+            console.log('✅ Étape 1 affichée');
+            
+            // Scroll vers le haut
+            window.scrollTo(0, 0);
+        } else {
+            throw new Error('❌ Étape 1 introuvable dans le DOM');
+        }
+        
+        // ✅ ÉTAPE 8 : Masquer le splash screen
+        hideApplicationSplashScreen();
+        
+        // Message de succès
+        UIHelpers.showSuccess('✅ Formulaire prêt ! Vous pouvez commencer votre dépôt.');
+        
+        console.log('✅ === PROCESSUS DE CANDIDATURE INITIALISÉ ===');
+        
+    } catch (error) {
+        console.error('❌ Erreur initialisation candidature:', error);
+        hideApplicationSplashScreen();
+        UIHelpers.showError('Erreur : ' + error.message);
     }
 }
+
+// ✅ Fonction pour afficher le splash screen spécifique à l'application
+function showApplicationSplashScreen() {
+    let splash = document.getElementById('applicationSplash');
+    
+    if (!splash) {
+        splash = document.createElement('div');
+        splash.id = 'applicationSplash';
+        splash.innerHTML = `
+            <div class="splash-content">
+                <div class="splash-logo">
+                    <img src="/uploads/logo-universite.png" alt="Logo" class="logo-image" 
+                         onerror="this.style.display='none'" style="width: 80px; height: 80px;">
+                </div>
+                <h1 class="splash-title">📝 Nouveau Dépôt de Dossier</h1>
+                <p class="splash-subtitle">Préparation du formulaire en cours...</p>
+                <div class="splash-loader"></div>
+                <div class="splash-progress">
+                    <div class="splash-progress-bar"></div>
+                </div>
+                <p class="splash-status" id="applicationSplashStatus">Initialisation...</p>
+            </div>
+        `;
+        document.body.appendChild(splash);
+    }
+    
+    splash.classList.remove('hidden');
+    splash.style.display = 'flex';
+}
+
+// ✅ Fonction pour masquer le splash screen
+function hideApplicationSplashScreen() {
+    const splash = document.getElementById('applicationSplash');
+    if (splash) {
+        splash.classList.add('hidden');
+        setTimeout(() => {
+            splash.style.display = 'none';
+        }, 500);
+    }
+}
+
+// ✅ Fonction pour mettre à jour le statut
+function updateApplicationSplashStatus(message) {
+    const statusEl = document.getElementById('applicationSplashStatus');
+    if (statusEl) {
+        statusEl.textContent = message;
+    }
+}
+
+// Export global
+window.startApplicationProcess = startApplicationProcess;
+window.showApplicationSplashScreen = showApplicationSplashScreen;
+window.hideApplicationSplashScreen = hideApplicationSplashScreen;
+window.updateApplicationSplashStatus = updateApplicationSplashStatus;
+
+console.log('✅ Module de démarrage de candidature chargé (avec actualisation forcée)');
 
 async function nextStep(event, nextStepNumber) {
     event.preventDefault();
