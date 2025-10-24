@@ -8,6 +8,128 @@
     <link rel="stylesheet" href="Style.css">
     <link rel="stylesheet" href="Style1.css">
 <style>
+    /* =================== SPLASH SCREEN APPLICATION =================== */
+#applicationSplash {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    z-index: 100000 !important;
+    transition: opacity 0.5s ease, visibility 0.5s ease;
+}
+
+#applicationSplash.hidden {
+    opacity: 0;
+    visibility: hidden;
+}
+
+#applicationSplash .splash-content {
+    text-align: center;
+    color: white;
+    animation: fadeInScale 0.6s ease-out;
+    max-width: 500px;
+    padding: 20px;
+}
+
+#applicationSplash .splash-logo {
+    width: 120px;
+    height: 120px;
+    background: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 25px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    animation: pulse 2s ease-in-out infinite;
+}
+
+#applicationSplash .splash-logo img {
+    width: 80px;
+    height: 80px;
+    object-fit: contain;
+}
+
+#applicationSplash .splash-title {
+    font-size: 2rem;
+    font-weight: 800;
+    margin: 0 0 15px 0;
+    text-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    animation: slideInUp 0.6s ease-out 0.2s both;
+}
+
+#applicationSplash .splash-subtitle {
+    font-size: 1.1rem;
+    font-weight: 300;
+    margin: 0 0 35px 0;
+    opacity: 0.95;
+    animation: slideInUp 0.6s ease-out 0.4s both;
+}
+
+#applicationSplash .splash-loader {
+    width: 60px;
+    height: 60px;
+    border: 4px solid rgba(255, 255, 255, 0.3);
+    border-top: 4px solid white;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 25px;
+}
+
+#applicationSplash .splash-progress {
+    width: 280px;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 2px;
+    overflow: hidden;
+    margin: 0 auto 20px;
+}
+
+#applicationSplash .splash-progress-bar {
+    height: 100%;
+    background: white;
+    border-radius: 2px;
+    width: 100%;
+    animation: progressBar 2s ease-out forwards;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+}
+
+#applicationSplash .splash-status {
+    font-size: 0.95rem;
+    opacity: 0.85;
+    margin: 0;
+    animation: fadeIn 0.6s ease-out 0.6s both;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    #applicationSplash .splash-title {
+        font-size: 1.5rem;
+    }
+    
+    #applicationSplash .splash-subtitle {
+        font-size: 1rem;
+    }
+    
+    #applicationSplash .splash-logo {
+        width: 100px;
+        height: 100px;
+    }
+    
+    #applicationSplash .splash-logo img {
+        width: 60px;
+        height: 60px;
+    }
+    
+    #applicationSplash .splash-progress {
+        width: 220px;
+    }
+}
         /* Splash Screen Styles */
         #splashScreen {
             position: fixed;
